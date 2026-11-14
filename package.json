@@ -1,9 +1,12 @@
 {
   "name": "fallboard",
   "private": true,
-  "description": "Fallboard Piano: the site lives in dist/; these scripts engrave the built-in scores and serve a local preview.",
+  "description": "Fallboard Piano: the site lives in dist/; these scripts engrave the built-in scores, build the repertoire catalogue and serve a local preview.",
   "scripts": {
     "engrave": "node tools/engrave.js",
+    "catalog": "node tools/catalog/build.js",
+    "catalog:pull": "node tools/catalog/pull-imslp.js && node tools/catalog/pull-wikipedia.js && node tools/catalog/pull-wikidata.js",
+    "catalog:test": "node tools/catalog/test-search.js",
     "dev": "node dev-server.js"
   },
   "devDependencies": {

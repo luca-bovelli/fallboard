@@ -30,4 +30,8 @@ Every push to `main` runs `.github/workflows/pages.yml`: it engraves any new or 
 
 A bar too dense for the width (MuseScore logs "System justification error") keeps its system's real width and is drawn scaled down to fit the screen. The title, composer and rights lines are left out of the engraving, since the app shows the title itself. Each element is tagged with the hand it belongs to (`data-s`), so the hand filter can fade the other hand; barlines and the brace are neutral and fade only on the other hand's half.
 
+## Repertoire catalogue
+
+`catalog/` lists every solo keyboard work by 19 composers (3,773 pieces) with titles, nicknames, catalogue numbers and keys, for the score library and its search. `npm run catalog` builds it; `catalog/README.md` explains the files and sources.
+
 `sources/` holds untouched downloads that the shipped scores were made from.

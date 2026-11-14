@@ -1,0 +1,1666 @@
+{
+ "composer": "Schubert, Franz",
+ "pulled": "2026-11-14",
+ "pages": [
+  {
+   "title": "10 Variations in F major, D.156 (Schubert, Franz)",
+   "pageid": 7763,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=10 Variations in {{K|F}}\n|Alternative Title=X Variations pour le Forte-Piano composes par Francois Schubert, Ecolier de Salieri, prémier Maitre de la Chapelle imperiale et royale de Vienne 1815\n|Opus/Catalogue Number=D.156\n|Key={{Key|F}}\n|Number of Movements/Sections=Theme, 10 variations\n|Dedication=\n|Year/Date of Composition=1815-02-15\n|Year of First Publication=1887\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=variations ; pf"
+  },
+  {
+   "title": "101 Classics (Dunstan, Ralph)",
+   "pageid": 433582,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=The World's Most Famous Piano Solos\n|Alternative Title=\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=88\n|Number of Movements/Sections=88 pieces\n#Liszt, ''Liebestraum'', p.2 \n#Delibes, ''Grande Valse'', p.6 \n#Tchaikovsky, ''Danse chinoise'', p.10 \n#Thomas, {{OpDerivs|Mignon|''Romance'' from|0}}, p.12\n#Verdi, ''Anvil Chorus'', p.14\n#Wagner, {{OpDerivs|Meistersinger|''Walther's Prize Song'' from|0}}, p.16\n#Beethoven, ''Minuet in G'', p.18\n#Beethoven, ''Ecossaise'', p.19\n#Bizet, {{OpDerivs|Carmen|Toreador's Song from|0}}, p.20\n#Schubert, ''Moment Musical'', No.3, p.23\n#Field, ''Nocturne in D minor'', p.24\n#Chopin, ''Mazurka in C'', p.26\n#Chopin, ''Mazurka in F'', p.26\n#Chopin, ''Ecossaise'', p.28\n#Bach, ''Prelude in D Minor'', p.29\n#Bach, ''Gavotte in G'', p.30\n#Mendelssohn, ''Allegro non Troppo op.72'', p.31\n#Mendelssohn, ''{{OpDerivs|MidsummerFM|Dance of the Clowns from|0}}'', p.32\n#Schumann, ''Phantasietanz'', p.33 \n#Gluck, {{OpDerivs|OrfeoEuridiceG|Ballet from|0}}, p.34\n#Brahms, ''Waltz in A{{flat}} op.39 no.15'', p.35\n#Heller, ''Arabeske in C op.49 No.1'', p.36\n#Brahms, ''Waltz in D Minor, op.39 No.9'', p.37\n#Handel, ''Sinfonia'' from ''Almira'', p.38\n#Liszt, ''Consolation No.4'' ''(simplified arrangement)'', p.39 \n#Gounod, {{OpDerivs|Faust|Flower Song from|0}}, p.40\n#Mussorgsky, ''A Tear'' (''Eine Träne''), p.42\n#Purcell,  ''Overture & Hornpipe'' from ''Bonduca'', p.44\n#Tchaikovsky, ''Chanson Triste'', P.46\n#Wilson, ''The Shepherd Boy'', p.47\n#Palmgren, ''The Call of the Sea'', p.49\n#Chopin, ''Notturno op.15 No.2'', p.50\n#Wagner, {{OpDerivs|Rienzi|''The Prayer Motive'' from the overture to|0}}, p.52\n#K.P.E.Bach, ''Solfegietto'' Wq. 117/2, p.54\n#Hauser, ''Wiegenlied'', p.56\n#Delibes, ''Pas des Echarpes'', p.57\n#Thomas,  {{OpDerivs|Mignon|''Gavotte'' from|0}}, p.60 \n#Tchaikovsky, ''Danse Russe'' (''Trépak''),  p.62\n#Brahms, ''Hungarian Dance No.2'', p.64 \n#Brahms, ''Hungarian Dance No.4'', p.66\n#Pleyel, ''Rondeau'', p.68                                                                                                                       \n#Shield, ''Giuoco. Alla Sclavonica'', p.70\n#Haydn, ''[[Piano Trio in G major, Hob.XV:25 (Haydn, Joseph)|Gipsy Rondo]]'', p.72\n#Yradier, ''La Paloma'' (''La Colombe''), p.75\n#Nevin, ''Narcissus'' (''Water Scenes''), p.78 \n#Mozart, ''Andante in C'' (from a ''Trio'' for Pf., Vl., & Cello), p.80\n#Traditional{{FolkDerivs|Volga|,|0}}, p.81  \n#Moszkowski, ''Fabliau op.76 No.3'', p.84\n#Lange, ''Edelweiss'', p.88\n#Scarlatti, ''Tempo di Ballo'', p.91 (= {{LinkWork|Keyboard Sonata in D major|K.430|Scarlatti|Domenico|0}})\n#Mozart, ''Air'' from ''Don Giovanni'', p.92 \n#Mozart, ''Canzonetta'' from ''Don Giovanni'', p.93\n#Handel, ''Largo'', p.94\n#Chopin, ''Mazurka in A Minor op.68 No.2'', p.95\n#Beethoven, ''L'Adieu'', p.96 \n#Traditional, ''Londonderry Air'', p.98\n#Kalkbrenner, ''Nocturne in Ab'', p.100\n#Heller, ''Arabeske in A op.49 No.2'', p.102\n#Cirri, ''Minuet in F'', p.103  \n#Dussek, ''Minuetto Di Ballo'', p.104  \n#Beethoven, ''Andante in G'', p.105 \n#Corelli, ''Gavotte in A'', p.106 \n#Corelli, ''Gigue'', p.107 \n#Schumann, ''Papillon No.8'', p.108 \n#Heller, ''Blumen-Frucht and Dornenstücke op.82 No.3'', p.109 \n#Heller,  ''Andante in Bb op.78 No.4'', p.110 \n#Handel, ''Sarabande in G Minor'' (from ''Harpsichord Suite No.7''), p.111 \n#Gluck, ''Tambourin'' from {{LinkWork|Iphigénie en Aulide|Wq.40|Gluck|Christoph Willibald|0}}, p.112 \n#Gluck, ''Minuet in D'' from ''Iphigenia in Aulis'', p.113\n#Giardini, ''Siciliana'', p.114 \n#Schumann, ''Kinderscenen'' (13 Pieces), p.115  \n#Boccherini, ''Minuet in A'', , p.130 \n#Gluck, ''Minuet in F'' from ''Orfeo'', p.131 \n#Heller, ''Prelude in A op.81 No.7'', p.132 \n#Handel, ''Gigue in G Minor'' from ''Harpsichord Suite No.7'', p.133 \n#Gluck, ''Pantomime'' from ''Orfeo'', p.134  \n#Delibes, ''Andante'' from ''La Source'', p.135 \n#Krebs, ''Corrente in Bb'', p.136 \n#Krebs, ''Bourrée'', p.137  \n#Zipoli, ''Gigue in G Minor'', p.138 \n#Kirnberger, ''Gavotte in D Minor'', EngK 78, p.139  \n#Bertini, ''Allegretto in F'', p.140  \n#Handel, ''Dance of Spectres'' from ''Admeto'', p.141\n#Delibes, {{OpDerivs|LaSource|Variation from|0}}, p.142\n#Delibes, {{OpDerivs|LaSource|Dance circassienne from|0}}, p.143 \n#Bertini, ''Minuet in G'', p.147 \n#Wagner, {{OpDerivs|Holländer|the Spinning Chorus from|0}}, p.148\n#Strauss{{OrchDerivs|Danube|, |0}}, p.150\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1928\n|Page Type=Collection\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=Piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "12 Ecossaises, D.299 (Schubert, Franz)",
+   "pageid": 7798,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 1,
+   "info": "|Work Title=12 Ecossaises\n|Alternative Title=\n|Opus/Catalogue Number=D.299\n|Number of Movements/Sections=12 dances\n|Dedication=\n|Year/Date of Composition=1815\n|Year of First Publication=1897 (Nos.1 to 8) ; 1912 (Nos.9 to 12)\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=ecossaises ; pf"
+  },
+  {
+   "title": "12 Ecossaises, D.781 (Schubert, Franz)",
+   "pageid": 7800,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=12 Ecossaises\n|Alternative Title=\n|Opus/Catalogue Number=D.781\n|Movements Header=12 dances\n|Number of Movements/Sections=12 dances\n|Dedication=\n|Year/Date of Composition=1823 January\n|Year of First Publication=1824 (Nos.4, 7) ; 1825 (No.1) ; 1889 (Nos.2-12)\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Related Works=Ecossaise No.1 is identical to No.2 (No.18) of {{LinkWork|18 German Dances and Ecossaises|D.783|Schubert|Franz|0}}\n|Tags=ecossaises ; pf"
+  },
+  {
+   "title": "12 Etudes de virtuosité (Philipp, Isidor)",
+   "pageid": 544318,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Douze etudes de virtuosité\n|Alternative Title=Douze etudes de virtuosité, choisies dans les oeuvres de V. Alkan, Méreaux, Kessler, Tellefsen, Willmers, Ch. Mayer et Liszt\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=12\n|Number of Movements/Sections=12 pieces\n# {{LinkCompS|Charles-Valentin|Alkan}}: {{LinkWork|Recueil de Chants|Op.38|Alkan|Charles-Valentin|0}}. Assez vivement (No.1)\n# {{LinkCompS|Charles-Valentin|Alkan}}: {{LinkWork|Recueil de Chants|Op.38|Alkan|Charles-Valentin|0}}. Allegretto (No.8)\n# {{LinkCompS|Charles-Valentin|Alkan}}: {{LinkWork|3 Grandes Études|Op.76|Alkan|Charles-Valentin|0}}. Etude pour les deux mains (No.3)\n# {{LinkCompS|Jean-Amédée Lefroid de|Méreaux}}: {{LinkWork|Etudes|Op.63|Méreaux|Jean-Amédée Lefroid de|0}}. Etude en doubles notes (No.37)\n# {{LinkCompS|Jean-Amédée Lefroid de|Méreaux}}: {{LinkWork|Etudes|Op.63|Méreaux|Jean-Amédée Lefroid de|0}}. Etude pour l'independence des doigts (No.4)\n# {{LinkCompS|Jean-Amédée Lefroid de|Méreaux}}: {{LinkWork|Etudes|Op.63|Méreaux|Jean-Amédée Lefroid de|0}}. Etude des trilles (No.48)\n# {{LinkCompS|Joseph Christoph|Kessler}}: {{LinkWork|Etudes rhapsodiques|Op.51|Kessler|Joseph Christoph|0}}. Pour la main droite seule (No.4)\n# {{LinkCompS|Thomas Dyke Acland|Tellefsen}}: {{LinkWork|Étude|Op.43|Tellefsen|Thomas Dyke Acland|0}} (Etude en sixtes)\n# {{LinkCompS|Rudolf|Willmers}}: {{LinkWork|2 Concert Etudes|Op.28|Willmers|Rudolf|0}}. Etude en doubles notes (La Danza delle Bacchanti) (No.2)\n# {{LinkCompS|Charles|Mayer}}: {{LinkWork|3 Études caractéristiques|Op.127|Mayer|Charles|0}}. Etude de Staccato\n# {{LinkCompS|Franz|Schubert}}-{{LinkCompS|Franz|Liszt}}: {{LinkWork|Erlkönig|D.328|Schubert|Franz|0}} (Etude d'Octaves. Le Roi des Aulnes)\n# {{LinkCompS|Franz|Liszt}}: {{LinkWork|Années de pèlerinage I|S.160|Liszt|Franz|0}}. Au bord d'un source (No.4)\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=  \n|Page Type=Collection\n|Language=\n|Piece Style=Romantic\n|Instrumentation=Piano\n|Tags=studies ; pf"
+  },
+  {
+   "title": "12 German Dances, D.420 (Schubert, Franz)",
+   "pageid": 21587,
+   "for": [
+    "piano"
+   ],
+   "files": 69,
+   "audio": 35,
+   "info": "|Work Title=12 German Dances\n|Alternative Title=\n|Opus/Catalogue Number=D.420\n|Movements Header=12 dances and coda\n|Number of Movements/Sections=12 dances and coda\n|Dedication=\n|Year/Date of Composition=1816\n|Year of First Publication=1871 {{EN}} Vienna: [[J.P. Gotthard]] (in an edition with 5 ecossaises from {{LinkWork|8 Ecossaises|D.529|Schubert|Franz|0}})\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "12 German Dances, D.790 (Schubert, Franz)",
+   "pageid": 7837,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=12 German Dances\n|Alternative Title=12 Ländler\n|Opus/Catalogue Number=D.790 ; Op.171\n|Number of Movements/Sections=12 dances\n|Dedication=\n|Year/Date of Composition=1823\n|Year of First Publication=1864\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=Piano\n|Tags=landler ; pf"
+  },
+  {
+   "title": "12 Grazer Waltzer, D.924 (Schubert, Franz)",
+   "pageid": 7836,
+   "for": [
+    "piano"
+   ],
+   "files": 9,
+   "audio": 0,
+   "info": "|Work Title=Graz Waltzes\n|Alternative Title=\n|Opus/Catalogue Number=D.924 (Op.91)\n|Number of Movements/Sections=12 waltzes\n|Dedication=\n|Year/Date of Composition=1827 (?)\n|Year of First Publication=1828\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "12 Ländler, D.681 (Schubert, Franz)",
+   "pageid": 879111,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=12 Ländler\n|Alternative Title=\n|Opus/Catalogue Number=D.681\n|Key=\n|Movements Header=8 ländler (nos.1-4 are missing)\n|Number of Movements/Sections=8 ländler (nos.1-4 are missing)\n|Average Duration=4-5 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1815 ca.\n|Year of First Publication=1930\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=Nos.5-12 are extant\n|Instrumentation=piano\n|Tags=landler ; pf"
+  },
+  {
+   "title": "12 Valses nobles, D.969 (Schubert, Franz)",
+   "pageid": 7865,
+   "for": [
+    "piano"
+   ],
+   "files": 25,
+   "audio": 0,
+   "info": "|Work Title=12 Valses Nobles\n|Alternative Title=\n|Opus/Catalogue Number=D.969 ; Op.77\n|Number of Movements/Sections=12 waltzes\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=1827\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "12 Viennese German Dances, D.128 (Schubert, Franz)",
+   "pageid": 7866,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=12 Viennese German Dances\n|Alternative Title=\n|Opus/Catalogue Number=D.128\n|Number of Movements/Sections=12 dances\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "13 Variations on a Theme of Hüttenbrenner, D.576 (Schubert, Franz)",
+   "pageid": 7764,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=13 Variations on a Theme of A. Hüttenbrenner\n|Alternative Title=\n|Opus/Catalogue Number=D.576\n|Key={{Key|a}}\n|Movements Header=Theme, 13 variations\n|Number of Movements/Sections=Theme, 13 variations\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Genre=Piano piece\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=variations ; pf"
+  },
+  {
+   "title": "17 Ländler, D.366 (Schubert, Franz)",
+   "pageid": 7838,
+   "for": [
+    "piano"
+   ],
+   "files": 98,
+   "audio": 51,
+   "info": "|Work Title=17 Ländler\n|Alternative Title=\n|Opus/Catalogue Number=D.366\n|Movements Header=17 ländler\n|Number of Movements/Sections=17 ländler\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=landler ; pf"
+  },
+  {
+   "title": "18 German Dances and Ecossaises, D.783 (Schubert, Franz)",
+   "pageid": 7823,
+   "for": [
+    "piano"
+   ],
+   "files": 23,
+   "audio": 1,
+   "info": "|Work Title=18 German Dances and Ecossaises\n|Alternative Title=\n|Opus/Catalogue Number=D.783 ; Op.33\n|Number of Movements/Sections=18 pieces\n|Dedication=\n|Year/Date of Composition=1823-24\n|Year of First Publication=1825\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=ecossaises ; pf"
+  },
+  {
+   "title": "2 Dance Sketches, D.980a (Schubert, Franz)",
+   "pageid": 879494,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=2 Dance Sketches\n|Alternative Title=\n|Opus/Catalogue Number=D.980a (formerly D.640)\n|Key=\n|Movements Header=2 sketches\n|Number of Movements/Sections=2 sketches\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1821 ante\n|Year of First Publication=1956\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=fragment\n|Instrumentation=piano(?)\n|Tags=sketches ; pf ; und"
+  },
+  {
+   "title": "2 Dance Sketches, D.980e (Schubert, Franz)",
+   "pageid": 879567,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=2 Dance Sketches\n|Alternative Title=\n|Opus/Catalogue Number=D.980e\n|Key=\n|Movements Header=2 sketches\n|Number of Movements/Sections=2 sketches\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1818 post\n|Year of First Publication=1989\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=fragment\n|Instrumentation=piano(?)\n|Tags=sketches ; pf ; dances"
+  },
+  {
+   "title": "2 German Dances, D.769 (Schubert, Franz)",
+   "pageid": 3377,
+   "for": [
+    "piano"
+   ],
+   "files": 11,
+   "audio": 2,
+   "info": "|Work Title=2 German Dances\n|Alternative Title=\n|Opus/Catalogue Number=D.769\n|Number of Movements/Sections=2 dances\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "2 German Dances, D.841 (Schubert, Franz)",
+   "pageid": 879491,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=2 German Dances\n|Alternative Title=\n|Opus/Catalogue Number=D.841\n|Key=\n|Movements Header=2 dances\n|Number of Movements/Sections=2 dances\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1825\n|Year of First Publication=1930\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "2 German Dances, D.974 (Schubert, Franz)",
+   "pageid": 3380,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 2,
+   "info": "|Work Title=2 German Dances\n|Alternative Title=\n|Opus/Catalogue Number=D.974\n|Movements Header=2 dances\n|Number of Movements/Sections=2 dances:\n#{{K|Db}}\n#{{K|Db}}\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "2 Ländler in D-flat major, D.980c (Schubert, Franz)",
+   "pageid": 879507,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=2 Ländler in D-flat major\n|Alternative Title=\n|Opus/Catalogue Number=D.980c (formerly D.680)\n|Key={{key|Db}}\n|Movements Header=2 sketches\n|Number of Movements/Sections=2 sketches\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1821 ante\n|Year of First Publication=1930\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=fragment\n|Instrumentation=piano\n|Tags=landler ; pf"
+  },
+  {
+   "title": "2 Ländler in E-flat major, D.980b (Schubert, Franz)",
+   "pageid": 879347,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=2 Ländler in E-flat major\n|Alternative Title=\n|Opus/Catalogue Number=D.980b (formerly D.679)\n|Key={{key|Eb}}\n|Movements Header=2 dances\n|Number of Movements/Sections=2 dances\n|Average Duration=1 minute\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1816?\n|Year of First Publication=1925\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=landler ; pf"
+  },
+  {
+   "title": "2 Minuets and Trios, D.91 (Schubert, Franz)",
+   "pageid": 879540,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=2 Minuets, each with 2 Trios\n|Alternative Title=\n|Opus/Catalogue Number=D.91\n|Key=\n|Movements Header=2 minuets, 4 trios\n|Number of Movements/Sections=2 minuets, 4 trios\n|Average Duration=5-6 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1813\n|Year of First Publication=1956\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=minuets ; pf"
+  },
+  {
+   "title": "2 Scherzos, D.593 (Schubert, Franz)",
+   "pageid": 7762,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 1,
+   "info": "|Work Title=2 Scherzos\n|Alternative Title=\n|Opus/Catalogue Number=D.593\n|Number of Movements/Sections=2 pieces\n#Allegretto ({{K|Bb}}) — ''Trio'' ({{K|Eb}})\n#Allegro moderato ({{K|Db}}) — ''Trio'' ({{K|Ab}})\n|Dedication=\n|Year/Date of Composition=1817 November\n|Year of First Publication=1871\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=The second scherzo in D-flat major [https://www.henle.de/media/foreword/0489.pdf has been suggested] as being a possible third movement to the {{NoComp|Piano Sonata in D-flat major, D.567|Schubert, Franz}}. Its trio is very similar to the trio of the minuet of the {{NoComp|Piano Sonata No.7, D.568|Schubert, Franz}} (itself a transposed and revised version of D.567).\n|Instrumentation=piano\n|Tags=scherzos ; pf"
+  },
+  {
+   "title": "2 Waltzes, D.980 (Schubert, Franz)",
+   "pageid": 879791,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=2 Waltzes\n|Alternative Title=\n|Opus/Catalogue Number=D.980\n|Key=\n|Movements Header=2 waltzes\n|Number of Movements/Sections=2 waltzes\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1826\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "20 Ländler (Schubert, Franz)",
+   "pageid": 53014,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 8,
+   "audio": 2,
+   "info": "|Work Title=20 Ländler von Franz Schubert\n|Alternative Title=\n|Opus/Catalogue Number=Anh.1a/06 (Brahms)\n|Number of Movements/Sections=20\n|Dedication=\n|Year/Date of Composition=1869?\n|Year of First Publication=1869 (May)\n|Page Type=Collection\n|Librettist=\n|Language=\n|Related Works=Arrangements of pieces by {{LinkCompS|Franz|Schubert}}\n:Nos.1–16 from {{NoComp|17 Ländler, D.366|Schubert, Franz}}, and Nos.1–4 from {{NoComp|4 Ländler, D.814|Schubert, Franz}}\n|Piece Style=Romantic\n|Instrumentation=Piano (solo or 4 hands)\n|Tags=landler ; pf ; pf4h"
+  },
+  {
+   "title": "20 Minuets, D.41 (Schubert, Franz)",
+   "pageid": 7839,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Minuets\n|Alternative Title=\n|Opus/Catalogue Number=D.41\n|Number of Movements/Sections=20 minuets\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=Nos. 1–8, 11–18, and 20–23 are extant\n|Instrumentation=piano\n|Tags=minuets ; pf"
+  },
+  {
+   "title": "20 Waltzes, D.146 (Schubert, Franz)",
+   "pageid": 7868,
+   "for": [
+    "piano"
+   ],
+   "files": 11,
+   "audio": 0,
+   "info": "|Work Title=20 Waltzes\n|Alternative Title=''Letzte Walzer'', ''Last Waltzes''\n|Opus/Catalogue Number=D.146 (published as Op.posth.127)\n|Number of Movements/Sections=20 waltzes\n|Dedication=\n|Year/Date of Composition=1815–23\n|Year of First Publication=1830\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "3 Ecossaises, D.816 (Schubert, Franz)",
+   "pageid": 879345,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=3 Ecossaises\n|Alternative Title=\n|Opus/Catalogue Number=D.816\n|Key=\n|Movements Header=3 dances\n|Number of Movements/Sections=3 dances\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1824\n|Year of First Publication=1956\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=ecossaises ; pf"
+  },
+  {
+   "title": "3 German Dances, D.971 (Schubert, Franz)",
+   "pageid": 7819,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=German Dances, D.971\n|Alternative Title=\n|Opus/Catalogue Number=D.971\n|Number of Movements/Sections=3 dances\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Genre=Piano piece\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=Piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "3 German Dances, D.972 (Schubert, Franz)",
+   "pageid": 7820,
+   "for": [
+    "piano"
+   ],
+   "files": 14,
+   "audio": 7,
+   "info": "|Work Title=3 German Dances\n|Alternative Title=\n|Opus/Catalogue Number=D.972\n|Movements Header=3 dances\n|Number of Movements/Sections=3 dances:\n#{{K|Db}}\n#{{K|Ab}}\n#{{K|A}}\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "3 German Dances, D.973 (Schubert, Franz)",
+   "pageid": 7821,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 3,
+   "info": "|Work Title=German Dances\n|Alternative Title=\n|Opus/Catalogue Number=D.973\n|Movements Header=3 dances\n|Number of Movements/Sections=3 dances:\n#{{K|E}}\n#{{K|E}}\n#{{K|Ab}}\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "3 Klavierstücke, D.946 (Schubert, Franz)",
+   "pageid": 3146,
+   "for": [
+    "piano"
+   ],
+   "files": 9,
+   "audio": 2,
+   "info": "|Work Title=3 Piano Pieces\n|Alternative Title=Drei Klavierstücke\n|Opus/Catalogue Number=D.946\n|Movements Header=3 pieces\n|Number of Movements/Sections=3 pieces:\n#Allegro assai\n#Allegretto\n#Allegro\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "3 Minuets, D.380 (Schubert, Franz)",
+   "pageid": 7834,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=3 Minuets, each with 2 Trios\n|Alternative Title=\n|Opus/Catalogue Number=D.380\n|Key=\n|Movements Header=3 minuets (No.3 is a fragment)\n|Number of Movements/Sections=3 minuets:\n#{{K|E}}\n#{{K|A}}\n#{{K|C}} (fragment)\n|Average Duration=7 minutes\n|Dedication=\n|Year/Date of Composition=1816\n|Year of First Publication=1897 (Nos. 1 and 2); 1956 (No. 3)\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=fragment\n|Instrumentation=piano\n|Tags=minuets ; pf"
+  },
+  {
+   "title": "3 Piano Pieces, D.459a (Schubert, Franz)",
+   "pageid": 7759,
+   "for": [
+    "piano"
+   ],
+   "files": 5,
+   "audio": 1,
+   "info": "|Work Title=3 Piano Pieces\n|Alternative Title=3 Klavierstücke; Piano Sonata in E major\n|Opus/Catalogue Number=D.459a\n|Movements Header=3 pieces\n|Number of Movements/Sections=3 pieces:<br>\n#Adagio ({{k|C}})\n#''Scherzo''. Allegro — ''Trio''. Più tardo ({{k|A}})\n#Allegro patetico ({{k|E}})\n|Average Duration=17 minutes\n|Dedication=\n|Year/Date of Composition=1816 (?)\n|Year of First Publication=1843 – [[C.A. Klemm]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=The Breitkopf & Härtel edition originally published the work along with movts. I and II of the {{LinkWork|Piano Sonata in E major|D.459|Schubert|Franz|0}}, and under the title \"5 Piano Pieces\" (''5 Klavierstücke'').\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "36 Originaltänze, D.365 (Schubert, Franz)",
+   "pageid": 7842,
+   "for": [
+    "piano"
+   ],
+   "files": 58,
+   "audio": 72,
+   "info": "|Work Title=36 Original Dances (First Waltzes), D.365 (Op.9)\n|Alternative Title=\n|Opus/Catalogue Number=D.365 (Op.9)\n|Movements Header=36 waltzes\n|Number of Movements/Sections=36 waltzes\n#Deutscher Tanz in {{K|Ab}}\n#Trauerwalzer in {{K|Ab}}\n#Deutscher Tanz in {{K|Ab}}\n#Deutscher Walzer in {{K|Ab}}\n#Deutscher Tanz in {{K|Ab}}\n#Deutscher Tanz in {{K|Ab}}\n#Deutscher Tanz in {{K|Ab}}\n#Deutscher Tanz in {{K|Ab}}\n#Deutscher Tanz in {{K|Ab}}\n#Deutscher Tanz in {{K|Ab}}\n#Deutscher Tanz in {{K|Ab}}\n#Deutscher Tanz in {{K|Ab}}\n#Deutscher Tanz in {{K|Ab}}\n#Deutscher Tanz in {{K|Db}}\n#Deutscher Tanz in {{K|Db}}\n#Deutscher Tanz in {{K|A}}\n#Deutscher Tanz in {{K|A}}\n#Deutscher Tanz in {{K|A}}\n#Deutscher Tanz in {{K|G}}\n#Deutscher Tanz in {{K|G}}\n#Deutscher Tanz in {{K|G}}\n#Deutscher Tanz in {{K|g#}}\n#Deutscher Tanz in {{K|B}}\n#Deutscher Tanz in {{K|B}}\n#Deutscher Tanz in {{K|E}}\n#Deutscher Tanz in {{K|E}}\n#Deutscher Tanz in {{K|E}}\n#Deutscher Tanz in {{K|A}}\n#Atzenbrugger Tanz in {{K|D}}\n#Atzenbrugger Tanz in {{K|A}}\n#Atzenbrugger Tanz in {{K|C}}\n#Deutscher Tanz in {{K|F}}\n#Deutscher Tanz in {{K|F}}\n#Deutscher Tanz in {{K|F}}\n#Deutscher Tanz in {{K|F}}\n#Deutscher Tanz in {{K|F}}\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "38 Waltzes, Ländler and Ecossaises, D.145 (Schubert, Franz)",
+   "pageid": 7869,
+   "for": [
+    "piano"
+   ],
+   "files": 13,
+   "audio": 0,
+   "info": "|Work Title=38 Waltzes, Landler and Ecossaises, D.145 (Op.18)\n|Alternative Title=\n|Opus/Catalogue Number=D.145; Op.18\n|Number of Movements/Sections=12 waltzes, 17 landler, 9 ecossaises\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=1823\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; landler ; ecossaises ; pf"
+  },
+  {
+   "title": "4 Fugal Sketches, D.37a (Schubert, Franz)",
+   "pageid": 878293,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=4 Fugal Sketches\n|Alternative Title=\n|Opus/Catalogue Number=D.37a (formerly D.967)\n|Key={{key|Bb}}\n|Movements Header=4 sketches\n|Number of Movements/Sections=4 sketches\n|Average Duration=5-6 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1813?\n|Year of First Publication=1986\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano(?)\n|Tags=sketches ; pf"
+  },
+  {
+   "title": "4 Impromptus, D.899 (Schubert, Franz)",
+   "pageid": 2062,
+   "for": [
+    "piano"
+   ],
+   "files": 32,
+   "audio": 17,
+   "info": "|Work Title=Vier Impromptus\n|Alternative Title=\n|Opus/Catalogue Number=D.899 ; Op.90\n|Movements Header=4 impromptus\n|Number of Movements/Sections=4 impromptus:\n{{#subitem:id=jGjMo9ik|level=1|number=1|title=Allegro molto moderato ({{Key|c}})}}\n{{#subitem:id=BzY+rni6|level=1|number=2|title=Allegro ({{Key|Eb}})}}\n{{#subitem:id=exGfWBob|level=1|number=3|title=Andante ({{Key|Gb}})}}\n{{#subitem:id=idSph5xt|level=1|number=4|title=Allegretto ({{Key|Ab}})}}\n|Incipit={{More}}<br>\n*1. <score lang=\"lilypond\" sound=\"1\">\n\\relative c'' {\n  \\tempo \"Allegro molto moderato\"\n  \\key c \\minor\n  \\numericTimeSignature\n  <g g'>2.\\fermata\\ff b8.\\pp( c16 |\n  d4-.)( d-. d-.) c8.\n  \\shape #'((0 . 0)(0 . 1)(0 . 1)(0 . 0)) ( d16 |\n  ees4. d8 c4) d8.\n  \\shape #'((0 . 0)(0 . 1)(0 . 1)(0 . -0.8)) ( c16 |\n  \\once\\stemUp b4 a8. b16 c4 d8. ees16) |\n  d2.\n}\n</score>\n\n*2. <score lang=\"lilypond\" sound=\"1\">\n\\relative c''' {\n  \\tempo \"Allegro\"\n  \\key ees \\major\n  \\time 3/4\n  \\override TupletBracket.bracket-visibility = ##t\n  \\override TupletBracket.outside-staff-priority = #0\n  \\partial 4 bes4-\\markup {\\dynamic p \\italic \"legato\" } |\n  \\tuplet 3/2 4 {\n    g8 bes aes g f ees d c bes |\n    \\omit TupletBracket\n    \\omit TupletNumber\n    aes g f ees d c bes c d |\n    ees\\< d ees e dis e f e f |\n    fis\\> eis fis g fis g aes g aes <>\\!|\n  }\n}\n</score>\n\n*3. <score lang=\"lilypond\" sound=\"1\">\n{\n  \\tempo \"Andante\"\n  \\key ges \\major\n  \\time 4/2\n  <<\n    \\relative c'' {\n  bes1( 2-. 2-.) |\n  bes1( ges) |\n    }\n    \\\\\n    \\relative c' {\n      \\tuplet 6/4 2 {\n        \\override TupletBracket.bracket-visibility = ##t\n        aes8\\rest\\pp bes des ges des bes\n        des bes des ges des bes\n        aes\\rest bes des ges des bes\n        aes\\rest bes des ges des bes |\\noBreak\n        \\omit TupletBracket\n        \\omit TupletNumber\n        aes\\rest bes ees ges des bes\n        ees bes ees ges ees bes\n        f\\rest ges bes ees bes ges\n        f\\rest ges bes ees bes ges\n      }\n    }\n  >>\n}\n</score>\n\n*4. <score lang=\"lilypond\" sound=\"1\">\n\\relative c''' {\n  \\tempo \"Allegro\"\n  \\key aes \\major\n  \\time 3/4\n  ces16-\\pp ees ces aes aes ces aes ees ees aes ees ces |\n  ces ees ces aes aes ces aes ees <g bes>8-! r |\n}\n</score>{{MoreEnd}}\n|Dedication=\n|Year/Date of Composition=1827\n|Year of First Publication=1827 (Nos.1-2)<br>1857 (Nos.3-4)\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=impromptus ; pf"
+  },
+  {
+   "title": "4 Impromptus, D.935 (Schubert, Franz)",
+   "pageid": 2063,
+   "for": [
+    "piano"
+   ],
+   "files": 26,
+   "audio": 21,
+   "info": "|Work Title=4 Impromptus\n|Alternative Title=Vier Impromptus\n|Opus/Catalogue Number=D.935 ; Op.142\n|Movements Header=4 impromptus\n|Number of Movements/Sections=4 impromptus:\n#Allegro moderato ({{K|f}})\n#Allegretto ({{K|Ab}})\n#''Theme and 5 variations'' ({{K|Bb}})\n#Allegro scherzando ({{K|f}})\n|Dedication=\n|Year/Date of Composition=1827\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=impromptus ; pf"
+  },
+  {
+   "title": "6 Ecossaises in A-flat major, D.697 (Schubert, Franz)",
+   "pageid": 7796,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=6 Ecossaises\n|Alternative Title=\n|Opus/Catalogue Number=D.697\n|Key={{Key|Ab}}\n|Movements Header=6 dances\n|Number of Movements/Sections=6 dances\n|Dedication=\n|Year/Date of Composition=1820 May\n|Year of First Publication=1823\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Related Works=Ecossaise No.5 is identical to No.6 (No.35) of {{LinkWork|38 Waltzes, Ländler and Ecossaises|D.145|Schubert|Franz|0}}\n|Tags=ecossaises ; pf"
+  },
+  {
+   "title": "6 Ecossaises, D.421 (Schubert, Franz)",
+   "pageid": 7797,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=6 Ecossaises\n|Alternative Title=\n|Opus/Catalogue Number=D.421\n|Number of Movements/Sections=6 dances\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Genre=Piano piece\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=ecossaises ; pf"
+  },
+  {
+   "title": "6 German Dances, D.820 (Schubert, Franz)",
+   "pageid": 168154,
+   "for": [
+    "piano"
+   ],
+   "files": 39,
+   "audio": 25,
+   "info": "|Work Title=6 German Dances\n|Alternative Title=\n|Opus/Catalogue Number=D.820\n|Key=\n|Number of Movements/Sections=6 dances\n#No.1 in {{K|Ab}}\n#No.2 in {{K|Ab}}\n#No.3 in {{K|Ab}}\n#No.4 in {{K|Bb}}\n#No.5 in {{K|Bb}}\n#No.6 in {{K|Bb}}\n|Average Duration=6-7 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1824\n|Year of First Publication=1931\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "6 German Dances, D.970 (Schubert, Franz)",
+   "pageid": 7822,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=6 German Dances\n|Alternative Title=\n|Opus/Catalogue Number=D.970\n|Movements Header=6 dances\n|Number of Movements/Sections=6 dances\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "6 Minuets for Winds, D.2d (Schubert, Franz)",
+   "pageid": 891758,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=6 Minuets for Winds\n|Alternative Title=\n|Opus/Catalogue Number=D.2d (formerly D.995)\n|Key=\n|Movements Header=6 minuets\n|Number of Movements/Sections=6 minuets:\n#{{K|C}}\n#{{K|F}}\n#{{K|D}}\n#{{K|C}}\n#{{K|d}}\n#{{K|Bb}}\n|Average Duration=17-18 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1811\n|Year of First Publication=1956\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=Nos.1–3 are complete; piano sketches for Nos.1-2 and 4-6\n|Instrumentation=2 oboes, 2 clarinets, 2 bassoons, 2 horns, trumpet\n|Tags=minuets ; 2ob 2cl 2bn 2hn tpt ; pf"
+  },
+  {
+   "title": "7 Easy Variations in G major, D.Anh.I/12 (Schubert, Franz)",
+   "pageid": 948630,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=7 Easy Variations in G major\n|Alternative Title=\n|Opus/Catalogue Number=D.Anh.I/12\n|Key={{key|G}}\n|Movements Header=Theme, 7 variations\n|Number of Movements/Sections=Theme, 7 variations\n|Average Duration=8 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1810?\n|Year of First Publication=1810\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=variations ; pf"
+  },
+  {
+   "title": "8 Ecossaises, D.529 (Schubert, Franz)",
+   "pageid": 7795,
+   "for": [
+    "piano"
+   ],
+   "files": 4,
+   "audio": 1,
+   "info": "|Work Title=8 Ecossaises\n|Alternative Title=\n|Opus/Catalogue Number=D.529\n|Movements Header=8 dances\n|Number of Movements/Sections=8 dances\n|Dedication=\n|Year/Date of Composition=1817\n|Year of First Publication=1871 {{EN}} Vienna: [[J.P. Gotthard]] (Nos.1-3, 6, and 8)<br>1897 {{EN}} in {{LinkWork|Franz Schubert's Werke||Schubert|Franz|0}} (Nos.4, 5, and 7; in Series XXI, Band 1)\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=The dance ordering on this page follows that found in the Deutsch catalogue.\n|Instrumentation=piano\n|Tags=ecossaises ; pf"
+  },
+  {
+   "title": "8 Ecossaises, D.977 (Schubert, Franz)",
+   "pageid": 7799,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=8 Ecossaises\n|Alternative Title=\n|Opus/Catalogue Number=D.977\n|Movements Header=8 ecossaises\n|Number of Movements/Sections=8 ecossaises\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=ecossaises ; pf"
+  },
+  {
+   "title": "8 Ländler, D.378 (Schubert, Franz)",
+   "pageid": 7835,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=Ländler\n|Alternative Title=\n|Opus/Catalogue Number=D.378\n|Number of Movements/Sections=8 Ländler\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=landler ; pf"
+  },
+  {
+   "title": "Adagio in C major, D.349 (Schubert, Franz)",
+   "pageid": 21585,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Adagio in C major\n|Alternative Title=\n|Opus/Catalogue Number=D.349\n|Key={{key|C}}\n|Movements Header=Adagio\n|Number of Movements/Sections=Adagio\n|Average Duration=4 minutes\n|Dedication=\n|Year/Date of Composition=1816 (?)\n|Year of First Publication=1897 {{EN}} ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=fragment\n|Instrumentation=piano\n|Tags=adagios ; pf"
+  },
+  {
+   "title": "Adagio in D-flat major, D.505 (Schubert, Franz)",
+   "pageid": 582079,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=Adagio in D-flat major\n|Alternative Title=\n|Opus/Catalogue Number=D.505 (Op.145 No.1)\n|Number of Movements/Sections=Adagio\n|Dedication=\n|Key={{key|Db}}\n|Year/Date of Composition=1818 (September ?)\n|Year of First Publication=1898 - ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=adagios ; pf"
+  },
+  {
+   "title": "Adagio in E major, D.612 (Schubert, Franz)",
+   "pageid": 7775,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Adagio in E major\n|Alternative Title=\n|Opus/Catalogue Number=D.612\n|Number of Movements/Sections=Adagio\n|Dedication=\n|Key={{key|E}}\n|Year/Date of Composition=1818 (April)\n|Year of First Publication=1869 - Winterthur: [[J. Rieter-Biedermann]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=Piano\n|Tags=adagios ; pf"
+  },
+  {
+   "title": "Adagio in G major, D.178 (Schubert, Franz)",
+   "pageid": 21574,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Adagio in G major\n|Alternative Title=\n|Opus/Catalogue Number=D.178\n|Number of Movements/Sections=1\n|Dedication=\n|Key={{Key|G}}\n|Year/Date of Composition=1815\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=Piano\n|Tags=adagios ; pf"
+  },
+  {
+   "title": "Album ausgewählter Vortragsstücke (Germer, Heinrich)",
+   "pageid": 742035,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Album ausgewählter Vortragsstücke\n|Alternative Title=\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=36 pieces\n|Number of Movements/Sections=36 pieces\n#{{LinkCompS|Felix|Mendelssohn}}: No.1 (Allegro non troppo) from {{NoComp|6 Kinderstücke, Op.72|Mendelssohn, Felix}}\n#{{LinkCompS|Robert|Schumann}}: No.4 (''Bittendes Kind'') from {{NoComp|Kinderszenen, Op.15|Schumann, Robert}}\n#{{LinkCompS|Robert|Schumann}}: No.6 (''Wiegenliedchen''. Nicht schnell) from {{NoComp|Albumblätter, Op.124|Schumann, Robert}}\n#{{LinkCompS|Franz|Schubert}}: ''Walzer''<br>Based on No.6 from {{NoComp|12 Valses nobles, D.969|Schubert, Franz}} and Nos.2 & 26 from {{NoComp|Valses sentimentales, D.779|Schubert, Franz}} and Deutscher Tänz No.8 from {{NoComp|18 German Dances and Ecossaises, D.783|Schubert, Franz}}\n#{{LinkCompS|Robert|Schumann}}: No.2 (''Kuriose Geschichte'') from {{NoComp|Kinderszenen, Op.15|Schumann, Robert}}\n#{{LinkCompS|Felix|Mendelssohn}}: No.2 (Andante sostenuto) from {{NoComp|6 Kinderstücke, Op.72|Mendelssohn, Felix}}\n#{{LinkCompS|Franz|Schubert}}: ''Valse sentimentale''<br>Based on No.1 from {{NoComp|Valses sentimentales, D.779|Schubert, Franz}} and Wiener Damen-Ländler No.10 from {{NoComp|Wiener Damen-Ländler und Ecossaisen, D.734|Schubert, Franz}} and No.10 from {{NoComp|12 Valses nobles, D.969|Schubert, Franz}}\n#{{LinkCompS|Robert|Schumann}}: No.6 (''Wichtige Begebenheit'') from {{NoComp|Kinderszenen, Op.15|Schumann, Robert}}\n#{{LinkCompS|Felix|Mendelssohn}}: No.4 (Andante con moto) from {{NoComp|6 Kinderstücke, Op.72|Mendelssohn, Felix}}\n#{{LinkCompS|Franz|Schubert}}: ''Walzer''<br>Based on Nos.32, 33 & 35 from {{NoComp|36 Originaltänze, D.365|Schubert, Franz}}\n#{{LinkCompS|Felix|Mendelssohn}}: No.3 (Adagio non troppo) from {{NoComp|Lieder ohne Worte, Op.30|Mendelssohn, Felix}}\n#{{LinkCompS|Frédéric|Chopin}}: No.3 (Moderato con anima) from {{NoComp|Mazurkas, Op.24|Chopin, Frédéric}}\n#{{LinkCompS|Robert|Schumann}}: No.7 (''Träumerei'') from {{NoComp|Kinderszenen, Op.15|Schumann, Robert}}\n#{{LinkCompS|Franz|Schubert}}: ''Deutscher Tanz''<br>Based on Deutsche Tänze Nos.3 & 7 from {{NoComp|18 German Dances and Ecossaises, D.783|Schubert, Franz}} and Walzer No.2 (''Atzenbrucker Deutsche No.4'') from {{NoComp|38 Waltzes, Ländler and Ecossaises, D.145|Schubert, Franz}}\n#{{LinkCompS|Felix|Mendelssohn}}: No.4 (Moderato) from {{NoComp|Lieder ohne Worte, Op.19b|Mendelssohn, Felix}}\n#{{LinkCompS|Robert|Schumann}}: No.5 (''Fantasietanz''. Sehr rasch) {{NoComp|Albumblätter, Op.124|Schumann, Robert}}\n#{{LinkCompS|Franz|Schubert}}: ''Walzer''<br>Based on Nos.8, 9 & 12 from {{NoComp|36 Originaltänze, D.365|Schubert, Franz}}\n#{{LinkCompS|John|Field}}: {{NoComp|Nocturne in B-flat major, H 37|Field, John}}\n#{{LinkCompS|Frédéric|Chopin}}: No.1 (Vivace) from {{NoComp|Mazurkas, Op.7|Chopin, Frédéric}}\n#{{LinkCompS|Felix|Mendelssohn}}: No.6 (''Venetianisches Gondellied''. Andante sostenuto) from {{NoComp|Lieder ohne Worte, Op.19b|Mendelssohn, Felix}}\n#{{LinkCompS|Franz|Schubert}}: ''Walzer''<br>Based on No.29 (''Atzenbrugger Tanz No.3'') from {{NoComp|36 Originaltänze, D.365|Schubert, Franz}} and Deutsche Tänze Nos.2, 5 from {{NoComp|18 German Dances and Ecossaises, D.783|Schubert, Franz}}\n#{{LinkCompS|Robert|Schumann}}: No.17 (''Elfe''. So rasch als möglich) from {{NoComp|Albumblätter, Op.124|Schumann, Robert}}\n#{{LinkCompS|Robert|Schumann}}: No.13 (''Mai, lieber Mai, Bald bist du wieder da!'' Nicht schnell) from {{NoComp|Album für die Jugend, Op.68|Schumann, Robert}}\n#{{LinkCompS|Franz|Schubert}}: ''Ländler''<br>Based on Wiener Damen-Ländler No.2 from {{NoComp|Wiener Damen-Ländler und Ecossaisen, D.734|Schubert, Franz}} and Ländler No.10 from {{NoComp|38 Waltzes, Ländler and Ecossaises, D.145|Schubert, Franz}}\n#{{LinkCompS|Felix|Mendelssohn}}: No.4 (Andante) from {{NoComp|Lieder ohne Worte, Op.38|Mendelssohn, Felix}}\n#{{LinkCompS|Franz|Schubert}}: ''Deutscher Tanz''<br>Based on Nos.9, 12 & 13 from {{NoComp|18 German Dances and Ecossaises, D.783|Schubert, Franz}}\n#{{LinkCompS|Robert|Schumann}}: No.5 (''Glückes genug'') from {{NoComp|Kinderszenen, Op.15|Schumann, Robert}}\n#{{LinkCompS|Frédéric|Chopin}}: No.1 (Lento) {{NoComp|Mazurkas, Op.24|Chopin, Frédéric}}\n#{{LinkCompS|John|Field}}: {{NoComp|Nocturne in E-flat major, H 24|Field, John}}\n#{{LinkCompS|Franz|Schubert}}: No.3 from {{NoComp|Moments musicaux, D.780|Schubert, Franz}}\n#{{LinkCompS|Felix|Mendelssohn}}: No.4 (Adagio) from {{NoComp|Lieder ohne Worte, Op.53|Mendelssohn, Felix}}\n#{{LinkCompS|Franz|Schubert}}: ''Valse sentimentale''<br>Based on Nos.3, 12, 13 & 14 from {{NoComp|Valses sentimentales, D.779|Schubert, Franz}}\n#{{LinkCompS|Robert|Schumann}}: No.16 (''Schlummerlied''. Allegretto) from {{NoComp|Albumblätter, Op.124|Schumann, Robert}}\n#{{LinkCompS|Franz|Schubert}}: ''Walzer''<br>Based on Nos.17, 18 & 19 from {{NoComp|36 Originaltänze, D.365|Schubert, Franz}} and Walzer Nos.6 & 10 and Ländler No.15 from {{NoComp|38 Waltzes, Ländler and Ecossaises, D.145|Schubert, Franz}}\n#{{LinkCompS|Robert|Schumann}}: No.3 (''Warum?'' Langsam und zart) from {{NoComp|Fantasiestücke, Op.12|Schumann, Robert}}\n#{{LinkCompS|Franz|Schubert}}: ''Walzer''<br>Based on Nos.1, 3, 5, 6, 7, 14 & 15 from {{NoComp|36 Originaltänze, D.365|Schubert, Franz}}\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1890 - Leipzig: C.F. Leede\n|Librettist=  \n|Page Type=Collection\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "Allegretto in C major, D.346 (Schubert, Franz)",
+   "pageid": 21576,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Allegretto in C major\n|Alternative Title=\n|Opus/Catalogue Number=D.346\n|Key={{key|C}}\n|Movements Header=Allegretto\n|Number of Movements/Sections=Allegretto\n|Average Duration=5-6 minutes\n|Dedication=\n|Year/Date of Composition=1816 (?)\n|Year of First Publication=1897 {{EN}} ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=allegrettos ; pf"
+  },
+  {
+   "title": "Allegretto in C minor, D.900 (Schubert, Franz)",
+   "pageid": 21683,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Allegretto\n|Alternative Title=\n|Opus/Catalogue Number=D.900\n|Number of Movements/Sections=Allegretto\n|Key={{Key|c}}\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=allegrettos ; pf"
+  },
+  {
+   "title": "Allegretto in C minor, D.915 (Schubert, Franz)",
+   "pageid": 7743,
+   "for": [
+    "piano"
+   ],
+   "files": 5,
+   "audio": 0,
+   "info": "|Work Title=Allegretto in C minor\n|Alternative Title=\n|Opus/Catalogue Number=D.915\n|Movements Header=Allegretto\n|Number of Movements/Sections=Allegretto\n|Key={{Key|c}}\n|Dedication=\n|Year/Date of Composition=1828\n|Year of First Publication=1870\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=allegrettos ; pf"
+  },
+  {
+   "title": "Allegro and Minuet, D.Anh.I/11 (Schubert, Franz)",
+   "pageid": 926670,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Allegro and Minuet\n|Alternative Title=\n|Opus/Catalogue Number=D.Anh.I/11\n|Key=\n|Movements Header=2 movements\n|Number of Movements/Sections=2 movements\n#Allegro ({{K|G}})\n#Menuetto ({{K|C}})\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1813\n|Year of First Publication=1967\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=fragment\n|Instrumentation=piano\n|Tags=allegros ; minuets ; pf"
+  },
+  {
+   "title": "Allegro and Scherzo, D.570 (Schubert, Franz)",
+   "pageid": 21594,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Allegro in F-sharp minor and Scherzo in D major\n|Alternative Title=\n|Opus/Catalogue Number=D.570\n|Movements Header=2 movements\n|Number of Movements/Sections=2 movements\n#Allegro ({{k|f#}} - fragment)\n#''Scherzo''. Allegro vivace — ''Trio'' ({{k|D}})\n|Average Duration=8 minutes\n|Dedication=\n|Year/Date of Composition= 1817 July (?)\n|Year of First Publication= 1897 {{EN}} ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=allegros ; scherzos ; pf"
+  },
+  {
+   "title": "Allegro moderato in C major, D.347 (Schubert, Franz)",
+   "pageid": 21578,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Allegro Moderato, D.347\n|Key={{key|C}}\n|Alternative Title=\n|Opus/Catalogue Number=D.347\n|Number of Movements/Sections=Allegro moderato (fragment)\n|Dedication=\n|Year/Date of Composition=1813 (?)\n|Year of First Publication=1897 {{EN}} ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=allegros ; pf"
+  },
+  {
+   "title": "Andante in C major, D.29 (Schubert, Franz)",
+   "pageid": 7776,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=Andante in {{K|C}}\n|Alternative Title=\n|Opus/Catalogue Number=D.29\n|Number of Movements/Sections=Andante\n|Key={{Key|C}}\n|Dedication=\n|Year/Date of Composition=1812-09-09\n|Year of First Publication=1888\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Related Works=\n|Instrumentation=piano\n|Tags=andantes ; pf"
+  },
+  {
+   "title": "Andantino in C major, D.348 (Schubert, Franz)",
+   "pageid": 21581,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Andantino in C major\n|Alternative Title=\n|Opus/Catalogue Number=D.348\n|Key={{key|C}}\n|Movements Header=Andantino\n|Number of Movements/Sections=Andantino\n|Average Duration=3 minutes\n|Dedication=\n|Year/Date of Composition=1816 (?) \n|Year of First Publication=1897 {{EN}} ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=fragment\n|Instrumentation=piano\n|Tags=andantinos ; pf"
+  },
+  {
+   "title": "Anthology of German Piano Music (Moszkowski, Moritz)",
+   "pageid": 566703,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Anthology of German Piano Music\n|Alternative Title=\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=2 volumes\n|Number of Movements/Sections=2 volumes:\n* Volume 1: Early Composers\n:{{LinkName|Johann Jacob|Froberger}}, Toccata in d\n:{{LinkName|Johann Jacob|Froberger}}, Capriccio in C\n:{{LinkName|Johann|Pachelbel}}, Fugue in C\n:{{LinkName|Johann|Pachelbel}}, Variations upon the Choral \"Ach, was soll ich Sünder machen\"\n:{{LinkName|Johann|Kuhnau}}, Sonata in D\n:{{LinkName|Johann|Mattheson}}, Gigue in d\n:{{LinkName|Gottlieb|Muffat}}, Minuet in B-flat\n:{{LinkName|George Frideric|Handel}}, Allemande in E from the 5th Suite\n:{{LinkName|George Frideric|Handel}}, Capriccio in G\n:{{LinkName|George Frideric|Handel}}, Fugue in e from the 4th Suite\n:{{LinkName|Johann Sebastian|Bach}}, Toccata in c\n:{{LinkName|Johann Sebastian|Bach}}, Gigue in g from the 3rd English Suite\n:{{LinkName|Johann Sebastian|Bach}}, Prelude and Fugue in C sharp from the Welltempered Clavichord\n:{{LinkName|Johann Sebastian|Bach}}, Prelude in e from the 5th English Suite\n:{{LinkName|Johann Sebastian|Bach}}, Allemande in B flat from the First Partita\n:{{LinkName|Karl Heinrich|Graun}}, Gigue in B flat\n:{{LinkName|Wilhelm Friedemann|Bach}}, Fugue in c\n:{{LinkName|Johann Ludwig|Krebs}}, Fugue in G, Krebs-WV 847\n:{{LinkName|Carl Philipp Emanuel|Bach}}, Allegro in A\n:{{LinkName|Carl Philipp Emanuel|Bach}}, Allegro in a\n:{{LinkName|Johann Philipp|Kirnberger}}, Allegro in E, EngK 14\n:{{LinkName|Joseph|Haydn}}, Fantasia in C\n:{{LinkName|Johann Wilhelm|Hässler}}, Grande Gigue in D\n:{{LinkName|Wolfgang Amadeus|Mozart}}, Fantasia No. 2 in c\n:{{LinkName|Wolfgang Amadeus|Mozart}}, Rondo in a\n:{{LinkName|Wolfgang Amadeus|Mozart}}, Minuet in D\n:{{LinkName|Wolfgang Amadeus|Mozart}}, Gigue in G\n:{{LinkName|Ludwig van|Beethoven}}, 32 Variations in c\n:{{LinkName|Ludwig van|Beethoven}}, Rondo a Capriccio, Op. 129\n:{{LinkName|Ludwig van|Beethoven}}, Andante in F\n\n* Volume 2: Modern Composers\n:{{LinkName|Johann Nepomuk|Hummel}}, Rondo in E flat, Op. 11\n:{{LinkName|Carl Maria von|Weber}}, Momento Capricciosa, Op. 12\n:{{LinkName|Carl Maria von|Weber}}, Rondo Brilliante in E-flat, Op. 62\n:{{LinkName|Franz|Schubert}}, Moment Musical, Op. 94, No. 4\n:{{LinkName|Franz|Schubert}}, Improptu in f, Op. 142, No. 1\n:{{LinkName|Felix|Mendelssohn}}, Finale of the Fantasia in f sharp, Op. 28\n:{{LinkName|Felix|Mendelssohn}}, Prelude and Fugue in e\n:{{LinkName|Robert|Schumann}}, Des Abends, Op. 12, No. 1\n:{{LinkName|Robert|Schumann}}, Novellette in f sharp, Op. 21, No. 8\n:{{LinkName|Sigismond|Thalberg}}, Thème and Etude in a, Op. 45\n:{{LinkName|Adolf von|Henselt}}, Frühlingslied, Op. 15\n:{{LinkName|Stephen|Heller}}, Prologue, Op. 86, No. 1\n:{{LinkName|Joachim|Raff}}, Rigodon, Op. 204\n:{{LinkName|Johannes|Brahms}}, Capriccio, Op. 76, No. 1\n:{{LinkName|Johannes|Brahms}}, Capriccio, Op. 76, No. 2 \n:{{LinkName|Adolf|Jensen}}, Dryade, Op. 43, No. 4\n:{{LinkName|Adolf|Jensen}},  Galatea (from \"Erotikon\"), Op. 44, No. 3\n:{{LinkName|Josef Gabriel|Rheinberger}}, Fugue in g, Op. 5, No. 3\n:{{LinkName|Philipp|Scharwenka}}, Albumblatt, Op. 27, No. 3\n:{{LinkName|Xaver|Scharwenka}}, Novellette, Op. 22, No. 1\n:{{LinkName|Moritz|Moszkowski}}, Barcarole, Op. 15, No. 6\n:{{LinkName|Richard|Strauss}}, Auf stillem Waldespfad\n:{{LinkName|Max|Reger}}, Prelude and Fugue in F, Op. 13, No. 6\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1914 - Boston: Ditson\n|Librettist=  \n|Templates=<nowiki>{{</nowiki>[[Template:MLAnthol|MLAnthol]]<nowiki>|Vol|1914|Plate|page-range (opt)}}</nowiki>\n|Language=\n|Piece Style=Romantic\n|Page Type=Collection\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "Antologia pastorale (Various)",
+   "pageid": 462402,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Antologia pastorale\n|Alternative Title=Raccolta di 60 composizioni pastorali per armonio o per pianoforte adatte pelle feste del S. Natale in Chiesa ed in famiglia\n|Opus/Catalogue Number=\n|Key=\n|Number of Movements/Sections=60 pieces in 3 volumes\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1902\n|Librettist=  \n|Language=\n|Piece Style=Romantic\n|Page Type=Collection\n|Instrumentation=harmonium or piano\n|Tags=pieces ; harm ; pf"
+  },
+  {
+   "title": "Ballet-Album (Kleinmichel, Richard)",
+   "pageid": 482111,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Ballet-Album\n|Alternative Title=\n|Opus/Catalogue Number=\n|Key=\n|Number of Movements/Sections=14 pieces\n:{{LinkCompS|Jean-Baptiste|Lully}}: Gavotte aus der Oper Atys \n:{{LinkCompS|Jean-Philippe|Rameau}}: Rigaudon aus der Oper Dardanus \n:{{LinkCompS|Christoph Willibald|Gluck}}: Gavotte aus der Oper Iphigenie in Aulis\n:{{LinkCompS|Christoph Willibald|Gluck}}: Riegen seliger Geister aus der Oper Orpheus\n:{{LinkCompS|Wolfgang Amadeus|Mozart}}: Sclaventanz aus der Oper Die Zauberflöte\n:{{LinkCompS|Vincenzo|Righini}}: Ballet aus des Oper Tigrane \n:{{LinkCompS|Ludwig van|Beethoven}}: Terzett der Grotesken aus dem Ballet Die Geschöpfe des Prometheus\n:{{LinkCompS|Franz|Schubert}}: Ballet aus dem Drama Rosamunde\n:{{LinkCompS|Carl Maria von|Weber}}: Chor und Ballet aus der Oper Oberon\n:{{LinkCompS|Carl Maria von|Weber}}: Ballet aus dem Schauspiel Preciosa \n:{{LinkCompS|Felix|Mendelssohn}}: Rüpeltanz aus Ein Sommernachtstraum\n:{{LinkCompS|Louis|Spohr}}: Waffentanz aus der Oper Jessonda\n:{{LinkCompS|Louis|Spohr}}: Polonaise aus der Oper Faust\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Page Type=Collection\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=ballets ; dances ; pf"
+  },
+  {
+   "title": "Baroque and Classical Pieces for the Piano (Herring, Francis)",
+   "pageid": 479268,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 6,
+   "audio": 0,
+   "info": "|Work Title=Classical Arranged and Original Pieces for the Piano\n|Alternative Title=\n|Opus/Catalogue Number=\n|Key=\n|Number of Movements/Sections=5 sections\n#{{LinkCompS|Franz|Schubert}}: 22 Selected Songs (arr. Richard Metzdorff)\n#{{LinkCompS|Joseph|Haydn}}: Die sieben Worte des Erlösers am Kreuze (arr. Louis Köhler)\n#{{LinkCompS|Arcangelo|Corelli}}: Morceaux célèbres (arr. François Behr)\n#{{LinkCompS|Friedrich|Kuhlau}}: Piano Sonatinas, Vol.2 (ed. Louis Köhler)\n#{{LinkCompS|Various}}: Menuets célèbres (arr. E. Tavan, Louis Winkler)\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=\n|Page Type=Collection\n|Librettist=\n|Language=\n|Extra Information= This volume once belonged to the uploader's great-uncle, William Gunner, an amateur musician who lived for some time in Tiverton (Devon), like Francis Herring. The carefully handwritten additions are probably Herring's. The front cardboard covers were sewn together by the uploader's mother, but her son, the present uploader, was unfortunately less constructive when he thought fit (at a young thoughtless age) to scribble his name across the front cover. Partial information on F. Herring is to be found in the newspaper clipping W. Gunner added after the former owner's demise, but as this 'gazette' was/is no music magazine, it allowed other hobbies to intrude. And besides, there exists a discrepancy between the age of 90 presented in the newspaper which would put a date of birth of 1852 whereas MusicSack specifies 1862 which appears to be more in tune with F. Herring's biography. The journalist obviously had not marshalled his facts completely, a situation W.Gunner could not or did not care to correct either, with another pencilled annotation. The latter passed away well over 90 at Broadlands Retirement Home in Minehead (Somerset).\nKöhler's arrangement of Haydn's '7 Worte' is based on the orchestral or choral version, as is made clear by A.Herring whose pencilled annotations do not come out well when scanned. Thus, we have a footnote for n°4 p.11, referring to the last stave but one, 4th measure which is marked with a (2) : \"Qtt. (=Quartet) DC. with an added bar/if played with Qtt. the strings omit added bar (1) and proceed to (2)\". On page 12 the closing measure is annotated thus : \"In Qtt. the strings finish here & omit next page (not int Qtt.)\". A similar remark is attached to n°5 p.15 stave 4, measure 3 : \"Qtt. has D.C.\" and on page 20, end of stave 1 : \"Qtt. has DC\"\n\n|Piece Style=Classical\n|Instrumentation=Piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "Bunte Bühne (Batka, Richard)",
+   "pageid": 395522,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=Bunte Bühne\n|Alternative Title=fröhliche Tonkunst \n|Opus/Catalogue Number=\n|Key=\n|Movements Header=40 pieces\n|Number of Movements/Sections=40 pieces in 3 volumes\n;*1te folge.\n:1. {{LinkCompS|Hugo|Wolf}}: Epiphanias\n:2. {{LinkCompS|Ludwig van|Beethoven}}: Der Kuss, Op.128\n:3. {{LinkCompS|Carl|Loewe}}: Kleiner Haushalt\n:4. {{LinkCompS|Martin|Plüddemann}}: Phidile\n:5. {{LinkCompS|Carl Maria von|Weber}}: Reigen\n:6. {{LinkCompS|Wolfgang Amadeus|Mozart}}: Das gestörte Ständchen\n:7. {{LinkCompS|Ludwig van|Beethoven}}: Es war einmail ein König\n:8. {{LinkCompS|Orlande de|Lassus}}: Landknechtständchen\n;*2te folge.\n:9. Altdeutsches Wanderlied (arr. {{LinkCompS|Leo|Blech}})\n:10. {{LinkCompS|Ludwig van|Beethoven}}: Mit Mädeln sich vertragen\n:11. {{LinkCompS|Johann Hermann|Schein}}: Holla, gut G'sell\n:12. {{LinkCompS|Felix|Mendelssohn}}: Jagdlied (Des Knaben Wunderhorn)\n:13. {{LinkCompS|Hans|Sommer}}: Der arme Taugenichts, Op.27\n:14. {{LinkCompS|Carl Maria von|Weber}}: Ich sah ein Röschen am Wege stehn, Op.15 No.5\n:15. {{LinkCompS|Ludwig van|Beethoven}}: Die schöne Schusterin\n:16. {{LinkCompS|Orlande de|Lassus}}: Das Echo\n:17. {{LinkCompS|Carl Maria von|Weber}}: Mein Schatzerl is hübsch, Op.64 No.1\n:18. {{CSWnt|Christian|Pezold|Minuet in G major, BWV Anh.114}} (attr. J.S. Bach)\n:19. {{LinkCompS|Christoph Willibald|Gluck}}: Minuet in D major\n:20. {{LinkCompS|Joseph|Haydn}}: Minuet in C major, Hob.IX:27\n:21. {{LinkCompS|Wolfgang Amadeus|Mozart}}: Minuet in F major (from Le Nozze di Figaro, Act III)\n:22. {{LinkCompS|Ludwig van|Beethoven}}: Minuet & Trio in E-flat (Minuet from Op.49, No.2)\n:23. {{LinkCompS|Carl|Loewe}}: Graf Eberstein\n;*3te folge.\n:24. {{LinkCompS|Wolfgang Amadeus|Mozart}}: Mädchen, ich komm mit der Zither\n:25. {{LinkCompS|Ludwig van|Beethoven}}: Marmotte\n:26. {{LinkCompS|Carl Maria von|Weber}}: Quodlibet (\"So geht es in Schnützelputz-Häusel\")\n:27. {{LinkCompS|Carl|Loewe}}: Der Zahn\n:28. {{CSWnt|Joseph|Haydn|Das böse Weib, Hob.XXVIIb:23}}\n:29. {{LinkCompS|Robert|Schumann}}: Die Kartnerlegerin\n:30. {{LinkCompS|Felix|Mendelssohn}}: Abschied vom Wald\n:31. {{LinkCompS|Leo|Blech}}: Die Waldprinzessen\n:32. {{LinkCompS|Robert|Schumann}}: Abendlied, Op.85 No.12 (arr. cello and piano)\n:33. {{LinkCompS|Carl Maria von|Weber}}: Abschied\n:34. {{LinkCompS|Franz|Schubert}}: Die Advokaten\n:35. {{LinkCompS|Wolfgang Amadeus|Mozart}}: Die Alte\n:36. {{LinkCompS|Wolfgang Amadeus|Mozart}}: Der Zauberer\n:37. Der Krähwinkler Landsturm\n:38. Altfranzösisches Jagdstück\n:39. {{LinkCompS|Franz|Schubert}}: Marsch, Op.51 No.1\n:40. {{LinkCompS|Franz|Schubert}}: Der Goldschmiedgesell\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1902\n|Page Type=Collection\n|Librettist={{Sb}}\n:{{LinkLib|Johann Wolfgang von|Goethe}} (1, 7, 10, 25, 40)<br>{{LinkLib|Friedrich|Rückert}} (3)<br>{{LinkLib|Matthias|Claudius}} (4, 27)<br>{{LinkLib|Johann Heinrich|Voss}} (5)<br>{{LinkLib|Emanuel|Geibel}} (13)<br>{{LinkLib|Karl Friedrich|Müchler}} (14)<br>{{LinkLib|Ludwig|Uhland}} (23)<br>{{LinkLib|Gotthold Ephraim|Lessing}} (28)<br>{{LinkLib|Adelbert von|Chamisso}} (29)<br>{{LinkLib|Joseph von|Eichendorff}} (30)<br>{{LinkLib|Friedrich von|Hagedorn}} (35)<br>{{LinkLib|Christian Felix|Weisse}} (36)\n|Language=German \n|Piece Style=Romantic\n|External Links=\n|Instrumentation=Voices, piano\n|Tags=songs ; v pf ; 3vv pf ; mch ; ch ; pf ; vc pf ; pf4h ; de"
+  },
+  {
+   "title": "Children's Piano Pieces the Whole World Plays (Wier, Albert Ernest)",
+   "pageid": 980180,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Children's Piano Pieces the Whole World Plays\n|Alternative Title=A collection of more than one hundred and fifty tuneful piano pieces for juvenile players, including standard teaching and recreation pieces, and in addition a considerable number of new compositions\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=150 (or more)\n|Number of Movements/Sections=150 (or more)\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1920 {{EN}} New York: [[Appleton|D. Appleton & Co.]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Page Type=Collection\n|Instrumentation=piano (some original, and some arranged)\n|Tags=pieces ; pf ; pf (arr)"
+  },
+  {
+   "title": "Choix de mélodies de Schubert (Trojelli, Angelino)",
+   "pageid": 672745,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Choix de mélodies de Schubert\n|Alternative Title=Transcriptions faciles pour piano\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=12 transcriptions\n|Number of Movements/Sections=12 transcriptions\n#Le pêcheur ({{LinkWork|Der Fischer|D.225|Schubert|Franz|0}})\n#L'adieu ({{LinkWork|Adieu!||Weyrauch|August Heinrich von}})\n#La jeune mère ({{LinkWork|Wiegenlied|D.498|Schubert|Franz|0}})\n#Ave Maria ({{LinkWork|Ave Maria|D.839|Schubert|Franz|0}})\n#Le joueur de vielle (''Der Leiermann'' from {{LinkWork|Winterreise|D.911|Schubert|Franz|0}})\n#Le chausseur des Alpes ({{LinkWork|Der Alpenjäger|D.524|Schubert|Franz|0}})\n#L'illusion (''Täuschung'' from {{LinkWork|Winterreise|D.911|Schubert|Franz|0}})\n#L'éloge des larmes ({{LinkWork|Lob der Tränen|D.711|Schubert|Franz|0}})\n#La sérénade (''Ständchen'' from {{LinkWork|Schwanengesang|D.957|Schubert|Franz|0}})\n#La truite ({{LinkWork|Die Forelle|D.550|Schubert|Franz|0}})\n#La fille du pêcheur (''Das Fischermädchen'' from {{LinkWork|Schwanengesang|D.957|Schubert|Franz|0}})\n#Le départ (''Abschied'' from {{LinkWork|Schwanengesang|D.957|Schubert|Franz|0}})\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1880\n|Copyright Info={{BdlF|:<br>2e série, 69e année, Nº 18, 1 Mai 1880, p.238, reg.1616}}\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=pieces ; pf\n|Page Type=Collection\n|Extra Information=Based on {{LinkCompS|Franz|Schubert}} songs, save for ''L'adieu'' (No.2) which is based on a work now known to be by {{LinkCompS|August Heinrich von|Weyrauch}}."
+  },
+  {
+   "title": "Classic Keyboard Music (Sauer, Emil von)",
+   "pageid": 723756,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Classic Keyboard Music \n|Alternative Title=An Album of Piano Solos by Great Masters\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=40 pieces\n|Number of Movements/Sections=40 pieces\n#{{LinkCompS|François|Couperin}}: Fanfare\n#{{LinkCompS|Jean-Philippe|Rameau}}: Rondeau a musette\n#{{LinkCompS|Louis-Claude|Daquin}}: Cuckoo\n#{{LinkCompS|Domenico|Scarlatti}}: Sonata pastorale L.413\n#{{LinkCompS|Domenico|Scarlatti}}:Sonata l.388\n#{{LinkCompS|Johann Sebastian|Bach}}: Passpied from 5th English suite\n#{{LinkCompS|Johann Sebastian|Bach}}: Prelude No.1 from '6 Preludes for beginners'\n#{{LinkCompS|Johann Sebastian|Bach}}: Gavotte from 5th French suite\n#{{LinkCompS|Johann Sebastian|Bach}}: Andante from Sonata No.3 for unaccompanied violin\n#{{LinkCompS|George Frideric|Handel}}: Harmonious Blacksmith from 5th suite\n#{{LinkCompS|Wilhelm Friedemann|Bach}}: Spring\n#{{LinkCompS|Carl Philipp Emanuel|Bach}}: Solfeggietto\n#{{LinkCompS|Christoph Willibald|Gluck}}: Gavotte from ' Alceste'\n#{{LinkCompS|Joseph|Haydn}}: {{LinkWork|Variations in F minor, Hob.XVII:6||Haydn|Joseph|0}}\n#{{LinkCompS|Wolfgang Amadeus|Mozart}}: Rondo alla Turca\n#{{LinkCompS|Wolfgang Amadeus|Mozart}}: Sonata in C major K.545\n#{{LinkCompS|Wolfgang Amadeus|Mozart}}: Fantasy in D minor K.397\n#{{LinkCompS|Ludwig van|Beethoven}}: Piano Sonata, Op.49 No.2\n#{{LinkCompS|Ludwig van|Beethoven}}: Album leaf (for Elisa)\n#{{LinkCompS|Ludwig van|Beethoven}}: Bagatelle, Op.119 No.11\n#{{LinkCompS|Ludwig van|Beethoven}}: 6 Eccosaises\n#{{LinkCompS|Franz|Schubert}}: Moment musical in F minor\n#{{LinkCompS|Franz|Schubert}}: Celebrated minuet Op. 78\n#{{LinkCompS|Franz|Schubert}}: Scherzo in B-flat major\n#{{LinkCompS|Franz|Schubert}}: German Dances, Op.33\n#{{LinkCompS|Franz|Schubert}}: Sentimental Waltzes, Op.50\n#{{LinkCompS|Franz|Schubert}}: Waltzes, Op.9\n#{{LinkCompS|Franz|Schubert}}: Noble Waltzes, Op.47\n#{{LinkCompS|Robert|Schumann}}: Entrance from 'Forest scenes'\n#{{LinkCompS|Robert|Schumann}}: Dreaming from 'Scenes from childhood'\n#{{LinkCompS|Robert|Schumann}}: Why? from 'Fantasy pieces'\n#{{LinkCompS|Robert|Schumann}}: Lullaby from 'Album leaves' Op. 124 no 16\n#{{LinkCompS|Felix|Mendelssohn}}: Spring song from 'Songs without words' Book 5\n#{{LinkCompS|Felix|Mendelssohn}}: Barcarole from 'Songs without words' Book 2\n#{{LinkCompS|Frédéric|Chopin}}: Prelude, Op.28 No.7\n#{{LinkCompS|Frédéric|Chopin}}: Prelude, Op.28 No.15\n#{{LinkCompS|Frédéric|Chopin}}: Mazurka, Op.7 No.1\n#{{LinkCompS|Frédéric|Chopin}}: Waltz, Op.69 No.1\n#{{LinkCompS|Frédéric|Chopin}}: Funeral march from Sonata in B-flat minor, Op.45\n#{{LinkCompS|Frédéric|Chopin}}: Nocturne, Op.37 No.1\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Page Type=Collection\n|Piece Style=Classical\n|Instrumentation=piano\n|Tags=pieces ; pf ; pf (arr)"
+  },
+  {
+   "title": "Cotillon, D.976 (Schubert, Franz)",
+   "pageid": 7801,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 1,
+   "info": "|Work Title=Cotillon\n|Alternative Title=\n|Opus/Catalogue Number=D.976\n|Number of Movements/Sections=\n|Dedication=\n|Key={{Key|Eb}}\n|Year/Date of Composition=1825 ca.\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{AMG|cotillon-for-piano-in-e-flat-d-976-mc0002370947}}\n|Instrumentation=Piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "Counterpoint Exercises, D.16 (Schubert, Franz)",
+   "pageid": 881092,
+   "for": [
+    "keyboard"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Counterpoint Exercises\n|Alternative Title=\n|Opus/Catalogue Number=D.16\n|Key=\n|Movements Header=7 exercises\n|Number of Movements/Sections=7 exercises\n|Average Duration=2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1827-28?\n|Year of First Publication=1940\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=sketches\n|Instrumentation=keyboard notation\n|Tags=exercises ; music theory ; kbd"
+  },
+  {
+   "title": "Die Schule des Octavenspiels, Op.48 (Kullak, Theodor)",
+   "pageid": 9867,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 8,
+   "audio": 0,
+   "info": "|Work Title=Die Schule des Octavenspiels\n|Alternative Title=Die Schule des Oktavenspiels ; Neue vervasserte und vermehrte Ausgabe<br>The School of Octave Playing<br>Méthode du jeu d'octaves\n|Opus/Catalogue Number=\n|Movements Header=3 parts\n|Number of Movements/Sections=3 parts\n*Abt.1. Vorschule <small>(Preparatory Exercises; Méthode préparatoire)</small>\n*:Uebungen zur Ausbildung der Hände für das Octavenspiel\n*Abt.2. 7 Oktaven-Etüden <small>(7 Octave Studies; 7 Études d'octaves / 7 Exercices et études)</small>\n*# Allegro ({{K|F}})\n*# Allegro scherzando ({{K|Ab}})\n*# Andante legato assai ({{K|F}})\n*# Allegro con fuoco ({{K|C}})\n*# Allegro grazioso ({{K|Eb}})\n*# Allegro maestoso ({{K|E}})\n*# Allegro ({{K|Eb}})\n*Abt.3. 60 Beispiele. Passagen, Uebungen und Octaven-Beispiele <small>(Passages, Exercises and Octave-examples; Passages, exercices, exemples)</small> aus den Werken von Chopin, Döhler, Dreyschock, Henselt, Hummel, Kullak, Liszt, Meyer, Prudent, Heller, Mendelssohn-Bartholdy, Taubert, Thalberg, Litolff, Beethoven, C.M. v. Weber\n{{More}}\n:# {{LinkCompS|Johann Sebastian|Bach}}–{{LinkCompS|Carl|Tausig}}: ''[https://imslp.org/wiki/Special:ReverseLookup/391105 Toccata in D minor]''\n:# Bach–{{LinkCompS|Franz|Liszt}}: {{LinkWork|Preludes and Fugues by J.S. Bach|S.462|Liszt|Franz|0}}/1b\n:# {{LinkCompS|Ludwig van|Beethoven}}: {{LinkWork|Piano Sonata No.22|Op.54|Beethoven|Ludwig van|0}} (I)\n:# Beethoven: {{LinkWork|Piano Sonata No.32|Op.111|Beethoven|Ludwig van|0}} (I)\n:# Beethoven: {{LinkWork|Andante favori|WoO 57|Beethoven|Ludwig van|0}}\n:# Beethoven: {{LinkWork|Piano Concerto No.5|Op.73|Beethoven|Ludwig van|0}} (I)\n:# Beethoven: {{LinkWork|24 Variations on 'Venni Amore'|WoO 65|Beethoven|Ludwig van|0}} (Var.19)\n:# {{LinkCompS|Franz|Bendel}}: Grande fantaisie sur des motifs de 'Faust', Op.17\n:# {{LinkCompS|Frédéric|Chopin}}: {{LinkWork|Ballade No.1|Op.23|Chopin|Frédéric|0}}\n:# Chopin: {{LinkWork|Piano Sonata No.2|Op.35|Chopin|Frédéric|0}} (II)\n:# Chopin: {{LinkWork|Andante spianato et Grande polonaise brillante|Op.22|Chopin|Frédéric|0}}\n:# Chopin: {{LinkWork|Preludes|Op.28|Chopin|Frédéric|0}} No.22\n:# Chopin: {{LinkWork|Polonaise in F-sharp minor|Op.44|Chopin|Frédéric|0}}\n:# Chopin: {{LinkWork|Barcarolle|Op.60|Chopin|Frédéric|0}}\n:# Chopin: {{LinkWork|Scherzo No.3|Op.39|Chopin|Frédéric|0}}\n:# Chopin: {{LinkWork|Polonaise in A-flat major|Op.53|Chopin|Frédéric|0}}\n:# {{LinkCompS|Alexander|Dreyschock}}: ''Rondo militaire No.2'', Op.20\n:# {{LinkCompS|Theodor|Döhler}}: {{LinkWork|Tarantelle|Op.39|Döhler|Theodor|0}}\n:# {{LinkCompS|Edvard|Grieg}}: {{LinkWork|Piano Concerto|Op.16|Grieg|Edvard|0}} (III)\n:# Grieg: Piano Concerto, Op.16 (I)\n:# {{LinkCompS|Stephen|Heller}}: {{LinkWork|2 Polonaises|Op.132|Heller|Stephen|0}} No.2\n:# {{LinkCompS|Johann Nepomuk|Hummel}}: {{LinkWork|Fantasie in E-flat major|Op.18|Hummel|Johann Nepomuk|0}}\n:# {{LinkCompS|Theodor|Kullak}}: {{LinkWork|Lieder aus alter Zeit|Op.111|Kullak|Theodor|0}} No.4\n:# Kullak: {{LinkWork|2 Études de concert|Op.2|Kullak|Theodor|0}} No.2\n:# Liszt: {{LinkWork|Années de pèlerinage II|S.161|Liszt|Franz|0}}/7\n:# Liszt: {{LinkWork|Paraphrase de concert sur 'Rigoletto'|S.434|Liszt|Franz|0}}\n:# Liszt: {{LinkWork|Hungarian Rhapsody No.10|S.244/10|Liszt|Franz|0}}\n:# Liszt: {{LinkWork|Années de pèlerinage I|S.160|Liszt|Franz|0}}/6\n:# Liszt: Années de pèlerinage I, S.160/5\n:# Liszt: Années de pèlerinage I, S.160/5\n:# Liszt: {{LinkWork|Piano Concerto No.2|S.125|Liszt|Franz|0}}\n:# Liszt: {{LinkWork|Hungarian Rhapsody No.9|S.244/9|Liszt|Franz|0}}\n:# {{LinkCompS|Felix|Mendelssohn}}: {{LinkWork|Piano Concerto No.1|Op.25|Mendelssohn|Felix|0}} (III)\n:# Mendelssohn: {{LinkWork|6 Preludes and Fugues|Op.35|Mendelssohn|Felix|0}} No.1b\n:# Mendelssohn: {{LinkWork|Fantasie|Op.28|Mendelssohn|Felix|0}} (III)\n:# Mendelssohn: {{LinkWork|Rondo capriccioso|Op.14|Mendelssohn|Felix|0}}\n:# {{LinkCompS|Moritz|Moszkowski}}: {{LinkWork|Piano Concerto|Op.59|Moszkowski|Moritz|0}} (I)\n:# Moszkowski: Piano Concerto, Op.59 (I)\n:# {{LinkCompS|Joachim|Raff}}: {{LinkWork|Suite No.4 for Piano|Op.91|Raff|Joachim|0}} (IV)\n:# Raff: {{LinkWork|Cachoucha-Caprice|Op.79|Raff|Joachim|0}}\n:# {{LinkCompS|Anton|Rubinstein}}: {{LinkWork|Piano Concerto No.1|Op.25|Rubinstein|Anton|0}} (I)\n:# Rubinstein: Piano Concerto No.1, Op.25 (I)\n:# Rubinstein: Piano Concerto No.1, Op.25 (III)\n:# Rubinstein: {{LinkWork|6 Etudes|Op.23|Rubinstein|Anton|0}} No.2\n:# {{LinkCompS|Franz|Schubert}}: {{LinkWork|Fantasie in C major|D.760|Schubert|Franz|0}} (IV)\n:# {{LinkCompS|Robert|Schumann}}: {{LinkWork|Symphonic Etudes|Op.13|Schumann|Robert|0}} No.6/7\n:# Schumann: Symphonic Etudes, Op.13 No.9\n:# Schumann: {{LinkWork|Piano Sonata No.1|Op.11|Schumann|Robert|0}} (IV)\n:# Schumann: {{LinkWork|8 Novelletten|Op.21|Schumann|Robert|0}} No.8\n:# Schumann: {{LinkWork|Toccata|Op.7|Schumann|Robert|0}}\n:# Schumann: {{LinkWork|Piano Concerto|Op.54|Schumann|Robert|0}} (III)\n:# Schumann: {{LinkWork|Carnaval|Op.9|Schumann|Robert|0}} No.14\n:# Schubert–Tausig: ''[https://imslp.org/wiki/Special:ReverseLookup/267862 Militärmarsch]''\n:# Tausig: {{LinkWork|Réminiscences de 'Halka'|Op.2|Tausig|Carl|0}}\n:# {{LinkCompS|Sigismond|Thalberg}}: {{LinkWork|Fantasia on Rossini's 'Moses'|Op.33|Thalberg|Sigismond|0}}\n:# Thalberg: {{LinkWork|Fantasia on Rossini's 'Semiramide'|Op.51|Thalberg|Sigismond|0}}\n:# Thalberg: Fantasia on Rossini's 'Semiramide', Op.51\n:# {{LinkCompS|Carl Maria von|Weber}}: {{LinkWork|Piano Concerto No.2 in E-flat major|Op.32|Weber|Carl Maria von|0}} (III)\n:# Weber: {{LinkWork|7 Variations sur la romance \"À peine au sortir\"|Op.28|Weber|Carl Maria von|0}} (Var.7)\n:# Weber: {{LinkWork|Konzertstück in F minor|Op.79|Weber|Carl Maria von|0}} (IV)\n{{MoreEnd}}\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=1841 – {{WC|614252764|Berlin: Schlesinger}}\n|Librettist=\n|Language=German\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=methods ; studies ; pf ; de\n|Extra Information=A later edition of Vol.3 appears to omit Beethoven, Döhler, Meyer, Prudent, and Taubert for Bendel, Brahms, Bülow, Grieg, Kiel, Raff, Rubinstein, Schumann, Seiss, and Tausig; von Sauer's edition appears to omit Brahms, Bülow, Henselt, Kiel, Litolff, Meyer, Prudent, Seiss, and Taubert while keeping Beethoven and Döhler and adding Moszkowski and Schubert. The whole Op.48 was also translated into English, French, and Italian by Albert R. Parsons, W. Langhans, and Eug. Pirani respectively"
+  },
+  {
+   "title": "Ecossaise in D major, D.782 (Schubert, Franz)",
+   "pageid": 879785,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Ecossaise in D major\n|Alternative Title=\n|Opus/Catalogue Number=D.782\n|Key={{key|D}}\n|Movements Header=1 dance\n|Number of Movements/Sections=1 dance\n|Average Duration=1 minute\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1824\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=ecossaises ; pf"
+  },
+  {
+   "title": "Ecossaise in E-flat major, D.511 (Schubert, Franz)",
+   "pageid": 879341,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Ecossaise in E-flat major\n|Alternative Title=\n|Opus/Catalogue Number=D.511\n|Key={{key|Eb}}\n|Movements Header=1 dance\n|Number of Movements/Sections=1 dance\n|Average Duration=1 minute\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1817 ca.\n|Year of First Publication=1956\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=ecossaises ; pf"
+  },
+  {
+   "title": "Ecossaise, D.158 (Schubert, Franz)",
+   "pageid": 7802,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Ecossaise\n|Alternative Title=\n|Opus/Catalogue Number=D.158\n|Movements Header=\n|Number of Movements/Sections=\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=ecossaises ; pf"
+  },
+  {
+   "title": "Fantasie in C major, D.605 (Schubert, Franz)",
+   "pageid": 21630,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Fantasie in C major\n|Alternative Title=Fantasia in C Major for Piano solo\n|Opus/Catalogue Number=D.605\n|Key={{Key|C}}\n|Number of Movements/Sections=1 fantasia\n|Average Duration=13 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1818\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Classical\n|Instrumentation=piano\n|Tags=fantasias ; pf"
+  },
+  {
+   "title": "Fantasie in C major, D.760 (Schubert, Franz)",
+   "pageid": 86693,
+   "for": [
+    "piano"
+   ],
+   "files": 20,
+   "audio": 6,
+   "info": "|Work Title=Fantasie\n|Alternative Title=Wanderer-fantasie \n|Key={{key|C}}\n|Opus/Catalogue Number=D.760 ; Op.15\n|Movements Header=4 movements\n|Number of Movements/Sections=4 movements:\n#Allegro con fuoco ma non troppo (188 bars)\n#Adagio (57 bars)\n#Presto (354 bars)\n#Allegro (123 bars)\n|Dedication=Emm. Edler von Liebenberg-Zittin\n|First Performance=1832 in Vienna, Musikverein*\n:Karl Maria von Bocklet (piano)\n|Year/Date of Composition=1822 (November)\n|Year of First Publication=1823 (February) - Vienna: Cappi & Diabelli, Plate C. & P. No. 1174\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Average Duration=20 minutes\n|Discography={{MusBrnz|W|40f46c9e-a64f-3e4e-bbdd-27a1ead8503a}}\n|Extra Information=*First known performance.\n|External Links=[[wikipedia:Wanderer_Fantasy|Wikipedia article]]<br>{{AMG|mc0002394265}}\n|Instrumentation=piano\n|Tags=fantasias ; pf"
+  },
+  {
+   "title": "Fantasiestücke nach Liedern von Franz Schubert, Op.90 (Lange, Gustav)",
+   "pageid": 345936,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 7,
+   "audio": 1,
+   "info": "|Work Title=Fantasiestücke nach Liedern von Franz Schubert\n|Alternative Title=\n|Opus/Catalogue Number=Op.90\n|Key=\n|Movements Header=20\n|Number of Movements/Sections=20 pieces\n#Wohin?\n#Ave Maria!\n#Ständchen (Horch, Horch)\n#Sei mir gegrüsst\n#Des Baches Wiegenlied\n#Das Mädchens Klage\n#Der Wanderer\n#Am Meer\n#Ungeduld\n#Erlkönig\n#Ständchen\n#Die Forelle\n#Der Neugierige\n#Aufenthalt\n#Der Lindenbaum\n#Die Post\n#Lob der Thränen\n#Trockene Blumen\n#Der Tod und das Mädchen\n#Das Wandern\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1871?-1877 {{EN}} Berlin: Challier & Co.\n|Page Type=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=fantasias ; pf"
+  },
+  {
+   "title": "Fantasy in C major, D.605a (Schubert, Franz)",
+   "pageid": 581352,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Fantasy in C major\n|Alternative Title=''Grazer Fantasie'', ''Grazer Fantasy''\n|Opus/Catalogue Number=D.605a\n|Key={{Key|C}}\n|Number of Movements/Sections=5 sections: Moderato con espressione; Alla polacca; più moto; Moderato con espressione; Tempo I\n|Average Duration=13 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1818 (?)\n|Year of First Publication=1969\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=fantasias ; pf"
+  },
+  {
+   "title": "Fantasy in C minor, D.2e (Schubert, Franz)",
+   "pageid": 877443,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Fantasy in C minor\n|Alternative Title=\n|Opus/Catalogue Number=D.2e (formerly D.993)\n|Key={{key|c}}\n|Movements Header=4 sections\n|Number of Movements/Sections=4 sections:\n#Largo\n#Andantino\n#Allegro\n#Largo\n|Average Duration=6 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1811\n|Year of First Publication=1979\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=fantasias ; pf"
+  },
+  {
+   "title": "Fugal Exercises, D.965b (Schubert, Franz)",
+   "pageid": 884413,
+   "for": [
+    "keyboard"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Fugal Exercises\n|Alternative Title=\n|Opus/Catalogue Number=D.965b\n|Key=\n|Movements Header=18 fugal expositions\n|Number of Movements/Sections=18 fugal expositions\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1828\n|Year of First Publication=1986\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=composition exercises; 18 two-voice fugal expositions corrected by {{LinkName|Simon|Sechter}} (1788-1867)\n|Instrumentation=keyboard notation\n|Tags=music theory ; fugues ; fugues ; kbd ; 2open"
+  },
+  {
+   "title": "Fugue in C major, D.24a (Schubert, Franz)",
+   "pageid": 872197,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Fugue in C major\n|Alternative Title=\n|Opus/Catalogue Number=D.24a\n|Key={{key|C}}\n|Movements Header=Allegro\n|Number of Movements/Sections=Allegro\n|Average Duration=4 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1812?\n|Year of First Publication=1978\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano (or organ)\n|Tags=fugues ; pf ; org"
+  },
+  {
+   "title": "Fugue in C major, D.24d (Schubert, Franz)",
+   "pageid": 876865,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Fugue in C major\n|Alternative Title=\n|Opus/Catalogue Number=D.24d\n|Key={{key|C}}\n|Movements Header=Maestoso\n|Number of Movements/Sections=Maestoso\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1812?\n|Year of First Publication=1979\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=fragment\n|Instrumentation=piano\n|Tags=fugues ; pf"
+  },
+  {
+   "title": "Fugue in D minor, D.13 (Schubert, Franz)",
+   "pageid": 855192,
+   "for": [
+    "piano"
+   ],
+   "files": 14,
+   "audio": 0,
+   "info": "|Work Title=Fugue in D minor\n|Alternative Title=\n|Opus/Catalogue Number=D.13\n|Key={{key|d}}\n|Movements Header=Allegro maestoso\n|Number of Movements/Sections=Allegro maestoso\n|Average Duration=3 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1812-13?\n|Year of First Publication=1988\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=fugues ; pf"
+  },
+  {
+   "title": "Fugue in D minor, D.24c (Schubert, Franz)",
+   "pageid": 875954,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Fugue in D minor\n|Alternative Title=\n|Opus/Catalogue Number=D.24c\n|Key={{key|d}}\n|Movements Header=Maestoso\n|Number of Movements/Sections=Maestoso\n|Average Duration=4 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1812-13?\n|Year of First Publication=1978\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano (or organ)\n|Tags=fugues ; pf ; org"
+  },
+  {
+   "title": "Fugue in E minor, D.41a (Schubert, Franz)",
+   "pageid": 877811,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Fugue in E minor\n|Alternative Title=\n|Opus/Catalogue Number=D.41a\n|Key={{key|e}}\n|Movements Header=Allegro moderato\n|Number of Movements/Sections=Allegro moderato\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1813\n|Year of First Publication=1988\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=fragment\n|Instrumentation=piano\n|Tags=fugues ; pf"
+  },
+  {
+   "title": "Fugue in E minor, D.71b (Schubert, Franz)",
+   "pageid": 877997,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Fugue in E minor\n|Alternative Title=\n|Opus/Catalogue Number=D.71b\n|Key={{key|e}}\n|Movements Header=Maestoso\n|Number of Movements/Sections=Maestoso\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1813\n|Year of First Publication=1986\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=fragment\n|Instrumentation=piano\n|Tags=fugues ; pf"
+  },
+  {
+   "title": "Fugue in F major, D.25c (Schubert, Franz)",
+   "pageid": 883903,
+   "for": [
+    "keyboard"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Fugue in F major\n|Alternative Title=\n|Opus/Catalogue Number=D.25c\n|Key={{key|F}}\n|Movements Header=1 fugue\n|Number of Movements/Sections=1 fugue\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1812?\n|Year of First Publication=1986\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=counterpoint exercise; fragment\n|Instrumentation=keyboard notation\n|Tags=fugues ; kbd"
+  },
+  {
+   "title": "Fugue in F major, D.deest (Schubert, Franz)",
+   "pageid": 943006,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Fugue in F major\n|Alternative Title=\n|Opus/Catalogue Number=D.deest\n|Key={{key|F}}\n|Movements Header=1 fugue\n|Number of Movements/Sections=1 fugue\n|Average Duration=1 minute\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1813\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=sketch\n|Instrumentation=piano\n|Tags=fugues ; pf"
+  },
+  {
+   "title": "Fugue in G major, D.24b (Schubert, Franz)",
+   "pageid": 872335,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Fugue in G major\n|Alternative Title=\n|Opus/Catalogue Number=D.24b\n|Key={{key|G}}\n|Movements Header=Allegro\n|Number of Movements/Sections=Allegro\n|Average Duration=2-3 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1812?\n|Year of First Publication=1978\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano (or organ)\n|Tags=fugues ; pf ; org"
+  },
+  {
+   "title": "Galop and Ecossaises, D.735 (Schubert, Franz)",
+   "pageid": 7803,
+   "for": [
+    "piano"
+   ],
+   "files": 6,
+   "audio": 0,
+   "info": "|Work Title=Galop and 8 Ecossaises, D.735\n|Alternative Title=\n|Opus/Catalogue Number=D.735 (op.49)\n|Number of Movements/Sections=9 pieces\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=1825\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=Piano\n|Tags=galops ; ecossaises ; pf"
+  },
+  {
+   "title": "General Bass Exercises, D.Anh.I/32 (Schubert, Franz)",
+   "pageid": 884054,
+   "for": [
+    "keyboard"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=General Bass Exercises\n|Alternative Title=\n|Opus/Catalogue Number=D.Anh.I/32 (formerly D.598a)\n|Key=\n|Movements Header=6 exercises\n|Number of Movements/Sections=6 exercises\n|Average Duration=4-5 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1810-12\n|Year of First Publication=1986\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=composition exercises\n|Instrumentation=keyboard notation\n|Tags=music theory ; kbd"
+  },
+  {
+   "title": "German Dance and Ecossaise, D.643 (Schubert, Franz)",
+   "pageid": 7824,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=German Dance and Ecossaise, D.643\n|Alternative Title=\n|Opus/Catalogue Number=D.643\n|Number of Movements/Sections=2 pieces:\n#German Dance ({{K|c#}})\n#Ecossaise ({{K|Db}})\n|Dedication=\n|Year/Date of Composition=1819\n|Year of First Publication=1889\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=Piano\n|Tags=dances ; ecossaises ; pf"
+  },
+  {
+   "title": "German Dance in C-sharp major, D.139 (Schubert, Franz)",
+   "pageid": 879105,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=German Dance in C-sharp major with Trio in A major\n|Alternative Title=\n|Opus/Catalogue Number=D.139\n|Key={{key|C#}}\n|Movements Header=1 dance\n|Number of Movements/Sections=1 dance\n|Average Duration=2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1815\n|Year of First Publication=1930\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "German Dance in E major, D.135 (Schubert, Franz)",
+   "pageid": 878725,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=German Dance with Trio in E major\n|Alternative Title=\n|Opus/Catalogue Number=D.135\n|Key={{key|E}}\n|Movements Header=1 dance\n|Number of Movements/Sections=1 dance\n|Average Duration=2-3 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1815\n|Year of First Publication=1930\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "German Dance, D.722 (Schubert, Franz)",
+   "pageid": 7816,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=German Dance\n|Alternative Title=\n|Opus/Catalogue Number=D.722\n|Key={{Key|Gb}}\n|Movements Header=\n|Number of Movements/Sections=\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Genre=Piano_piece\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "German Dance, D.975 (Schubert, Franz)",
+   "pageid": 7817,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 1,
+   "info": "|Work Title=German Dance\n|Alternative Title=\n|Opus/Catalogue Number=D.975\n|Key={{Key|D}}\n|Movements Header=\n|Number of Movements/Sections=\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=dances ; pf"
+  },
+  {
+   "title": "Grazer Galopp, D.925 (Schubert, Franz)",
+   "pageid": 7840,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=Graz Galop\n|Alternative Title=\n|Opus/Catalogue Number=D.925\n|Number of Movements/Sections=1 galop\n|Key={{Key|C}}\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=galops ; pf"
+  },
+  {
+   "title": "Impromptus and Moments musicaux (Schubert, Franz)",
+   "pageid": 824951,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Impromptus and Moments musicaux\n|Alternative Title=\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=3 works\n|Number of Movements/Sections=3 works:\n# {{LinkWork|4 Impromptus|D.899|Schubert|Franz|0}}\n# {{LinkWork|Moments musicaux|D.780|Schubert|Franz|0}}\n# {{LinkWork|4 Impromptus|D.935|Schubert|Franz|0}}\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=\n|Page Type=Collection\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=impromptus ; pieces ; pf"
+  },
+  {
+   "title": "Improvvisi (Schubert, Franz)",
+   "pageid": 934972,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Improvvisi\n|Alternative Title=Improvvisi per pianoforte Op.90 e 142\n|Opus/Catalogue Number=Op.90, 142\n|Key=\n|Movements Header=\n|Number of Movements/Sections=\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Page Type=Collection\n|Instrumentation=piano\n|Tags=improvisations ; pf"
+  },
+  {
+   "title": "L'école des grands maîtres, Op.119 (Barbot, Paul)",
+   "pageid": 901037,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=L'école des grands maîtres du clavecin et du piano\n|Alternative Title=Exercice journalier de mécanisme\n|Opus/Catalogue Number=Op.119\n|Key=\n|Movements Header=90 pieces in 3 livres\n|Number of Movements/Sections=90 pieces in 3 livres:\n*Premier livre. ''Moyenne force facile''\n#{{LinkName|Muzio|Clementi|M. Clementi}} &mdash; [[6 Piano Sonatinas, Op.36 (Clementi, Muzio)|Op.36]]\n#{{LinkName|George Frideric|Handel|Haendel}} &mdash; Gavotte variée\n#{{LinkName|Wolfgang Amadeus|Mozart|Mozart}} &mdash; Sonatine\n#Clementi &mdash; Sonatine\n#Haendel &mdash; Passacaille\n#{{LinkName|Giovanni Battista|Martini|Le père J. B. Martini}} &mdash; Sonate, 1738\n#{{LinkName|Joseph|Haydn|Haydn}} &mdash; Allegro\n#Mozart &mdash; Menuet\n#{{LinkName|Jean-Philippe|Rameau|J. P. Rameau}}  &mdash; Les niais de Sologne, 1731\n#{{LinkName|Friedrich|Kuhlau|F. Kuhlau}} &mdash; Variations\n#Mozart &mdash; Sonate\n#{{LinkName|Jan Ladislav|Dussek|Dussek}} &mdash; La matinée, Rondo\n#Haendel &mdash; Menuet varié\n#Rameau &mdash; Gavotte variée\n#Kuhlau &mdash; Variations\n#{{LinkName|Franz|Schubert|Schubert}} &mdash; Sonate, 1760\n#Haydn &mdash; Variations\n#{{LinkName|Ludwig van|Beethoven|Beethoven}} &mdash; La molinara, Variations\n#Rameau &mdash; Variations, 1731\n#Dussek &mdash; Variations\n#Mozart &mdash; Variations\n#Rameau &mdash; La joyeuse, Rondo\n#Beethoven &mdash; Variations\n#{{LinkName|Daniel|Steibelt|Steibelt}} &mdash; Polonaise\n#Rameau &mdash; Gavotte variée\n#{{LinkName|Johann Nepomuk|Hummel|Hummel}} &mdash; Variations sur Armide de Gluck\n#{{LinkName|Carl Philipp Emanuel|Bach|C.P.E. Bach}} &mdash; Sonate, 1779\n#Mozart &mdash; Sonate\n#{{LinkName|Johann Baptist|Cramer|Cramer}} &mdash; Sonate\n#Haydn &mdash; Caprice variations\n#Mozart &mdash; Thême varié\n#Mozart &mdash; Fantaisie, 1780\n#Clementi &mdash; Variations, 1776\n#Haendel &mdash; Thême varié\n#Mozart &mdash; Thême varié\n#Beethoven &mdash; Variations\n#Mozart &mdash; Thême varié\n#Dussek &mdash; Marche de Tamerlan, Variations\n#Cramer &mdash; Thême varié\n#Dussek &mdash; La consolation\n*Deuxième livre. ''Difficile''\n#Mozart &mdash; Rondo\n#Dussek &mdash; Grande sonate, 1786\n#{{LinkName|Domenico|Scarlatti|D. Scarlatti}} &mdash; Fugue du chat, 1726\n#Rameau &mdash; Les cyclopes, 1731\n#{{LinkName|Johann Christian|Bach|J.C. Bach}} &mdash; Sonate, 1770\n#Dussek &mdash; Grande sonate, 1786\n#Steibelt &mdash; Sonate, 1787\n#{{LinkName|Leopold|Kozeluch|Kozeluch}} &mdash; Variations, 1778\n#Dussek &mdash; Grande sonate, 1786\n#Scarlatti &mdash; Toccata, 1726\n#Beethoven &mdash; Op.2\n#Beethoven &mdash; Op.2\n#Dussek &mdash; Grande sonate, 1786\n#Rameau &mdash; Gavotte variée, 1731\n#Kozeluch &mdash; Variations, 1778\n#Scarlatti &mdash; Allegro di bravoura, 1726\n#Mozart &mdash; Fantaisie, 1780\n#Steibelt &mdash; Sonate, 1787\n#Beethoven &mdash; Rondo, Op.2\n#Rameau &mdash; Gavotte variée, 1731\n#{{LinkName|Frédéric|Chopin|Chopin}} &mdash; [[Waltzes, Op.34 (Chopin, Frédéric)|Valse, Op.34]]\n#Dussek &mdash; Marche de Tamerlan, Variation\n#Haendel &mdash; Air varié\n#{{LinkName|Carl Maria von|Weber|Weber}} &mdash; [[Konzertstück in F minor, Op.79 (Weber, Carl Maria von)|Concerto, Op.79]]\n#Mozart &mdash; Thême varié\n#Cramer &mdash; [[Piano Sonatas, Op.11 (Cramer, Johann Baptist)|Concerto, Op.11]]\n#Weber &mdash; [[Piano Sonata No.3 in D minor, Op.49 (Weber, Carl Maria von)|Rondo, Op.49]]\n#{{LinkName|John|Field}} &mdash; [[Piano Concerto No.1, H 27 (Field, John)|1<small><sup>er.</sup></small> Concerto]]\n#Weber &mdash; Rondo\n#Hummel &mdash; [[Piano Concerto No.2, Op.85 (Hummel, Johann Nepomuk)|Concerto, Op.85]]\n*Troisième livre. ''Très difficile''\n#Martini &mdash; Sonate, 1738\n#Beethoven &mdash; Op.2\n#Weber &mdash; Op.79\n#Hummel &mdash; Concerto, Op.85\n#{{LinkName|Felix|Mendelssohn|Mendelssohn Bartholdy}} &mdash; [[Piano Concerto No.1, Op.25 (Mendelssohn, Felix)|Concerto, Op.25]]\n#Hummel &mdash; [[Fantasie in E-flat major, Op.18 (Hummel, Johann Nepomuk)|Fantaisie, Op.18]]\n#Beethoven &mdash; [[Piano Sonata No.4, Op.7 (Beethoven, Ludwig van)|Op.7]]\n#Chopin &mdash; [[Impromptu No.1, Op.29 (Chopin, Frédéric)|Impromptu, Op.29]]\n#{{LinkName|Ferdinand|Ries|F. Ries}} &mdash; [[Grandes variations sur un thême hongrois, Op.15 (Ries, Ferdinand)|Variations, Op.15]]\n#Hummel &mdash; [[Piano Concerto No.5, Op.113 (Hummel, Johann Nepomuk)|Concerto, Op.113]]\n#Chopin &mdash; [[Introduction et polonaise brillante, Op.3 (Chopin, Frédéric)|Polonaise, Op.3]]\n#Beethoven &mdash; [[7 Bagatelles, Op.33 (Beethoven, Ludwig van)|Op.33]]\n#F. Ries &mdash; Thême hongrois, Variations\n#Beethoven &mdash; Op.33\n#Mendelssohn &mdash; [[Fantasie, Op.28 (Mendelssohn, Felix)|Op.28]]\n#Hummel &mdash; [[Piano Sonata No.5, Op.81 (Hummel, Johann Nepomuk)|Sonate, Op.81]]\n#Beethoven &mdash; [[Piano Sonata No.23, Op.57 (Beethoven, Ludwig van)|Sonata appasionata, Op.57]]\n#Chopin &mdash; [[Berceuse, Op.57 (Chopin, Frédéric)|Berceuse, Op.57]]\n#Weber &mdash; [[7 Variations sur la romance \"À peine au sortir\", Op.28 (Weber, Carl Maria von)|Variations sur Joseph, Op.28]]\n#Chopin &mdash; [[Piano Concerto No.1, Op.11 (Chopin, Frédéric)|1<small><sup>er.</sup></small> Concerto, Op.11]]\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1877\n|Copyright Info={{BdlF|:<br>67<small><sup>e</sup></small> année, 2<small><sup>e</sup></small> série, Nº 2, 12 Janvier 1878, p.24, reg.51}}\n|Librettist=\n|Language=\n|Page Type=Collection\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=exercises ; pf"
+  },
+  {
+   "title": "La virtuosité, Op.44 (Dumont, Félix)",
+   "pageid": 469596,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=La virtuosité\n|Alternative Title={{TPtr}}\n:30 études de mécanisme pour la moyenne force tirées des chefs d'oeuvres classiques pour piano seul de Bach, Beethoven, Chopin, Clementi, Cramer, Dussek, Field, Händel, Haydn, Hummel, Mendelssohn, Mozart, Scarlatti, Schubert, Steibelt, Weber accentueés nuancées et doigtées avec la plus sévère attention par Félix Dumont </span>\n|Opus/Catalogue Number=Op.44\n|Key=\n|Movements Header=30\n|Number of Movements/Sections=30 studies\n#{{LinkName|Ludwig van|Beethoven}}: Allegro ({{K|C}})\n#{{LinkName|Domenico|Scarlatti}}: Presto ({{K|d}})\n#{{LinkName|Johann Sebastian|Bach}}: Andantino ({{K|C}})\n#{{LinkName|Muzio|Clementi}}: Allegro ({{K|e}})\n#{{LinkName|Muzio|Clementi}}: Allegro ({{K|G}})\n#{{LinkName|Ludwig van|Beethoven}}: Allegretto ({{K|d}})\n#{{LinkName|Johann Baptist|Cramer}}: Allegro ({{K|G}})\n#{{LinkName|Muzio|Clementi}}: Presto ({{K|c}})\n#{{LinkName|Johann Baptist|Cramer}}: Allegro ({{K|C}})\n#{{LinkName|Carl Maria von|Weber}}: Allegro ({{K|C}})\n#{{LinkName|Wolfgang Amadeus|Mozart}}: Allegro ({{K|C}})\n#{{LinkName|Franz|Schubert}}: Allegretto ({{K|Ab}})\n#{{LinkName|Frédéric|Chopin}}: Allegro ({{K|C}})\n#{{LinkName|Franz|Schubert}}: Andante ({{K|Bb}})\n#{{LinkName|Muzio|Clementi}}: Allegro ({{K|D}})\n#{{LinkName|Felix|Mendelssohn}}: Allegro ({{K|d}})\n#{{LinkName|Johann Nepomuk|Hummel}}: Allegro ({{K|C}})\n#{{LinkName|Felix|Mendelssohn}}: Presto ({{K|D}})\n#{{LinkName|Daniel|Steibelt}}: Allegro ({{K|E}})\n#{{LinkName|John|Field}}: ({{K|C}})\n#{{LinkName|George Frideric|Handel}}: Presto ({{K|G}})\n#{{LinkName|Frédéric|Chopin}}: Allegretto ({{K|e}})\n#{{LinkName|Muzio|Clementi}}: Allegretto ({{K|Bb}})\n#{{LinkName|Joseph|Haydn}}: Allegro ({{K|F}})\n#{{LinkName|Jan Ladislav|Dussek}}: Allegro ({{K|D}})\n#{{LinkName|Wolfgang Amadeus|Mozart}}: Andante ({{K|F}})\n#{{LinkName|Jan Ladislav|Dussek}}: Andantino ({{K|g}})\n#{{LinkName|Ludwig van|Beethoven}}: Andantino ({{K|Eb}})\n#{{LinkName|Jan Ladislav|Dussek}}: Andantino ({{K|g}})\n#{{LinkName|Carl Maria von|Weber}}: Allegro ({{K|C}})\n|Average Duration=\n|Dedication={{LinkDed|Antoine François|Marmontel}}\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1877 {{EN}} Paris: Marcel Colombier\n|Copyright Info={{BdlF|<br>(2d Series, Vol.21, No.38, 22 September 1877, p.528, reg. no.2932)}}\n|Page Type=Collection\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=studies ; pf"
+  },
+  {
+   "title": "Le musée des pianistes (Various)",
+   "pageid": 305909,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Le musée des pianistes  \n|Alternative Title=\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=84 pieces\n|Number of Movements/Sections=84 pieces\n# {{LinkCompS|Édouard|Wolff}}: Berceuse, Mélodie, Op.178\n# {{LinkCompS|Charles|Voss}}: Grande fantaisie sur '[[L'étoile du nord (Meyerbeer, Giacomo)|L'étoile du nord]]', Op.174\n# {{LinkCompS|Josef Adalbert|Pacher}}: Élégie, Op.17\n# {{LinkCompS|Émile|Prudent}}:  {{NoCompS|Impromptu|Prudent, Émile|''Impromptu''}}\n# {{LinkCompS|Georges|Mathias}}: Le pècheur (Ballade de Goethe), Op.17\n# {{CSWnt|France|Prešeren|Chant d'amour, Op.15}}\n# {{CSWnt|Charles|Mayer|Romaneske, Op.184}}\n# {{LinkCompS|Charles Samuel|Bovy-Lysberg}}: L’aube, Reverie, Op.36 No.2\n# {{LinkCompS|Gustav|Nottebohm}}: Valse de Salon, Op.10 No.6\n# {{LinkCompS|Johann Nepomuk|Kafka}}: Sérénade, Op.30\n# {{CSWnt|Louis Moreau|Gottschalk|Colliers d'Or, Op.6||Mazurka in A major, Op.6 No.1}}\n# {{CSWnt|Sigismond|Thalberg|L'art du chant appliqué au piano, Op.70||Bella adorata incognita, de 'Il Giuramento', Op70 No.7}}\n# {{CSWnt|Joseph|Ascher|Danse espagnole, Op.24}}\n# {{LinkCompS|Theodor|Leschetizky}}: {{NoCompS|6 Meditations, Op.19|Leschetizky, Theodor|''Berceuse, Op.19 No.4''}}\n# {{LinkCompS|Theodor|Leschetizky}}: {{NoCompS|6 Meditations, Op.19|Leschetizky, Theodor|''Découragement, Op.19 No.5''}}\n# {{LinkCompS|Theodor|Leschetizky}}: {{NoCompS|6 Meditations, Op.19|Leschetizky, Theodor|''Consolation, Op.19 No.6''}}\n# {{CSWnt|Adolfo|Fumagalli|La pendule, Op.33|a=No.1. Caprice fantastique}}\n# {{CSWnt|Jules|Egghard|Sérénade italienne, Op.22}}\n# {{LinkCompS|François|Couperin|F. Couperin}}: [[Troisième livre de pièces de clavecin (Couperin, François)|Soeur Monique]]\n# {{LinkCompS|Sigismond|Thalberg}}: {{NoCompS|L'art du chant appliqué au piano, Op.70|Thalberg, Sigismond|''Il mio tesoro de 'Don Giovanni''', Op.70 No.12}}\n# {{LinkCompS|Adolf|Gutmann}}: [[Nocturne No.7, Op.20 (Gutmann, Adolf)|Nocturne No.7, Op.20]]\n# {{LinkCompS|Karl|Wehle}}: Sérénade napolitaine, Op.31\n# {{LinkCompS|Alexandre Édouard|Goria}}: [[6 Grandes études artistiques, Op.63 (Goria, Alexandre Édouard)|La rêveuse, Étude-nocturne, Op.63 No.5]]\n# {{LinkCompS|Sigismond|Thalberg}}: [[10 Piano Pieces, Op.36 (Thalberg, Sigismond)|Mi manca la voce de Moïse de Rossini, Op.36 No.3]]\n# {{LinkCompS|Franz|Schubert}}: [[4 Impromptus, D.935 (Schubert, Franz)|Souvenir d'un Songe, Impromptu-nocturne, D.935 No.2]]\n# {{LinkCompS|Fritz|Spindler}}: [[Im Wald, Op.75 (Spindler, Fritz)|Près de la source, Rêverie brillante, Op.75 No.2]]\n# {{LinkCompS|Charles|John}}: [[Chant des sirènes, Op.33 (John, Charles)|Chant des sirènes, Op.33]]\n# {{LinkCompS|Constanze|Geiger}}: [[Kennst du meine Leiden?, Op.30 (Geiger, Constanze)|Kennst du meine Leiden?, Nocturne, Op.30]]\n# {{LinkCompS|Albert|Loeschhorn}}: Transcription de salon sur '[[Il trovatore (Verdi, Giuseppe)|Il Trovatore]]' de {{LinkName|Giuseppe|Verdi|Verdi}}, Op.32 No.1\n# {{CSWnt|Ludwig van|Beethoven|String Quartet No.8, Op.59 No.2|a=Allegretto}} (arr. {{LinkCompS|Louis|Winkler}})\n# {{LinkCompS|Michał|Bergson}}: Impromptu-mazurka, Op.35\n# {{CSWnt|Louis Moreau|Gottschalk|The Banjo, Op.15}}\n# {{LinkCompS|Ferdinand|Waldmüller}}: Une fleur de printemps, Nocturne, Op.87\n# {{LinkName|Charles Samuel|Bovy-Lysberg}}: [[Valse brillante, Op.48 (Bovy-Lysberg, Charles Samuel)|Valse brillante de concert, Op.48]]\n# {{LinkName|Frédéric|Chopin}}: [[Preludes, Op.28 (Chopin, Frédéric)|Prelude, Op 28 No.3]]\n# {{LinkName|Albert|Biehl}}: Au clair de lune, Barcarole vénitienne, Op.10 No.3\n# {{LinkName|Leopold de|Meyer}}: Fandango, Danse espagnole, Op.90\n# {{LinkName|Wilhelm|Kuhe}}: [[Graziella, Op.60 (Kuhe, Wilhelm)|Graziella, Morceau de salon, Op.60]]\n# {{LinkName|H.|Rudolphy}}: Salut du matin, Sérénade, Op.9 \n# {{LinkName|Frédéric|Chopin}}: [[Preludes, Op.28 (Chopin, Frédéric)|Prelude, Op 28 No.18]]\n# {{LinkName|Leopold de|Meyer}}: Grillen-Polka, Op.130\n# {{LinkName|Léopold|Hesse}}: La sentimentale, Rêverie musicale\n# {{LinkName|William Vincent|Wallace}}: [[Ballade de 'Rigoletto', Op.82 (Wallace, William Vincent)|Ballade de l'opéra 'Rigoletto', Op.82]]\n# {{LinkName|Ignaz|Tedesco}}: Mon souhait, Nocturne, Op.88\n# {{LinkName|Félix|Godefroid}}: Les chanson de Madrid, Sérénade, Op.70\n# {{LinkName|Hermann|Berens}}: 2e Scène italienne, Op.51\n# {{LinkName|Charles|Mayer}}: Les plus beaux yeux, Lied de Stighelli, Op.237 [{{LinkWork|Die schönsten Augen||Stigelli|Georgio}}]\n# {{LinkName|Gustav|Schumann}}: 2e Mazurka de salon, Op.8 No.2\n# {{LinkName|Auguste|Dupont}}: Pluie de mai, Étude de trilles, Op.2\n# {{LinkName|Ludwig van|Beethoven}}: Adagio, tiré de la [[Piano Sonata No.11, Op.22 (Beethoven, Ludwig van)|Sonata Op.22]]\n# {{LinkName|Louis James Alfred|Lefébure-Wély}}: L'étincelle, Caprice, Op.109\n# {{LinkName|Charles|Mayer}}: Chanson sentimentale\n# {{LinkName|Adolf|Gutmann}}: Le chant du pêcheur, Barcarolle, Op.46\n# {{LinkName|Charles Samuel|Bovy-Lysberg}}: [[La baladine, Op.51 (Bovy-Lysberg, Charles Samuel)|Le baladine, Galop de concert, Op.51]]\n# {{LinkName|Jean Henri|Ravina}}: Chanson à boire, Morceau de salon, Op.37\n# {{LinkName|Camille|Stamaty}}: [[Egmont, Op.84 (Beethoven, Ludwig van)|Egmont]] [Op.84] de {{LinkName|Ludwig van|Beethoven|Beethoven}}, Caprice dramatique sur la romance et chanson militaire, Op.27\n# {{LinkName|Charles|Mayer}}: Nocturne sentimental, Op.232\n# {{LinkName|J. Charles|Hess}}: [[Où vas-tu petit oiseau?, Op.17 (Hess, J. Charles)|Rêverie sur la romance favorite d'amat 'Où vas-tu, petit oiseau?', Op.17]]\n# {{LinkName|Fritz|Spindler}}: [[Herbstblumen, Op.79 (Spindler, Fritz)|Fleur d'automne, Idylle, Op.79 No.1]]\n# {{LinkName|Polydore de|Vos}}: Marche triomphale\n# {{LinkName|Adolf|Greulich}}: Andante extrait de la Sonate Op.15\n# {{LinkName|Fanny|Hensel}} (formerly attributed to {{LinkName|Felix|Mendelssohn}}): [[12 Gesänge, Op.8 (Mendelssohn, Felix)|Le mal du pays, Agitato, Op.8 No.2]] (arranged for Piano Solo)\n# {{LinkName|Karl|Wehle}}: 4e Nocturne, Op.53\n# {{LinkName|Auguste|Vincent}}: Transcription du '[[Le pardon de Ploërmel (Meyerbeer, Giacomo)|Pardon de Ploërmel]]', Op.10\n# {{LinkName|Carl Maria von|Weber}}: Menuet capriccioso, Presto tiré de la [[Piano Sonata No.2 in A-flat major, Op.39 (Weber, Carl Maria von)|Sonate Op.39]]\n# {{LinkName|Wilhelm|Krüger}}: Miserere, '[[Il trovatore (Verdi, Giuseppe)|Il Trovatore]]', opéra de {{LinkName|Giuseppe|Verdi|Verdi}}, Op.60\n# {{LinkName|Félix|Dumouchel}}: Rêverie, Op.44\n# {{LinkName|Joseph|Ascher}}: [[La fiammina (Ascher, Joseph)|La fiammina, Mazurka élégante de salon]]\n# {{LinkName|Jules|Egghard}}: [[Chant du soir, Op.33 (Egghard, Jules)|Chant du soir, Nocturne, Op.33]]  \n# {{LinkName|Niels|Gade}}: [[4 Idyllen, Op.34 (Gade, Niels)|Im Blumengarten, Idylle, Op.34 No.1]]\n# {{LinkName|Wilhelm|Kuhe}}: Bon soir, Pensée musicale\n# {{LinkName|Ignaz|Tedesco}}: L'inquiétude, Étude de concert, Op.46 No.1\n# {{LinkName|Maurice|Lee}}: L'électricité, Morceau de salon, Op.7\n# {{LinkName|Wilhelm|Ganz}}: Souvenir de Wrest, Mazurka de concert, Op.4\n# {{LinkName|Charles|John}}: [[Marche, Op.55 (John, Charles)|Marche (Pas Redoublé), Op.55]]\n# {{LinkName|Henri|Herz}}: Andante, tiré du [[Piano Concerto No.5, Op.180 (Herz, Henri)|5me Concerto (en fa mineur) Op.180]]\n# {{LinkName|Richard|Hoffman}}: [[La Gazelle (Hoffman, Richard)|La gazelle, Andante élégant]]\n# {{LinkName|Fritz|Spindler}}: [[Im Wald, Op.75 (Spindler, Fritz)|Waldvöglein, Impromptu caractéristique, Op.75 No.1]]\n# {{LinkName|Gennaro|Perrelli}}: Nocturne, Op.7\n# {{LinkName|Alexander|Dreyschock}}: [[Rastlose Liebe, Op.112 (Dreyschock, Alexander)|Rastlose Liebe, Morceau caractéristique, Op.112]]\n# {{LinkName|Jacques|Blumenthal}}: [[La caressante, Op.39 (Blumenthal, Jacques)|La caressante, Caprice, Op.39]]\n# {{LinkName|George Alexander|Osborne}}: [[Ah che la morte et le célèbre Miserere de l'opéra 'Il trovatore' (Osborne, George Alexander)|Ah che la morte et le célèbre Miserere de l'opéra 'Il trovatore']]\n# {{LinkName|Jules|Egghard}}: [[La rosée de perles, Op.34 (Egghard, Jules)|La rosée de perles, Impromptu de salon, Op.34]]\n# {{LinkName|Theodor|Döhler}}: [[Romance sans paroles (Döhler, Theodor)|Romance sans Paroles, Op.Posth.]]\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=pieces ; pf\n|Page Type=Collection"
+  },
+  {
+   "title": "March in B minor, D.757a (Schubert, Franz)",
+   "pageid": 878290,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=March in B minor\n|Alternative Title=\n|Opus/Catalogue Number=D.757a (formerly D.deest)\n|Key={{key|b}}\n|Movements Header=Allegro assai — ''Trio''\n|Number of Movements/Sections=Allegro assai — ''Trio''\n|Average Duration=3-4 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1822\n|Year of First Publication=1988\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=marches ; pf"
+  },
+  {
+   "title": "March in E major, D.606 (Schubert, Franz)",
+   "pageid": 7777,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=March in E, D.606\n|Alternative Title=\n|Opus/Catalogue Number=D.606\n|Number of Movements/Sections=Allegro con brio\n|Dedication=\n|Key={{Key|E}}\n|Year/Date of Composition=1818 (?)\n|Year of First Publication=1840\n|Average Duration=3-6 minutes\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=marches ; pf"
+  },
+  {
+   "title": "Master Series For The Young (Hughes, Edwin)",
+   "pageid": 1344285,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 20,
+   "audio": 0,
+   "info": "|Work Title=Master Series For The Young\n|Alternative Title=Compositions For Piano In Their Original Versions\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=12 volumes:\n|Number of Movements/Sections=12 volumes:\n:1. Bach\n:2. Handel\n:3. Haydn\n:4. Mozart\n:5. Beethoven\n:6. Schubert\n:7. Weber\n:8. Mendelssohn\n:9. Schumann\n:10. Chopin\n:11. Grieg\n:12. Tchaikovsky\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=\n|Page Type=Collection\n|Librettist=\n|Language=\n|Copyright Info={{RoST}}\n|Piece Style=Classical\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "Masterpieces of Piano Music (Wier, Albert Ernest)",
+   "pageid": 513861,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Masterpieces of Piano Music\n|Alternative Title=\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=271 pieces\n|Number of Movements/Sections=271 pieces\n:Loure ; Prelude in C : [from the] Welltempered clavichord ; Bourrée : from the Second violin concerto / J.S. Bach \nMinuet / Luigi Boccherini --\nRondo espressivo / P.E. Bach --\nCaprice : from Alceste / C.W. von Gluck --\nGavotte / F.J. Gossec --\nBourrée / G.F. Händel --\nAndante / C.W. von Gluck --\nSarabande / G. Fr. Händel --\nLe tambourin / J.P. Rameau --\nTurkish march / W.A. Mozart --\nGipsy rondo / J. Haydn --\nGavotte / J.B. Lully --\nMinuet : from Divertimento no. 1 / W.A. Mozart --\nSerenade / J. Haydn --\nTempo di ballo / D. Scarlatti --\nAdagio [from the] \" Moonlight\" sonata / L. van Beethoven --\nWeber's last thought = (Derniere pensee musicale) / C.M. von Weber --\nFür Elise / L. von Beethoven --\nAn Alexis / melody by F.H. Himmel ; tr. by J.N. Hummel --\nMinuet in G / L. van Beethoven --\nMoment musical : op. 94, no. 3 / Fr. Schubert --\nUnfinished symphony : part of 1st movement / Fr. Schubert --\nMarche militaire : op. 51, no. 1 / Franz Schubert --\nSerenade / Fr. Schubert --\nNocturne / John Field --\n\"Minute\" waltz : op. 64 ; Prelude, op. 28, no. 20 ; Prelude, op. 28, no. 6 ; Nocturne, op. 9, no. 2 ; Prelude, op. 28, no. 4 / Fr. Chopin --\nConsolation / F. Mendelssohn --\nBerceuse / Charles Gounod --\nNocturne, op. 55, no. 1 / F. Chopin --\nLove song / A. Henselt --\nBerceuse / H. Kjerulf --\nLa gondola : (etude) : op. 13, no. 2 / A. Henselt --\nMazurka, op. 7, no. 1 / Fr. Chopin --\nValse, op. 83, no. 1 / A. Durand --\nTarentelle, op. 85, no. 2 / Stephen Heller --\nRemembrance : op. 68, no. 28 ; Traumerei : op. 15, no. 7 ; Romanze : [op. 68, no. 19] ; The happy farmer : op. 68, no. 10 ; Why! : op. 12, no. 3 / R. Schumann --\nSpinning song ; Spring song ; Wedding march : [from] Midsummer night's dream / F. Mendelssohn --\nSlumber song : op. 124 / R. Schumann --\nWar march of the priests : from Athalia / F. Mendelssohn --\nEvening song : op. 23, no. 4 / Robert Schumann --\nConfidence : op. 19, no. 4 / F. Mendelssohn --\nA la bien aimée : valse / Ed. Schütt --\nPetite valse : op. 10, no. 2 / G. Karganoff --\nAt sunset : op. 28, no. 5 / E. MacDowell --\nCanzonetta / César Cui --\nÉlégie, op. 1, no. 3 / S. Yóuferoff --\nBerceuse : op. 26, no. 7 / L. Schytte --\nChanson triste : op. 40, no. 2 / P. Tschaikowsky --\nSecond mazurka / Benjamin Godard --\nEn berçant : lullaby / E. Schutt --\nRéverie : op. 34, no. 5 / E. Schutt --\nRomance, op. 44, no. 1 / A. Rubinstein --\nToréador et Andalouse : op. 103, no. 7 / A. Rubinstein --\nCrescendo / Per Lasson --\nSpanish dance : op. 12, no. 1 / M. Moszkowski --\nRéverie / André Wormser --\nConsolation : op. 19, no. 6 / Th. Leschetizky --\nErotik : op. 43, no. 5 / E. Grieg --\nThe Flatt'rer = La lisonjera / Cécile Chaminade --\nRustle of spring / Christian Sinding --\nSilhouette / A. Dvořak --\nIn the wood / E. Poldini --\nSerenata / M. Moszkowski --\nPapillon = Butterfly / E. Grieg --\nHumoresque : op. 10, no. 2 / P. Tschaikowsky --\nPrès de l'eau = By the sea : op. 38, no. 3 / F. Blumenfeld --\nTraumerei : op. 9, no. 4 / Richard Strauss --\nRomance / A. Jensen --\nMoment musical / P. Scharwenka --\nSerenade / Ole Olsen --\nThe flow'ret : Forest idyl no. 1 / E.A. MacDowell --\nBerceuse / G. Delbrück --\nRomance, op. 2, no. 2 / J. Raff --\nChant sans paroles / P. Tschaikowsky --\nValse gracieuse : op. 54, no. 1 / A. Dvořák --\nMurmuring zephyrs / Adolf Jensen --\nNocturne : from Petite suite / A. Borodin --\nRomance sans paroles : op. 17, no. 3 / G. Fauré --\nScotch poem : op. 31, no. 2 / E. MacDowell --\nCanzonetta : from Violin concerto / Benjamin Godard --\nLe cygne = The swan / C. Saint-Saëns --\nPrelude : op. 3, no. 2 / S. Rachmaninoff --\nVillanesca : Spanish dance : op. 5 / E. Granados --\nSérénade / G. Pierné --\nHumoreske : op. 101, no. 7 / Anton Dvořák --\nAngelus : from Scenes pittoresques / J. Massenet --\nA love dream : nocturne no. 3 / Franz Liszt --\nNorwegian dance : op. 35, no. 2 / Edward Grieg --\nSalut d'amour = Love's greeting / Edward Elgar --\nAnitra's dance / Edward Grieg --\nScarf dance / Cécile Chaminade --\nMelody in F : op. 3, no. 1 / A. Rubinstein --\nAse's death : [from] Peer Gynt / Edward Grieg --\nRomance, op. 5 / P. Tschaikowsky --\nPas des amphores : air de ballet / C. Chaminade --\nCradle song : from Noure and Anitra suite : op. 13 / A. Ilyinsky --\nMurmuring brook / E. Poldini --\nMélodie : op. 18, no. 1 / M. Moszkowski --\nBerceuse : [from] Jocelyn / Benjamin Godard --\nConsolation / Franz Liszt --\nMazurka, op. 21, no. 1 / C. Saint-Saëns --\nWaltzes, op. 39. No. 1, 2, 3, 5, 8, 15 / J. Brahms --\nMazurka : op. 40, no. 2 / Erik Meyer-Helmund --\nRêverie / C. Debussy --\nMenuet à l'antique / Ignace J. Paderewski --\nHungarian dance no. 5 / J. Brahms --\nRomance / S. Rachmaninoff --\nSpring dance / E. Grieg --\nAu matin / Benj. Godard --\nAlla mazurka / A. Nemerowsky --\nCabaletta / Theodore Lack --\nMélodie, op. 10 / Jules Massenet --\nArabeske / G. Karganoff --\nHabanera / E. Chabrier --\nPolish dance : op. 3, no. 1 / Xavier Scharwenka --\nPoupée valsante = Dancing doll / Ed. Poldini --\nSouvenir / F. Drdla --\nWarblings at eve : romance / Brinley Richards --\nWaves of the ocean : galop de salon / Chas. D. Blake --\nGood night / A. Loeschhorn --\nSimple aveu = Simple confession / Francis Thomé --\nEntr'acte gavotte / E. Gillet --\nLonging for home / Albert Jungmann --\nThe blacksmith in the woods : forge in the forest / Th. Michaelis --\nJoyous life : op. 33 / Fritz Spindler --\nFifth nocturne / I. Leybach --\nStephanie ; Love's dream after the ball : intermezzo / Alphonse Czibulka --\nOne heart, one mind : polka mazurka / Johann Strauss --\nLonging / H. Kjerulf --\nThe Turkish patrol / Th. Michaelis --\nIntermezzo russe / Th. Franke --\nEsmeralda : hesitation waltz / Carlos De Mesquita --\nThe Alp-maid's dream / A. Sabitzky --\nChinese serenade / H. Fliege --\nValse bleue / Alfred Margis --\nLa Paloma / S. Yradier --\nFlower song / Gustav Lange --\nCradle song / Miska Hauser --\nLa zingana : Hungarian dance ; La fontaine : morceau de salon / C. Bohm --\nLoin du bal = Ball-room echoes / Ernest Gillet --\nLa czarine : Russian mazurka / Louis Ganne --\nCanzonetta / Victor Hollaender --\nLe secret : intermezzo / L. Gautier --\nThe maiden's prayer / Thekla Badarcveszka --\nCon amore : mélodie / Paul Beaumont --\nLa cinquantaine = The golden wedding / Gabriel-Marie --\nThe dying poet : meditation / L. Gottschalk --\nThine own ; Pure as snow / Gustave Lange --\nThe song of the Robin / G.W. Warren --\nUnder the leaves = Sous la fauillée / Fr. Thomé --\nAlbum leaf / Th. Kirchner --\nLes sylphes : impromptu valse / G. Bachmann --\nThe angels' serenade / G. Braga --\nThe lost chord / Sir Arthur Sullivan --\nAdeste fideles : paraphrase / R. Vilbac --\nA l'église : op. 3 / G. Pierné --\nLargo / G.F. Händel --\nAve Maria / Fr. Schubert --\nDead march : from Saul / G.F. Händel --\nThe shepherd boy / G.D. Wilson --\nThe pilgrim's song of hope / Edouard Batiste ; transcribed by Jules de Sivrai --\nInflammatus : from Stabat Mater / G. Rossini --\nThe monastery bells / Lefébure-Wély --\nPleyel's hymn : transcription / W.J. Westbrook --\nAndante religioso / Francis Thomé --\nThe last hope / L.M. Gottschalk --\nHallelujah chorus : [from] The Messiah / G.F. Handel --\nBut the Lord is mindful : [from] St. Paul / F. Mendelssohn --\nCujus animam : from Stabat Mater / G. Rossini --\nKol Nidrei / Hebrew melody --\nFuneral march : from Sonata, op. 35 / Fr. Chopin --\nThe glory of God in nature / L. van Beethoven --\nPrayer : op. 48, no. 1 / L. van Beethoven --\nThe heavens are telling : from The creation / J. Haydn --\nAve Maria : meditation / Bach-Gounod --\nLast dream of the Virgin : prelude / J. Massenet --\nPalm branches = Les rameaux / J.B. Faure --\nSextette : [from] Lucia di Lammermoor / G. Donizetti --\nValse lente : [from] Coppelia / L. Delibes --\nSiciliana : [from] Cavalleria rusticana / P. Mascagni --\nWaltz : [from] Faust / Ch. Gounod --\nGrand march : [from] Aïda / G. Verdi --\nMy heart at thy sweet voice : [from] Samson and Delilah / C. Saint-Saëns --\nGrand march : [from] Norma / V. Bellini --\nAragonaise : {from] Le Cid / Jules Massenet --\nMiserere : [from] Il trovatore / G. Verdi --\nMinuet : [from] Don Juan / W.A. Mozart --\nCoronation march : from Le prophète / G. Meyerbeer --\nIntermezzo : [from] Cavalleria rusticana / P. Mascagni --\nQuartet : [from] Rigoletto ; Drinking song : [from] La traviata ; Celeste Aïda : [from] Aïda / G. Verdi --\nBridal march : [from] Lohengrin ; To the evening star : [from] Tannhäuser ; Grand march : [from] Tannhäuser / R. Wagner --\nWilliam Tell : excerpts / G. Rossini --\nGavotte : [from] Mignon / A. Thomas --\nPizzicato : [from] Sylvia balet / Leo Delibes --\nHabanera : [from] Carmen / G. Bizet --\nDance of the hours : [from] La Gioconda / A. Ponchielli --\nEntr'acte : from Rosamunde / Franz Schubert --\nPrayer : The hunter / C.M. von Weber --\nBarcarolle : [from] Tales of Hoffman / J. Offenbach --\nAnvil chorus : [from] Il trovatore / G. Verdi --\nPrayer : [from] Hansel and Gretel / E. Humperdinck --\nPoet and peasant : overture / F. von Suppé.\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1918 - New York: Albert E. Wier\n|Librettist=  \n|Page Type=Collection\n|Language=\n|Templates=<nowiki>{{</nowiki>[[Template:MPMWier|MPMWier]]<nowiki>|page range (opt)}}</nowiki>\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "Méthode élémentaire de piano, Op.269 (Lack, Théodore)",
+   "pageid": 1616654,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Méthode élémentaire de piano\n|Alternative Title=Contenant 40 petits morceaux faciles et inédits spécialement écrits pour cette méthode, par les plus grandes célébrités musicales.\n|Opus/Catalogue Number=Op.269\n|Key=\n|Movements Header=6 sections\n|Number of Movements/Sections=6 sections:\n* Le Piano\n* La Première Leçon de Piano\n* Récréations Mélodiques et rythmiques à 4 mains (sur cinq notes aux deux parties)\n*# Rondes ({{K|C}})\n*# Rondes et blanches ({{K|C}})\n*# Rondes, blanches et noires ({{K|C}})\n*# Berceuse ({{K|G}})\n*# Chanson arabe ({{K|g}})\n*# Menuet ({{K|F}})\n*# Marche ({{K|D}})\n*# Courante. Style ancien ({{K|C}})\n*# Sicilienne ({{K|E}})\n*# Gigue ({{K|F}})\n*# Barcarolle ({{K|A}})\n*# Tarentelle ({{K|c}})\n* Variations à 2 mains sur l'exercice des cinq doigts\n* Pièces à 4 mains (Auteurs Classiques)\n*# {{Cat|Czerny, Carl}}: Étude ({{K|C}})\n*# {{Cat|Dussek, Jan Ladislav}}: Canzone ({{K|C}})\n*# {{Cat|Cramer, Johann Baptist}}: Thème ({{K|a}})\n*# {{Cat|Haydn, Joseph}}: La surprise ({{K|C}})\n*# {{Cat|Chopin, Frédéric}}: Chant polonais ({{K|a}})\n*# {{Cat|Schubert, Franz}}: La rose sauvage ({{K|G}})\n*# {{Cat|Mozart, Wolfgang Amadeus}}: Ariette ({{K|C}})\n*# {{Cat|Bach, Johann Sebastian}}: Air de la Pentecôte ({{K|F}})\n*# {{Cat|Mendelssohn, Felix}}: Au bord du gange ({{K|Bb}})\n*# {{Cat|Weber, Carl Maria von}}: Thème original ({{K|F}})\n*# {{Cat|Schumann, Robert}}: Berceuse ({{K|G}})\n*# {{Cat|Beethoven, Ludwig van}}: Marche des ruines d'Athènes ({{K|C}})\n* Gammes Majeures et Mineures\n* Pièces à 2 mains (Auteurs Modernes)\n*# {{Cat|Lavignac, Albert}}: Thème ({{K|C}})\n*# {{Cat|Marmontel, Antonin}}: Mélodie ({{K|C}})\n*# {{Cat|Philipp, Isidor}}: Pour bercer bébé ({{K|G}})\n*# {{Cat|Maréchal, Henri}}: Andantino ({{K|C}})\n*# {{Cat|Falkenberg, Georges}}: Aria ({{K|C}})\n*# {{Cat|Deslandres, Adolphe}}: Valse lente ({{K|C}})\n*# {{Cat|Greef, Arthur de}}: Vieille chanson flamande ({{K|C}})\n*# {{Cat|Wormser, André}}: Danse ancienne ({{K|a}})\n*# {{Cat|Lefebvre, Charles}}: Andantino ({{K|G}})\n*# {{Cat|Paladilhe, Émile}}: Allegretto ({{K|G}})\n*# {{Cat|Pierné, Gabriel}}: Canon ({{K|C}})\n*# {{Cat|Planté, Francis}}: Petite chanson ({{K|C}})\n*# {{Cat|Dubois, Théodore}}:  ({{K|F}})\n*# {{Cat|Cui, César}}: Grazioso ({{K|G}})\n*# {{Cat|Périlhou, Albert}}: Andantino ({{K|G}})\n*# {{Cat|Galeotti, Cesare}}: Simple chanson ({{K|C}})\n*# {{Cat|Indy, Vincent d'}}: Andantino ({{K|C}})\n*# {{Cat|Colomer, Blas María de}}: Allegretto grazioso ({{K|F}})\n*# {{Cat|Diémer, Louis}}: Petite pièce. Dans le style ancien ({{K|C}})\n*# {{Cat|Guilmant, Alexandre}}: Chanson ({{K|G}})\n*# {{Cat|Bourgault-Ducoudray, Louis-Albert}}: Berceuse de poupée ({{K|C}})\n*# {{Cat|Pfeiffer, Georges Jean}}: Petit chagrin ({{K|e}})\n*# {{Cat|Risler, Edouard}}: Étude (Les syncopes) ({{K|C}})\n*# {{Cat|Delafosse, Léon}}: Laendler ({{K|F}})\n*# {{Cat|Fischhof, Robert}}: Air ancien ({{K|G}})\n*# {{Cat|Jaques-Dalcroze, Emile}}: Allegretto ({{K|a}})\n*# {{Cat|Pessard, Émile}}: Les petits moineaux ({{K|F}})\n*# {{Cat|Delaborde, Elie Miriam}}: À la mémoire de Richard Wagner!! ({{K|C}})\n*# {{Cat|Chaminade, Cécile}}: Scherzino ({{K|a}})\n*# {{Cat|Thomé, Francis}}: Chant du chamelier ({{K|a}})\n*# {{Cat|René, Charles}}: Cantilène ({{K|G}})\n*# {{Cat|Moszkowski, Moritz}}: Allegro ({{K|a}})\n*# {{Cat|Saint-Saëns, Camille}}: Prélude ({{K|G}})\n*# {{Cat|Massenet, Jules}}: Étude d'expression ({{K|G}})\n*# {{Cat|Pugno, Raoul}}: Andantino ({{K|G}})\n*# {{Cat|Stojowski, Sigismond}}: Impression matinale ({{K|A}})\n*# {{Cat|Georges, Alexandre }}: Le montreur d'ours ({{K|C}})\n*# {{Cat|Hahn, Reynaldo}}: Canon dans le mode phrygien\n*# {{Cat|Debussy, Claude}}: [[The Little Nigar, CD 122 (Debussy, Claude)|The Little Nigar]] (Cake Walk) ({{K|C}})\n*# {{Cat|Widor, Charles-Marie}}: Improvisation ({{K|F}})\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1909\n|Librettist=\n|Page Type=Book\n|Language=French\n|Piece Style=Early 20th century\n|Instrumentation=\n|Tags=methods ; pf ; fr"
+  },
+  {
+   "title": "Minuet in A major, D.334 (Schubert, Franz)",
+   "pageid": 7843,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=Minuet\n|Alternative Title=\n|Opus/Catalogue Number=D.334\n|Number of Movements/Sections=Allegretto\n|Dedication=\n|Year/Date of Composition=1815 (September)\n|Year of First Publication=1897\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=minuets ; pf"
+  },
+  {
+   "title": "Minuet in A minor, D.277a (Schubert, Franz)",
+   "pageid": 839075,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Minuet in A minor\n|Alternative Title=\n|Opus/Catalogue Number=D.277a\n|Movements Header=Allegro — ''Trio''\n|Number of Movements/Sections=Allegro — ''Trio''\n|Average Duration=3-4 minutes\n|Dedication=\n|Year/Date of Composition=1815?\n|Year of First Publication=1925\n|Key={{Key|a}}\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=First version of the minuet from the {{LinkWork|Piano Sonata in C major, D.279||Schubert|Franz|0}}.\n|Related Works={{LinkWork|Piano Sonata in C major, D.279||Schubert|Franz|0}}\n|External Links=\n|Instrumentation=piano\n|Tags=minuets ; pf"
+  },
+  {
+   "title": "Minuet in C-sharp minor, D.600 (Schubert, Franz)",
+   "pageid": 7844,
+   "for": [
+    "piano"
+   ],
+   "files": 12,
+   "audio": 4,
+   "info": "|Work Title=Minuet\n|Alternative Title=\n|Key={{key|c#}}\n|Opus/Catalogue Number=D.600\n|Number of Movements/Sections=1 minuet\n|Dedication=\n|Year/Date of Composition=1813 (1st half)\n|Year of First Publication=1897\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=minuets ; pf"
+  },
+  {
+   "title": "Minuet in D major, D.Anh.I/15 (Schubert, Franz)",
+   "pageid": 23936,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Minuet with Trio\n|Alternative Title=\n|Key={{Key|D}}\n|Opus/Catalogue Number=D.Anh.I/15 [formerly D.336]\n|Movements Header=1 minuet with trio\n|Number of Movements/Sections=1 minuet with trio\n|Average Duration=2-3 minutes\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=1897\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=minuets ; pf"
+  },
+  {
+   "title": "Minuet in E major, D.335 (Schubert, Franz)",
+   "pageid": 40021,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Minuet with 2 Trios\n|Alternative Title=\n|Opus/Catalogue Number=D.335\n|Number of Movements/Sections=\n|Dedication=\n|Year/Date of Composition=1816 ca.\n|Year of First Publication=1897\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=minuets ; pf"
+  },
+  {
+   "title": "Moments musicaux, D.780 (Schubert, Franz)",
+   "pageid": 2066,
+   "for": [
+    "piano"
+   ],
+   "files": 99,
+   "audio": 17,
+   "info": "|Work Title=6 Moments musicaux\n|Alternative Title=Moments Musicaux, Pensées musicales, Musical Moments\n|Opus/Catalogue Number=D.780 ; Op.94\n|Movements Header=6 movements\n|Number of Movements/Sections=6 movements:\n#Moderato ({{K|C}})\n#Andantino ({{K|Ab}})\n#Allegro moderato ({{K|f}})\n#Moderato ({{K|c#}})\n#Allegro vivace ({{K|f}})\n#Allegretto ({{K|Ab}})\n|Dedication=\n|Year/Date of Composition=1823–28\n|Year of First Publication=1828\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Six moments musicaux (Schubert)}}\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "Musikalisches Angebinde zum Neuen Jahre (Müller, Carl Friedrich)",
+   "pageid": 1011080,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Musikalisches Angebinde zum Neuen Jahre\n|Alternative Title=Musikalisches Angebinde zum Neuen Jahre: Eine Sammlung 40 neuer Walzer [von 40 verschiedenen Componisten]\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=41 waltzes\n|Number of Movements/Sections=40 waltzes, plus a final Schlusswalzer with Coda\n# in {{K|Eb}} (with Trio in {{K|Ab}}) by {{LinkName|Ludwig van|Beethoven}}\n# in {{K|C}} by {{LinkName|Carl|Bettlach}}\n# in {{K|F}} by {{LinkName|Andreas|Bibl}}\n# in {{K|F}} by {{LinkName|Leopoldine|Blahetka}}\n# in {{K|Eb}} by {{LinkName|Carl Maria von|Bocklet}}\n# in {{K|D}} by {{LinkName|Joseph|Böhm}}\n# in {{K|Ab}} by {{LinkName|Carl Leopold|Böhm}}\n# in {{K|Eb}} by {{LinkName|Franz|Clement}}\n# in {{K|Db}} by {{LinkName|Leopold|Czapek}}\n# in {{K|C}} by {{LinkName|Carl|Czerny}}\n# in {{K|F}} by {{LinkName|Joseph|Czerny}}\n# in {{K|C}} by {{LinkName|Joseph|Drechsler}}\n# in {{K|D}} {{LinkName|Johann|Faistenberger}}\n# in {{K|D}} by {{LinkName|Franz Xaver|Grutsch}}\n# in {{K|C}} by {{LinkName|Adalbert|Gyrowetz}}\n# in {{K|D}} by {{LinkName|Georg|Hellmesberger Sr.}}\n# in {{K|C}} by {{LinkName|Joachim|Hoffmann}}\n# in {{K|Ab}} by {{LinkName|Erasmus|Kessler}}\n# in {{K|Eb}} by {{LinkName|Conradin|Kreutzer}}\n# in {{K|G}} by {{LinkName|Maximilian Joseph|Leidesdorf}}\n# in {{K|F}} by {{LinkName|Franz|Limmer}}\n# in {{K|Eb}} by {{LinkName|Léon de|Saint-Lubin}}\n# in {{K|Eb}} by {{LinkName|Carl Friedrich|Müller}}\n# in {{K|F}} by {{LinkName|Franz Anton|Neumann}}\n# in {{K|Eb}} by {{LinkName|Michael|Pamer}}\n# in {{K|E}} by {{LinkName|Joseph|Preisinger}}\n# in {{K|Eb}} by {{LinkName|Benedict|Randhartinger}}\n# in {{K|Eb}} by {{LinkName|Philipp Jakob|Riotte}}\n# in {{K|Eb}} by {{LinkName|Franz|Schubert}}\n# in {{K|F}} by {{LinkName|Ignaz|Schuster}}\n# in {{K|D}} by {{LinkName|Mathias|Schwarz}}\n# in {{K|F}} by {{LinkName|Ignaz|Seyfried}}\n# in {{K|C}} by {{LinkName|Joseph|Stadler}}\n# in {{K|A}} by {{LinkName|Ferdinand|Stegmayer}}\n# in {{K|C}} by {{LinkName|Michael|Umlauf}}\n# in {{K|Bb}} by {{LinkName|Antonia|Volkert}} (daughter of Franz Volkert)\n# in {{K|D}} by {{LinkName|Franz|Volkert}}\n# in {{K|A}} by {{LinkName|Franz|Weiss}}\n# in {{K|G}} by {{LinkName|Joseph|Wilde}}\n# in {{K|G}} by {{LinkName|Anton|Wranitzky}}\n# Schlusswalzer samt Coda in {{K|E}} by {{LinkName|Franz Paul|Lachner}}\n|Average Duration=\n|Dedication=Friedrich Demmer\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1824 ca.\n|Page Type=Collection\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=Collection of 41 waltzes by different composers\n|Instrumentation=piano \n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "Neujahrs und Carnevalsgabe 'Seyd uns zum zweytenmal willkommen' (Müller, Carl Friedrich)",
+   "pageid": 1011085,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Neujahrs und Carnevalsgabe 'Seyd uns zum zweytenmal willkommen'\n|Alternative Title=Seyd uns zum zweytenmal willkommen! Neujahrs und Carnevalsgabe, als Fortsetzung des beliebten musikalischen Angebindes enthältend fünfzig neue Walzer nebst einer Introduction über obiges Thema aus Mozarts Zauberflöte\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=50 walzes, plus Introduction and Coda \n|Number of Movements/Sections=50 walzes, plus Introduction (theme by Mozart) and Coda (by Lachner)\n:* Introduction arrangirt nach dem Mozartschen Thema \"Seyd uns zum zweyten Mahl willkommen\" ({{K|A}})\n# in {{K|D}} by {{LinkName|Ludwig van|Beethoven}}\n# in {{K|Bb}} by {{LinkName|Leopoldine|Blahetka}}\n# in {{K|Eb}} by {{LinkName|Leopold von|Blumenthal}}\n# in {{K|D}} by {{LinkName|Carl Leopold|Böhm}}\n# in {{K|A}} by {{LinkName|Carl|Czerny}}\n# in {{K|D}} by {{LinkName|Joseph|Foerster}}\n# in {{K|F}} by {{LinkName|Franz|Fraus}}\n# in {{K|A}} by {{LinkName|Franz|Gläser}}\n# in {{K|C}} by {{LinkName|Adalbert|Gyrowetz}}\n# in {{K|Bb}} by {{LinkName|Franz Xaver|Grutsch}}\n# in {{K|F}} by {{LinkName|Georg|Hellmesberger Sr.}}\n# in {{K|G}} by {{LinkName|Ignaz|Hirtl}}\n# in {{K|C}} by {{LinkName|Joachim|Hoffmann}}\n# in {{K|Bb}} by {{LinkName|Johann|Horzalka}}\n# in {{K|C}} by {{LinkName|Joseph|Hüttenbrenner}}\n# in {{K|C}} by {{LinkName|Johann Nepomuk|Hummel}}\n# in {{K|Ab}} by {{LinkName|Erasmus|Kessler}}\n# in {{K|F}} by {{LinkName|Joseph|Kinsky}}\n# in {{K|Eb}} by {{LinkName|Conradin|Kreutzer}}\n# in {{K|Eb}} by {{LinkName|Caroline|Krähmer}}, née Schleicher (wife of {{LinkName|Ernst|Krähmer}}, 1795-1837)\n# in {{K|E}} by {{LinkName|Franz Paul|Lachner}}\n# in {{K|F}} by {{LinkName|Eduard von|Lannoy}}\n# in {{K|D}} by {{LinkName|Maximilian Joseph|Leidesdorf}}\n# in {{K|Ab}} by {{LinkName|Moritz von|Lichnowsky}}\n# in {{K|Eb}} by {{LinkName|Carl Georg|Lickl}}\n# in {{K|Ab}} by {{LinkName|Franz|Limmer}}\n# in {{K|C}} by {{LinkName|Léon de|Saint-Lubin}}\n# in {{K|Eb}} by {{LinkName|Adolf|Müller}}\n# in {{K|G}} by {{LinkName|Carl Friedrich|Müller}}\n# in {{K|D}} by {{LinkName|Wenzel|Müller}}\n# in {{K|D}} by {{LinkName|Franz Anton|Neumann}}\n# in {{K|D}} by {{LinkName|Michael|Pamer}}\n# in {{K|D}} by {{LinkName|Wenzel|Plachy}}\n# in {{K|C}} by {{LinkName|Joseph|Preisinger}}\n# in {{K|Bb}} by {{LinkName|Benedict|Randhartinger}}\n# in {{K|A}} by {{LinkName|Philipp Jakob|Riotte}}\n# in {{K|Ab}} by {{LinkName|Franz|Schubert}}\n# in {{K|A}} by {{LinkName|Mathias|Schwarz}}\n# in {{K|E}} by {{LinkName|Ignaz|Seyfried}}\n# in {{K|F}} by {{LinkName|Joseph|Stadler}}\n# in {{K|D}} by {{LinkName|Friedrich|Starke}}\n# in {{K|F}} by {{LinkName|Ferdinand|Stegmayer}}\n# in {{K|D}} by {{LinkName|Joseph|Triebensee}}\n# in {{K|C}} by {{LinkName|Michael|Umlauf}}\n# in {{K|D}} by {{LinkName|Franz|Volkert}}\n# in {{K|Bb}} by {{LinkName|Franz|Weiss}}\n# in {{K|Eb}} by {{LinkName|Bedřich Diviš|Weber}}\n# in {{K|A}} by {{LinkName|Anton|Wranitzky}}\n# in {{K|Ab}} by {{LinkName|Václav Vilém|Würfel}}\n# in {{K|F}} by {{LinkName|J.|Zäch}}\n:* Coda in {{K|E}} by {{LinkName|Franz Paul|Lachner}}\n|Average Duration=\n|Dedication=Sophie of Austria\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1825 ca.\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=50 waltzes by different composers\n|Instrumentation=piano \n|Page Type=Collection \n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "Piano Accompaniment in B-flat major, D.988a (Schubert, Franz)",
+   "pageid": 937751,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Piano Accompaniment in B-flat major\n|Alternative Title=\n|Opus/Catalogue Number=D.988a\n|Key={{key|Bb}}\n|Movements Header=1 piano accompaniment\n|Number of Movements/Sections=1 piano accompaniment\n|Average Duration=1 minute\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1820 post\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=fragment; for a multi-part vocal composition?\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "Piano Piece in A major, D.604 (Schubert, Franz)",
+   "pageid": 7778,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Piano Piece in A major\n|Alternative Title=Andante in A major\n|Key={{key|A}}\n|Opus/Catalogue Number=D.604\n|Movements Header=Andante\n|Number of Movements/Sections=Andante\n|Average Duration=5 minutes\n|Dedication=\n|Year/Date of Composition=1816 or 1817 July\n|Year of First Publication=1888 – ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]] (?)\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=andantes ; pf"
+  },
+  {
+   "title": "Piano Piece in C major, D.916b (Schubert, Franz)",
+   "pageid": 878473,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Piano Piece in C major\n|Alternative Title=\n|Opus/Catalogue Number=D.916b\n|Key={{key|C}}\n|Movements Header=Allegro\n|Number of Movements/Sections=Allegro\n|Average Duration=4-5 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1827?\n|Year of First Publication=1978\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=sketch\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "Piano Piece in C minor, D.916c (Schubert, Franz)",
+   "pageid": 878475,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Piano Piece in C minor\n|Alternative Title=\n|Opus/Catalogue Number=D.916c\n|Key={{key|c}}\n|Movements Header=1 piece\n|Number of Movements/Sections=1 piece\n|Average Duration=9 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1827?\n|Year of First Publication=1978\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=sketch\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "Piano Piece in F major, D.deest (Schubert, Franz)",
+   "pageid": 944662,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Piano Piece in F major\n|Alternative Title=Andante in F major\n|Opus/Catalogue Number=D.deest\n|Key={{key|F}}\n|Movements Header=Andante\n|Number of Movements/Sections=Andante\n|Average Duration=1 minute\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1813\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=sketch\n|Instrumentation=piano\n|Tags=andantes ; pf"
+  },
+  {
+   "title": "Piano Sonata in A major, D.664 (Schubert, Franz)",
+   "pageid": 2034,
+   "for": [
+    "piano"
+   ],
+   "files": 11,
+   "audio": 6,
+   "info": "|Work Title=Piano Sonata in A major\n|Alternative Title=Piano Sonata No.10; Piano Sonata No.13\n|Opus/Catalogue Number=D.664 (published as Op.posth.120)\n|Key={{Key|A}}\n|Movements Header=3 movements\n|Number of Movements/Sections=3 movements:\n#Allegro moderato ({{K|A}}, 133 bars)\n#Andante ({{K|D}}, 75 bars)\n#Allegro ({{K|A}}, 216 bars)\n|Average Duration=24 minutes\n|Dedication=\n|Year/Date of Composition=1819 (Summer) or 1825\n|Year of First Publication=1829 {{EN}} Vienna: J. Czerny, plate 2656\n|Librettist=\n|Language=\n|External Links={{wp|Piano Sonata in A major, D 664 (Schubert)}}\n|Piece Style=Romantic\n|Extra Information=The work is numbered as Piano Sonata No.10 the Breitkopf & Härtel edition, and as Piano Sonata No.13 in both Classical Archives and the Wiener Urtext Edition.\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in A major, D.959 (Schubert, Franz)",
+   "pageid": 2037,
+   "for": [
+    "piano"
+   ],
+   "files": 6,
+   "audio": 9,
+   "info": "|Work Title=Piano Sonata in A major\n|Alternative Title=Piano Sonata No.14; Piano Sonata No.20\n|Opus/Catalogue Number=D.959\n|Key={{Key|A}}\n|Movements Header=4 movements\n|Number of Movements/Sections=4 movements:\n#Allegro ({{K|A}}, 357 bars)\n#Andantino ({{K|f#}}, 202 bars)\n#''Scherzo''. Allegro vivace ({{K|A}}, 80 bars) — ''Trio''. Un poco più lento ({{K|D}}, 34 bars)\n#''Rondo''. Allegretto ({{K|A}}, 382 bars)\n|Average Duration=42 minutes\n|Dedication=\n|Year/Date of Composition=1828 (September)\n|Year of First Publication=1839 {{EN}} Vienna: [[Diabelli]]\n|Librettist=\n|Language=\n|External Links={{wp|Schubert's last sonatas|English}}<br>{{wp|de:Klaviersonate Nr. 20 (Schubert)|German}}<br>{{wp|es:Sonata para piano en la mayor (Schubert)|Spanish}}\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in A minor, D.537 (Schubert, Franz)",
+   "pageid": 2032,
+   "for": [
+    "piano"
+   ],
+   "files": 9,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata in A minor\n|Alternative Title=Piano Sonata No.4, Piano Sonata No.6\n|Opus/Catalogue Number=D.537 (published as Op.posth.164)\n|Key={{key|a}}\n|Movements Header=3 movements\n|Number of Movements/Sections=3 movements:<br>\n#Allegro ma non troppo ({{k|a}})\n#Allegretto quasi Andantino ({{k|E}})\n#Allegro vivace ({{k|a}})\n|Average Duration=25 minutes\n|Dedication=\n|Year/Date of Composition=1817 March\n|Year of First Publication=1852 ca. {{EN}} [[Spina]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in A minor, D 537 (Schubert)}}\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in A minor, D.784 (Schubert, Franz)",
+   "pageid": 2035,
+   "for": [
+    "piano"
+   ],
+   "files": 10,
+   "audio": 5,
+   "info": "|Work Title=Piano Sonata in A minor, ''Grande Sonate''\n|Alternative Title=Piano Sonata No.8; Piano Sonata No.14\n|Opus/Catalogue Number=D.784 (published as Op.posth.143)\n|Key={{Key|a}}\n|Movements Header=3 movements\n|Number of Movements/Sections=3 movements:\n#Allegro giusto ({{k|a}})\n#Andante ({{k|F}})\n#Allegro vivace ({{k|a}})\n|Average Duration=23 minutes\n|Dedication=\n|Year/Date of Composition=1823 February\n|Year of First Publication=1839 {{EN}} [[Diabelli]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in A minor, D 784 (Schubert)}}\n|Extra Information=The work is numbered as Piano Sonata No.8 in the Breitkopf & Härtel edition and as Piano Sonata No.14 in both Classical Archives and the Wiener Urtext Edition.\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in A minor, D.845 (Schubert, Franz)",
+   "pageid": 2036,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 1,
+   "info": "|Work Title=Piano Sonata in A minor\n|Alternative Title=Piano Sonata No.9; Piano Sonata No.16\n|Opus/Catalogue Number=D.845 (published as Op.42)\n|Key={{Key|a}}\n|Movements Header=4 movements\n|Number of Movements/Sections=4 movements:<br>\n#Moderato ({{k|a}})\n#Andante poco mosso ({{k|C}})\n#''Scherzo''. Allegro vivace — ''Trio''. Un poco più lento ({{k|a}})\n#''Rondo''. Allegro vivace ({{k|a}})\n|Average Duration=37 minutes\n|Dedication={{LinkDed|Erzherzog|Rudolph}} von Österreich\n|Year/Date of Composition=1825 May\n|Year of First Publication=1826 − [[Pennauer]]\n|External Links=[[wikipedia:Piano Sonata in A minor, D. 845 (Schubert)|Wikipedia link]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in A-flat major, D.557 (Schubert, Franz)",
+   "pageid": 2033,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata in A-flat major\n|Alternative Title=Piano Sonata No.3, Piano Sonata No.5\n|Key={{key|Ab}}/{{key|Eb}}\n|Opus/Catalogue Number=D.557\n|Movements Header=3 movements\n|Number of Movements/Sections=3 movements:<br>\n#Allegro moderato ({{k|Ab}})\n#Andante ({{k|Eb}})\n#Allegro ({{k|Eb}})\n|Average Duration=13 minutes\n|Dedication=\n|Year/Date of Composition=1817 May\n|Year of First Publication=1888 {{EN}} ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in A-flat major, D 557 (Schubert)}}\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in B major, D.575 (Schubert, Franz)",
+   "pageid": 2038,
+   "for": [
+    "piano"
+   ],
+   "files": 11,
+   "audio": 1,
+   "info": "|Work Title=Piano Sonata in B major\n|Alternative Title=Piano Sonata No.5; Piano Sonata No.9; Piano Sonata No.10\n|Opus/Catalogue Number=D.575 (published as Op.posth.147)\n|Key={{Key|B}}\n|Movements Header=4 movements\n|Number of Movements/Sections=4 movements\n#Allegro ma non troppo ({{k|B}})\n#Andante ({{k|E}})\n#''Scherzo''. Allegretto — ''Trio'' ({{k|G}})\n#Allegro giusto ({{k|B}})\n|Average Duration=26 minutes\n|Dedication={{LinkDed|Sigismond|Thalberg}}\n|Year/Date of Composition=1817 August\n|Year of First Publication=1846 − [[Diabelli]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in B major, D 575 (Schubert)}}\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in B-flat major, D.960 (Schubert, Franz)",
+   "pageid": 2039,
+   "for": [
+    "piano"
+   ],
+   "files": 9,
+   "audio": 9,
+   "info": "|Work Title=Piano Sonata in B-flat major\n|Alternative Title=Piano Sonata No.15; Piano Sonata No.21 \n|Opus/Catalogue Number=D.960\n|Key={{Key|Bb}}\n|Movements Header=4 movements\n|Number of Movements/Sections=4 movements:\n#Molto moderato ({{K|Bb}}, 357 bars)\n#Andante sostenuto ({{K|c#}}/{{K|C#}}, 138 bars)\n#''Scherzo''. Allegro vivace con delicatezza ({{k|Bb}}, 90 bars) — ''Trio'' ({{K|Db}}, 28 bars) + 4 bars coda\n#Allegro ma non troppo ({{K|Bb}}, 540 bars)\n|Average Duration=43 minutes\n|Dedication=\n|Year/Date of Composition=1828 (September)\n|Year of First Publication=1839 {{EN}} Vienna: [[Diabelli]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Schubert's last sonatas|English}}<br>{{wp|fr:Sonate pour piano no 21 de Schubert|French}}\n|Extra Information=The work is numbered as Piano Sonata No.15 in the Breitkopf & Härtel edition and as Piano Sonata No.21 in both Classical Archives and the Wiener Urtext Edition.\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in C major, D.279 (Schubert, Franz)",
+   "pageid": 2031,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata in C major\n|Alternative Title=Piano Sonata No.2\n|Opus/Catalogue Number=D.279\n|Key={{Key|C}}/{{key|a}}\n|Movements Header=3 movements\n|Number of Movements/Sections=3 movements:\n#Allegro moderato ({{K|C}})\n#Andante ({{K|F}})\n#''Menuetto''. Allegro vivace — ''Trio'' ({{K|a}})\n|Average Duration=19 minutes\n|Dedication=\n|Year/Date of Composition=1815 September\n|Year of First Publication=1888 {{EN}} [[Franz Schubert's Werke (Schubert, Franz)|''Franz Schubert's Werke'']]\n|Related Works=The {{LinkWork|Minuet in A minor, D.277a||Schubert|Franz|0}} is the first version of the third movement.\n|Librettist=\n|Language=\n|Extra Information=Because the work lacks a Finale, some have proposed the incomplete {{LinkWork|Allegretto in C major, D.346||Schubert|Franz|0}} as a fourth movement. Others have proposed the fragmentary {{LinkWork|Rondo in C major, D.309a||Schubert|Franz|0}}.\n|Piece Style=Romantic\n|External Links=[[wikipedia:Piano_Sonata_in_C_major,_D_279_(Schubert)|Wikipedia article]]\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in C major, D.613 (Schubert, Franz)",
+   "pageid": 21636,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata in C major\n|Alternative Title=Piano Sonata No.10; Piano Sonata No.11\n|Key={{key|C}}\n|Opus/Catalogue Number=D.613\n|Movements Header=2 movements\n|Number of Movements/Sections=2 movements:\n#Moderato ({{k|C}} - fragment)\n#[without tempo indication] ({{k|C}} - fragment)\n|Average Duration=9-10 minutes\n|Dedication=\n|Year/Date of Composition=1818 April\n|Year of First Publication=1897 − ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in C major, D 613 (Schubert)}}\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in C major, D.840 (Schubert, Franz)",
+   "pageid": 21675,
+   "for": [
+    "piano"
+   ],
+   "files": 4,
+   "audio": 2,
+   "info": "|Work Title=Piano Sonata in C major, ''Reliquie''\n|Alternative Title=Piano Sonata No.15\n|Opus/Catalogue Number=D.840\n|Key={{key|C}}\n|Movements Header=4 movements\n|Number of Movements/Sections=4 movements:<br>\n#Moderato ({{k|C}})\n#Andante ({{k|c}})\n#''Menuetto''. Allegretto — ''Trio'' ({{k|Ab}} - fragment)\n#''Rondo''. Allegro ({{k|C}} - fragment)\n|Average Duration=38 minutes\n|Dedication=\n|Year/Date of Composition=1825 April\n|Year of First Publication=1861 − [[Whistling]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in C major, D 840 (Schubert)}}\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in C minor, D.958 (Schubert, Franz)",
+   "pageid": 2045,
+   "for": [
+    "piano"
+   ],
+   "files": 4,
+   "audio": 2,
+   "info": "|Work Title=Piano Sonata in C minor\n|Alternative Title=Piano Sonata No.13; Piano Sonata No.19 \n|Opus/Catalogue Number=D.958\n|Key={{Key|c}}\n|Movements Header=4 movements\n|Number of Movements/Sections=4 movements:\n#Allegro ({{K|c}}, 274 bars)\n#Adagio ({{K|Ab}}, 115 bars)\n#''Menuetto''. Allegro ({{K|c}}, 41 bars) — ''Trio'' ({{K|Ab}}, 36 bars)\n#Allegro ({{K|c}}, 717 bars)\n|Average Duration=32 minutes\n|Dedication=Dedicated, with D.959&D.960, to Robert Schumann by the publishers.\n|Year/Date of Composition=1828 (September)\n|Year of First Publication=1839 {{EN}} Vienna: [[Diabelli]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|External Links={{wp|Schubert's last sonatas|English}}<br>{{wp|es:Sonata para piano en do menor (Schubert)|Spanish}}\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in C-sharp minor, D.655 (Schubert, Franz)",
+   "pageid": 154897,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata in C-sharp minor\n|Alternative Title=Piano Sonata No.12\n|Opus/Catalogue Number=D.655\n|Key={{key|c#}}\n|Movements Header=1 movement [without tempo indication]\n|Number of Movements/Sections=1 movement [without tempo indication] (fragment)\n|Average Duration=5 minutes\n|Dedication=\n|Year/Date of Composition=1819 April\n|Year of First Publication=1897 − ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in C-sharp minor, D 655 (Schubert)}}\n|Extra Information=fragment\n|Instrumentation=piano\n|Tags=sonatas ; allegros ; pf"
+  },
+  {
+   "title": "Piano Sonata in D major, D.850 (Schubert, Franz)",
+   "pageid": 2040,
+   "for": [
+    "piano"
+   ],
+   "files": 4,
+   "audio": 9,
+   "info": "|Work Title=Piano Sonata in D major, ''Gasteiner''\n|Alternative Title=Piano Sonata No.11; Piano Sonata No.17\n|Opus/Catalogue Number=D.850 (published as Op.53)\n|Key={{Key|D}}\n|Movements Header=4 movements\n|Number of Movements/Sections=4 movements:\n#Allegro vivace ({{K|D}})\n#Con moto ({{K|A}})\n#''Scherzo''. Allegro vivace — ''Trio'' ({{K|D}})\n#''Rondo''. Allegro moderato ({{K|D}})\n|Average Duration=39 minutes\n|Dedication={{LinkDed|Carl Maria von|Bocklet}} (1801–1881)\n|Year/Date of Composition=1825 August\n|Year of First Publication=1826 − [[Artaria]]\n|External Links=[[wikipedia:Piano Sonata in D major, D. 850 (Schubert)|Wikipedia article]]\n|Discography={{AMG|mc0002370922}}\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in E major, D.154 (Schubert, Franz)",
+   "pageid": 21572,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata in E major\n|Alternative Title=Allegro in E major\n|Opus/Catalogue Number=D.154\n|Key={{key|E}}\n|Movements Header=1 movement\n|Number of Movements/Sections=1 movement:\n#Allegro ({{key|E}} - fragment)\n|Average Duration=6 minutes\n|Dedication=\n|Year/Date of Composition=1815 February 11\n|Year of First Publication=1897 {{EN}} ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]''\n|Related Works=First version of the first movement of the {{LinkWork|Piano Sonata in E major, D.157||Schubert|Franz|0}}\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=allegros ; pf"
+  },
+  {
+   "title": "Piano Sonata in E major, D.157 (Schubert, Franz)",
+   "pageid": 2030,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata in E major\n|Alternative Title=Piano Sonata No.1\n|Opus/Catalogue Number=D.157\n|Key={{key|E}}\n|Movements Header=3 movements\n|Number of Movements/Sections=3 movements:<br>\n#Allegro ma non troppo ({{k|E}})\n#Andante ({{k|e}})\n#''Menuetto''. Allegro vivace — ''Trio'' ({{k|B}})\n|Average Duration=20 minutes\n|Dedication=\n|Year/Date of Composition=1815 February\n|Year of First Publication=1888 {{EN}} ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Related Works={{LinkWork|Allegro in E major, D.154||Schubert|Franz|0}} is the first version of the first movement\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=unfinished?\n|External Links=[[wikipedia:Piano_Sonata_in_E_major,_D_157_(Schubert)|Wikipedia article]]\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in E major, D.459 (Schubert, Franz)",
+   "pageid": 444358,
+   "for": [
+    "piano"
+   ],
+   "files": 6,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata in E major\n|Alternative Title=Piano Sonata No.3\n|Key={{key|E}}\n|Opus/Catalogue Number=D.459\n|Movements Header=2 movements\n|Number of Movements/Sections=2 movements:<br>\n#Allegro moderato ({{k|E}})\n#''Scherzo''. Allegro ({{k|E}})\n|Average Duration=12 minutes\n|Dedication=\n|Year/Date of Composition=1816 August\n|Year of First Publication=1843 {{EN}} [[C.A. Klemm]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|External Links={{wp|Piano Sonata in E major, D 459 (Schubert)}}\n|Extra Information=First published with the {{LinkWork|3 Klavierstücke|D.459a|Schubert|Franz|0}} as ''5 Klavierstücke''. The work is therefore usually identified as either as a set of 5 piano pieces, or a five movement piano sonata.\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in E minor, D.566 (Schubert, Franz)",
+   "pageid": 2041,
+   "for": [
+    "piano"
+   ],
+   "files": 5,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata No. 6 in E minor\n|Alternative Title=Piano Sonata No.4, Piano Sonata No.6\n|Opus/Catalogue Number=D.566\n|Key={{Key|e}}\n|Movements Header=3 movements\n|Number of Movements/Sections=3 movements:<br>\n#Moderato ({{k|e}})\n#Allegretto ({{k|E}})\n#''Scherzo''. Allegro vivace — ''Trio'' ({{k|Ab}})\n|Average Duration=20 minutes\n|Dedication=\n|Year/Date of Composition=1817 June\n|Year of First Publication=1888 (1st movement) {{EN}} ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]<BR>1907 (2nd movement) {{EN}} Breitkopf & Härtel<BR>1928 (3rd movement) {{EN}} ''Die Musik''\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in E minor, D 566 (Schubert)}}\n|Extra Information=unfinished? Because the work appears to lack a finale, some have proposed the {{LinkWork|Rondo in E major|D.506|Schubert|Franz|0}} as a fourth movement. \n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in E minor, D.769a (Schubert, Franz)",
+   "pageid": 580960,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata in E minor\n|Alternative Title=\n|Opus/Catalogue Number=D.769a (formerly D.994)\n|Key={{key|e}}\n|Movements Header=1 movement\n|Number of Movements/Sections=1 movement:\n#Allegro ({{K|e}} - fragment)\n|Average Duration=1 minute\n|Dedication=\n|Year/Date of Composition=1823 ca.\n|Year of First Publication=1958 {{EN}} Brown/SCHUBERT\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in E minor, D 769A (Schubert)}}\n|Instrumentation=piano\n|Tags=sonatas ; allegros ; pf"
+  },
+  {
+   "title": "Piano Sonata in E-flat major, D.568 (Schubert, Franz)",
+   "pageid": 2042,
+   "for": [
+    "piano"
+   ],
+   "files": 9,
+   "audio": 4,
+   "info": "|Work Title=Piano Sonata in D-flat major/E-flat major\n|Alternative Title=Piano Sonata No.7, Piano Sonata No.8\n|Opus/Catalogue Number=D.568 (2nd version published as Op.posth.122); 1st version was formerly D.567\n|Key={{Key|Db}} (1st version)<br>{{Key|Eb}} (2nd version)\n|Movements Header=1 sonata (2 versions):<br>3 movements (1st version)<br>4 movements (2nd version)\n|Number of Movements/Sections=1 sonata (2 versions):<br>\n1st version\n#Allegro moderato ({{k|Db}})\n#Andante molto ({{k|c#}})\n#Allegretto ({{k|Db}} - fragment)\n2nd version\n#Allegro moderato ({{k|Eb}})\n#Andante molto ({{k|g}})\n#''Menuetto''. Allegretto — ''Trio'' ({{k|Eb}})\n#Allegro moderato ({{k|Eb}})\n|Average Duration=22 minutes (1st version)<br>30 minutes (2nd version)\n|Dedication=\n|Year/Date of Composition=1817 (1st version)<br>1825–1826(?) (2nd version)\n|Year of First Publication=1897 − ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]] (1st version) <br> 1829 − Vienna: Pennauer (Plate 436) (2nd version)\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in D-flat major, D 568 (Schubert)}} (1st version)<br>{{wp|Piano Sonata in E-flat major, D 568 (Schubert)}} (2nd version)\n|Extra Information=For the 1st version of the sonata, the Neue Schubert-Ausgabe published an alternative version of the 1st movement (Fassung der ersten Satzes nach der ersten Niederschrift). The Finale is a fragment, as the last page of the autograph, probably containing 17 bars, is lost. Its contents may be reconstructed from the parallel passages in the exposition and (for the coda) the 2nd version of the sonata. It is possible that the Scherzo in D-flat major (D.593/2), also composed in 1817, was originally conceived as the 3rd movement of the Sonata. The 1st version is numbered as Piano Sonata No.7 in both Classical Archives and the Wiener Urtext Edition; it is unnumbered in the Breitkopf & Härtel edition. The 2nd version is numbered as Piano Sonata No.7 in the Breitkopf & Härtel edition, and as Piano Sonata No.8 in the Wiener Urtext Edition; it is unnumbered in Classical Archives.\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in F minor, D.625 (Schubert, Franz)",
+   "pageid": 21642,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata in F minor\n|Alternative Title=Piano Sonata No.11; Piano Sonata No.12\n|Opus/Catalogue Number=D.625\n|Key={{key|f}}\n|Movements Header=3 movements\n|Number of Movements/Sections=3 movements:\n#Allegro ({{k|f}} - fragment)\n#''Scherzo''. Allegretto ({{k|E}})\n#Allegro ({{k|f}} - fragment)\n|Average Duration=20 minutes\n|Dedication=\n|Year/Date of Composition=1818 September\n|Year of First Publication=1897 − ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in F minor, D 625 (Schubert)}}\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in F-sharp minor, D.571 (Schubert, Franz)",
+   "pageid": 154898,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Piano Sonata in F-sharp minor\n|Alternative Title=Allegro in F# minor; Piano Sonata No.8; Piano Sonata No.9\n|Opus/Catalogue Number=D.571\n|Key={{Key|f#}}\n|Movements Header=1 movement\n|Number of Movements/Sections=1 movement\n#Allegro moderato ({{k|f#}} - fragment)\n|Average Duration=6 minutes\n|Dedication=\n|Year/Date of Composition=1817 July\n|Year of First Publication=1897 {{EN}} ''[[Franz Schubert's Werke (Schubert, Franz)|Franz Schubert's Werke]]'', [[Breitkopf und Härtel|Breitkopf & Härtel]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|External Links={{wp|Piano Sonata in F-sharp minor, D 571 (Schubert)}}\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Sonata in G major, D.894 (Schubert, Franz)",
+   "pageid": 2043,
+   "for": [
+    "piano"
+   ],
+   "files": 16,
+   "audio": 9,
+   "info": "|Work Title=Piano Sonata in G major, ''Fantasie''\n|Alternative Title=Piano Sonata No.12; Piano Sonata No.18 ; Fantasie, Andante, Menuetto, et Allegro\n|Opus/Catalogue Number=D.894 (published as Op.78)\n|Key={{Key|G}}\n|Movements Header=4 movements\n|Number of Movements/Sections=4 movements:\n#Molto moderato e cantabile ({{K|G}}, 174 bars)\n#Andante ({{K|D}}, 180 bars)\n#''Menuetto''. Allegro moderato ({{K|b}}, 52 bars) — ''Trio'' ({{K|B}}, 30 bars)\n#Allegretto ({{K|G}}, 411 bars)\n|Average Duration=30-50 minutes\n|Dedication=Joseph Edler von Spaun\n|Year/Date of Composition=1826 (October)\n|Year of First Publication=1827 {{EN}} Vienna: [[Tobias Haslinger]]\n|Librettist=\n|Language=\n|Extra Information=Durations vary. Most recordings now are close to 35 minutes, but one Sviatoslav Richter recording takes close to 50, half of that in the first movement.\n|External Links={{wp|Piano Sonata in G major, D 894 (Schubert)}}\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=sonatas ; pf"
+  },
+  {
+   "title": "Piano Transcriptions of Various Composers (Friedman, Ignaz)",
+   "pageid": 24019,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 28,
+   "audio": 0,
+   "info": "|Work Title=Piano Transcriptions of Various Composers\n|Alternative Title=\n|Opus/Catalogue Number=\n|Number of Movements/Sections=\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Page Type=Collection\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "Rondo in C major, D.309a (Schubert, Franz)",
+   "pageid": 581817,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Rondo in C major\n|Alternative Title=\n|Opus/Catalogue Number=D.309a (formerly D.deest)\n|Key={{Key|C}}\n|Movements Header=1 rondo\n|Number of Movements/Sections=Allegro vivace (fragment)\n|Average Duration=1 minute\n|Dedication=\n|Year/Date of Composition=1815 October 16\n|Year of First Publication=2000\n|Related Works={{LinkWork|Piano Sonata in C major, D.279||Schubert|Franz|0}} ?\n|Librettist=\n|Language=\n|Extra Information=This 6-bar fragment may have been originally conceived as a final movement for the {{LinkWork|Piano Sonata in C major, D.279||Schubert|Franz|0}}. It was completely cancelled out, and two days later the remainder of the page was used to begin the autograph of the 2nd version of [[Sehnsucht, D.310 (Schubert, Franz)|''Sehnsucht, D.310'']].\n|Piece Style=Romantic\n|External Links={{SchuOL|10020}}\n|Instrumentation=piano\n|Tags=rondos ; pf"
+  },
+  {
+   "title": "Rondo in E major, D.506 (Schubert, Franz)",
+   "pageid": 7774,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=Rondo in E major\n|Alternative Title=Adagio and Rondo in E major\n|Key={{key|E}}\n|Opus/Catalogue Number=D.506 (published as Op.posth.145 No.2)\n|Movements Header=Allegretto\n|Number of Movements/Sections=Allegretto\n|Average Duration=6-7 minutes\n|Dedication=\n|Year/Date of Composition=1817 June(?)\n|Year of First Publication=1848 − [[Diabelli]]\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=\n|Instrumentation=piano\n|Tags=rondos ; pf"
+  },
+  {
+   "title": "Sang und Klang im 19. und 20. Jahrhundert (Various)",
+   "pageid": 388323,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 5,
+   "audio": 0,
+   "info": "|Work Title=Sang und Klang im 19. und 20. Jahrhundert\n|Alternative Title=Ernstes und Heiteres aus dem Reiche der Töne ; mit einer Anzahl Biographien und Portraits\n|Opus/Catalogue Number=\n|Key=\n|Number of Movements/Sections=\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1904–1929\n|Librettist=\n|Language= German \n|Piece Style=Early 20th century\n|Instrumentation=piano, voice and piano\n|Tags=songs ; v pf ; pf ; de\n|Page Type=Collection"
+  },
+  {
+   "title": "Selected Piano Compositions (Schubert, Franz)",
+   "pageid": 553385,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Selected Piano Compositions\n|Alternative Title=\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=12\n|Number of Movements/Sections=12 pieces\n# Impromptus, Op.90\n# Impromptus, Op.142\n# Moments musicals, Op.94\n# Waltzes, Op.91\n# Valses sentimentales, Op.50a\n# Galop and Ecossaisen, Op.49\n# Allegretto, C minor\n# Fantasie, Op.15\n# Sonata, Op.42\n# Rondo, Op.53 No.2\n# Menuetto, Op.78 No.3\n# Andante sostenuto, from Sonata in B-flat major\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1912\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=Piano\n|Tags=pieces ; pf\n|Page Type=Collection"
+  },
+  {
+   "title": "Sonntags-musik (Pauer, Ernst)",
+   "pageid": 168259,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Sonntagsmusik\n|Alternative Title=Sunday Music; A Collection of 100 Pieces Extracted from the Sacred Vocal and Instrumental Works of the Most Celebrated Composers\n|Opus/Catalogue Number=\n|Key=\n|Movements Header=100 pieces\n|Number of Movements/Sections=100 pieces\n#{{LinkCompS|Franz|Schubert}} - ''Pax vobiscum''\n#{{LinkCompS|Wolfgang Amadeus|Mozart}} - ''Andante'' in G major\n#{{LinkCompS|Friedrich|Schneider}} - ''Prayer'' (Stille der Andacht)\n#{{LinkCompS|Luigi|Cherubini}} - ''Pie Jesu'' from the ''Requiem''\n#{{LinkCompS|August Ferdinand|Haeser}} - ''Graduale'' from the ''Requiem'', Op.34\n#{{LinkCompS|Franz|Schubert}} - ''Das Marienbild''\n#{{LinkCompS|Joseph|Haydn}} - ''Prayer'' (Gebet zu Gott)\n#{{LinkCompS|Jacob|Arcadelt}} - ''Ave Maria''\n#{{LinkCompS|Ludwig van|Beethoven}} - ''Hope'' (An die Hoffnung)\n#{{LinkCompS|Wolfgang Amadeus|Mozart}} - ''Andante'' in D major\n#''Allein Gott in der Höh sei Ehr'' (chorale)\n#{{LinkCompS|Felix|Mendelssohn}} - ''Andante'' in A major\n#{{LinkCompS|Ludwig van|Beethoven}} - ''Andante'' in D major\n#{{LinkCompS|August Ferdinand|Haeser}} - ''Pie Jesu'' from the ''Requiem'', Op.34\n#''Alle Menschen müssen sterben'' (chorale)\n#{{LinkCompS|George Frideric|Handel}} - ''Return, o God of hosts'' from the oratorio ''Samson''\n#{{LinkCompS|Alessandro|Stradella}} - ''Sacred Aria'' (Kirchen-Arie)\n#{{LinkCompS|Ludwig van|Beethoven}} - ''Nature's Praise of God'' (Die Ehre Gottes in der Natur'')\n#{{LinkCompS|Felix|Mendelssohn}} - Song\n#{{LinkCompS|Johann Adam|Hiller}} - ''Wie gross ist des Allmächt'gen Güte'' (chorale)\n#{{LinkCompS|Wolfgang Amadeus|Mozart}} - ''Ave verum''\n#{{LinkCompS|Christoph Willibald|Gluck}} - ''Hymn''\n#{{LinkCompS|Johann Sebastian|Bach}} - ''Chorus'' from the Passion-Music of St. Matthew\n#{{LinkCompS|Franz|Schubert}} - ''Litany'' (Litanei auf das Fest aller Seelen)\n#{{LinkCompS|Johann Adam|Hiller}} - ''Hymn'' (Mein Gott, zu dem ich weinend flehe!)\n#{{LinkCompS|Felix|Mendelssohn}} - ''Song'' (The Pilgrim's Song)\n#''Auf, auf mein Herz, mit Freuden'' (chorale)\n#{{LinkCompS|Ludwig van|Beethoven}} - ''Prayer'' (Bitten)\n#{{LinkCompS|Alessandro|Stradella}} - ''O Salutaris''\n#{{LinkCompS|Friedrich Heinrich|Himmel}} - ''Prayer''\n#{{LinkCompS|Ludwig van|Beethoven}} - ''Andante'' in E{{flat}} major\n#''Ach, bleib'bei uns, Herr Jesu Christ'' (chorale)\n#''Wie schön leuchtet der Morgenstern'' (chorale)\n#{{LinkCompS|Ludwig van|Beethoven}} - ''Love of our Neighbour'' (Die Liebe des Náchsten)\n#{{LinkCompS|Felix|Mendelssohn}} - ''Adagio'' in E major\n#{{LinkCompS|Ludwig van|Beethoven}} - ''March'' from the oratorio ''Mount of Olives''\n#{{LinkCompS|Felix|Mendelssohn}} - ''But the Lord is Mindful of His Own'' from the oratorio ''St. Paul''\n#''Alla Trinita beata'' (15th century cantique)\n#''Evening Hymn'' of the Moravian Brothers\n#{{LinkCompS|George Frideric|Handel}} - ''Ehr' sei im Himmelsthrone'' (chorale)\n#{{LinkCompS|Johann Sebastian|Bach}} - ''Hymn'' in G minor\n#{{LinkCompS|Giovanni Battista|Pergolesi}} - ''Stabat Mater''\n#{{LinkCompS|George Frideric|Handel}} - ''Come, Ever Smiling Liberty'' from ''Judas Maccabeus''\n#{{LinkCompS|Robert|Schumann}} - * * * \n#{{LinkCompS|Felix|Mendelssohn}} - ''Morning Song''\n#{{LinkCompS|Ludwig van|Beethoven}} - ''Andante'' in E major\n#{{LinkCompS|George Frideric|Handel}} - ''Adagio'' in B minor\n#{{LinkCompS|Giovanni Battista|Pergolesi}} - ''Quando corpus morietur'' (Stabat Mater)\n#''Audersteh'n, ja aufersteh'n, wirst du'' (chorale)\n#{{LinkCompS|Joseph|Haydn}} - ''The Heavens are Telling'' from ''The Creation''\n#{{LinkCompS|Heinrich|Schütz}} - ''Hymn''\n#{{LinkCompS|Antonio|Lotti}} - ''Oh! Hide Thy Face, O Gracious God''\n#{{LinkCompS|Wolfgang Amadeus|Mozart}} - ''Evening Thoughts''\n#{{LinkCompS|Emanuele|Astorga}} - ''Sancta Mater'' from the ''Stabat Mater''\n#{{LinkCompS|Johann Sebastian|Bach}} - ''My Heart Ever Faithful''\n#{{LinkCompS|Benedetto|Marcello}} - ''From Psalm I''\n#{{LinkCompS|William|Crotch}} - ''Be Peace on Earth''\n#{{LinkCompS|Vincenzo|Righini}} - ''Te Deum''\n#''Bless Thou Thy Maker'' (Old German)\n#{{LinkCompS|Dmytro|Bortniansky}} - ''Sanctus''\n#{{LinkCompS|Giovanni Pierluigi da|Palestrina}} - ''Agnus Dei''\n#{{LinkCompS|George Frideric|Handel}} - ''Adagio and Presto''\n#{{LinkCompS|Dmytro|Bortniansky}} - ''I Pray Unto the Power of Mercy''\n#{{LinkCompS|Wolfgang Amadeus|Mozart}} - ''Andante''\n#{{LinkCompS|Johann Adam|Hiller}} - ''God is My Song'' (Gott ist mein Lied)\n#{{LinkCompS|Johann Adam|Hiller}} - ''Thou Mourn'st, o Christ in Heavy Suff'ring'' (Du klagst, o Christ, in schwerem Leiden)\n#{{LinkCompS|Johann Adam|Hiller}} - ''O Lord, Against Thee Only Have I Sinned'' (An dir allein, an dir hab'ich gesündigt)\n#{{LinkCompS|George Frideric|Handel}} - ''Andante''\n#{{LinkCompS|Niccolò Antonio|Zingarelli}} - ''Litany''\n#{{LinkCompS|Benedetto|Marcello}} - ''Preserve Me, Lord, From the Ungodly'' from the 16th Psalm\n#{{LinkCompS|George Frideric|Handel}} - ''When Jesus, Our Lord''\n#{{LinkCompS|Felix|Mendelssohn}} - ''For in His Own Hand'' (95th Psalm)\n#{{LinkCompS|Ludwig van|Beethoven}} - ''Andante''\n#{{LinkCompS|Franz|Schubert}} - ''The Wanderer's Evening Song''\n#{{LinkCompS|Johann Adolph|Hasse}} - ''Recordare Jesu''\n#{{LinkCompS|Arcangelo|Corelli}} - ''Largo'' from the Sonata da Chiesa No.5\n#{{LinkCompS|Wolfgang Amadeus|Mozart}} - ''Gottheit, dir sei Preis'' (from the Hymn)\n#{{LinkCompS|Joseph|Haydn}} - ''Andantino''\n#{{LinkCompS|Franz|Schubert}} - ''To Music'' (An die Musik)\n#{{LinkCompS|Wolfgang Amadeus|Mozart}} - ''Adagio''\n#{{LinkCompS|Johann Sebastian|Bach}} - ''Andante''\n#{{LinkCompS|William|Crotch}} - ''Andantino'' from the oratorio ''Palestine''\n#{{LinkCompS|Giovanni Pierluigi da|Palestrina}} - ''Stabat Mater'' (1555)\n#{{LinkName|Carl Philipp Emanuel|Bach}} - ''Aria'' from the oratorio ''St. Peter''\n#{{LinkCompS|Johann Nepomuk|Hummel}} - ''Andantino''\n#{{LinkCompS|Wolfgang Amadeus|Mozart}} - ''Andante con moto''\n#{{LinkCompS|Ludwig van|Beethoven}} - ''Adagio''\n#{{LinkCompS|John|Field}} - ''Evening Song''\n#{{LinkCompS|Felix|Mendelssohn}} - ''I Will Sing of Thy Great Mercies''\n#{{LinkCompS|Arcangelo|Corelli}} - ''Sonata da chiesa''\n#{{LinkCompS|Samuel|Webbe}} - ''Prayer''\n#{{LinkCompS|Franz|Schubert}} - ''Dies irae, dies illa''\n#{{LinkCompS|Ludwig van|Beethoven}} - ''Adagio sostenuto''\n#''Old Hebrew Prayer''\n#{{LinkCompS|Friedrich Heinrich|Himmel}} - ''Prayer''\n#{{LinkCompS|Felix|Mendelssohn}} - ''I Waited for the Lord''\n#{{LinkCompS|Ludwig van|Beethoven}} - ''Andante cantabile'\n#{{LinkCompS|Jan Ladislav|Dussek}} - ''Adagio''\n#{{LinkCompS|Franz|Schubert}} - ''The Weeping''\n#{{LinkCompS|George Frideric|Handel}} - ''The King Shall Rejoice'' (Fourth Coronation Anthem)\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1878-79 {{EN}} Leipzig: [[Breitkopf und Härtel]]\n: 1. Heft: {{HMBref|1878|354}}\n: 2. Heft: {{HMBref|1879|120}}\n: 3. Heft: {{HMBref|1879|152}}\n|Librettist=\n|Language=\n|Page Type=Collection\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "The Musical Amulet for 1836 (Dun, Finlay)",
+   "pageid": 1246252,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=The Musical Amulet for 1836\n|Alternative Title=The Musical Scrap Book, Edited by Finlay Dun. This work will contain Original and Selected Songs, Ballads, Romances, Ariettes, &c. for the Voice, and Polonaises, Quadrilles, Waltzes, &c. for the Piano Forte\n|Opus/Catalogue Number=\n|Key=\n|Movements Header={{Sb}}\n|Number of Movements/Sections={{Sb}}\n#{{LinkName|Franz|Schubert}} - Waltz No.1 in {{key|C}} (No.1 in {{LinkWork|12 Valses nobles|D.969|Schubert|Franz|0}})\n#{{LinkName|Franz|Schubert}} - Waltz No.2 in {{key|C}} (No.6 in {{LinkWork|12 Valses nobles|D.969|Schubert|Franz|0}})\n#Neapolitan Ballad, arranged F. Dun - ''Se tu Nenna''\n#{{LinkName|Karol Józef|Lipiński}} - Polonaise in {{key|A}} (No.2 in {{LinkWork|3 Polonoises|Op.5|Lipiński|Karol Józef|0}})\n#{{LinkName|Carl|Czerny}} - Waltz in {{key|Bb}}\n#{{LinkName|Maria Agata|Szymanowska}} - Waltz in {{key|Bb}} (No.7 in {{LinkWork|18 Danses de Différent Genre||Szymanowska|Maria Agata|0}})\n#{{LinkName|Heinrich|Marschner}} - ''Schweigend in des Abends Stille'' / ''I try, dear love, to banish thought'' (Erinnerung, No.1 in {{LinkWork|4 Lieder der Liebe|Op.44|Marschner|Heinrich|0}})\n#{{LinkName|Carl Maria von|Weber}} - Romanza in {{key|F}} (No.2 in {{LinkWork|6 Petites pièces faciles|Op.3|Weber|Carl Maria von|0}})\n#{{LinkName|Antoine Rudolphe|Lenk}} - Gallopade in {{key|Eb}} (No.8 in {{LinkWork|8 Original Galop nebst Trio||Lenk|Antoine Rudolphe|0}})\n#The Scrap Book Quadrilles (First Set)\n##Berton (presumably {{LinkName|Henri-Montan|Berton}}) - Pantalon\n##{{LinkName|Wenzel Robert von|Gallenberg}} - L'Été\n##F. Dun - La Poule\n##F. Dun - Trenis\n##F. Dun - Finale\n#F. Dun - Ländler\n#Polish Dance\n#Neapolitan Ballad, arranged F. Dun - ''A Ischia non ce so''\n#Danish Air, arranged F. Dun - ''The sunny rays of morning'' (see also {{RISMs|141285}})\n##arrangement for voice and piano\n##arrangement for 2 voices and piano\n#{{LinkName|Wolfgang Amadeus|Mozart}}, arranged F. Dun - Andante (Movement 2) from {{LinkWork|String Quartet No.15 in D minor|K.421/417b|Mozart|Wolfgang Amadeus|0}}\n#{{LinkName|Heinrich|Marschner}} - ''Drüben im Walde'' / ''Flow gentle streamlet'' (Lied No.4 in {{LinkWork|4 Lieder der Liebe|Op.44|Marschner|Heinrich|0}})\n#Russian Air\n#Dutch Air [''Wien Neêrlandsch bloed in de aders vloeit'', by {{LinkName|Johann Wilhelm|Wilms}} ]\n#{{LinkName|Johann Michael|Müller II}} (1772-1835) - Rondo Brillant in {{key|G}}, dedicated to Miss Gerard\n#{{LinkName|Carl Maria von|Weber}} - Ninnarella (Cradle Song). ''Dormi bambin'' (Wiegenlied, No.2 in {{LinkWork|5 Lieder und ein Kanon|Op.13|Weber|Carl Maria von|0}})\n#J. Daniel - ''She grew on earth a summer flower''\n#Süssmilch - Grand Waltz in {{key|A}}\n#{{LinkName|George Farquhar|Graham}} - Ariettina in {{key|Eb}}\n#Polish March (Marsch der Sensenträger beim Auszuge aus Warschau; Marsz Kosynierów)\n#Danish Air, arranged F. Dun - ''Can I cease to remember''\n#Neapolitan Ballad, arranged F. Dun - ''Fenesta vascia patrona crudelle''\n#Ulric Vaucher - Waltz in {{key|G}}\n#Vienna Ländler\n#German Air, arranged F. Dun - The Sailor Boy. ''I will think of my love in the moonlight''\n#{{LinkName|Carl Maria von|Weber}} - Lützow's wilde Jagd, arranged for piano 4-hands (No.2 in {{LinkWork|Leyer und Schwerdt|Op.42|Weber|Carl Maria von|0}})\n#{{LinkName|Ferdinando|Paër}} - Waltz in {{key|Eb}} (No.1 in ''6 Waltzes'' dedicated to Marie Louise of Austria)\n#Krakoviak\n#The Scrap Book Quadrilles (Second Set)\n##Nebel - Pantalon\n##Baudouin - L'Été\n##Baudouin - La Poule\n##Nebel - Trenis \n##Baudouin - Finale\n#{{LinkName|Antoine Rudolphe|Lenk}} - Gallopade No.2 in {{key|D}} (No.5 (transposed) in {{LinkWork|8 Original Galop nebst Trio||Lenk|Antoine Rudolphe|0}})\n#Finlay Dun - Il Labbro. ''Dimmi, dimmi apetta cara''\n#Irish Air (unattributed arranger; piano accompaniment by Dun) - Patrick, a Ballad. ''Oh might I but my Patrick love!''\n#{{LinkName|Wolfgang Amadeus|Mozart}}, arranged Dun - Andante (Movement 2) from {{LinkWork|Symphony No.39 in E-flat major|K.543|Mozart|Wolfgang Amadeus|0}}\n#arranged Dun - La Capuana. ''No juorno jenno a spasso''\n#C. Hargitt junior (Charles Hargitt, 1806–1880) - L'Amitié\n|Average Duration=\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=includes\n:H. G. Bell\n:{{LinkLib|Theodor|Körner|1791|1813}}\n:C. S. G. \n:Robert Gilfillan\n:{{LinkLib|Karl Wilhelm|Salice-Contessa}} (1777-1825), from ''Der Orakelspruch''\n:F. M.\n|Language=English, Italian, German\n|Piece Style=Romantic\n|Extra Information=Published initially in 24 numbers under the title \"The Musical Scrap Book\" - issued as a bound volume of all 24 numbers under the title \"The Musical Amulet for 1836\"\n|Instrumentation=1-3 voices, piano; voice, guitar (or piano); piano; piano 4-hands \n|Page Type=Collection \n|Tags=ballads ; songs ; ariettas ; folksongs ; v pf ; 2vv pf ; 3vv pf ; v gtr ; en ; it ; de ; waltzes ; polonaises ; quadrilles ; landler ; airs ; marches ; pf ; pf4h"
+  },
+  {
+   "title": "Trio in E major, D.610 (Schubert, Franz)",
+   "pageid": 7857,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=Trio\n|Key={{key|E}}\n|Alternative Title=\n|Opus/Catalogue Number=D.610\n|Number of Movements/Sections=\n|Dedication=\n|Year/Date of Composition=1818\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=trios ; pf"
+  },
+  {
+   "title": "Trio of a Minuet, D.2f (Schubert, Franz)",
+   "pageid": 891769,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Trio of a Minuet for Winds(?), D.2f\n|Alternative Title=\n|Opus/Catalogue Number=D.2f\n|Key={{key|C}}\n|Movements Header=1 trio\n|Number of Movements/Sections=1 trio\n|Average Duration=1 minute\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1811\n|Year of First Publication=1991\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Extra Information=piano sketch\n|Instrumentation=2 oboes, 2 clarinets, 2 bassoons, 2 horns, trumpet (?)\n|Tags=minuets ; trios ; 2ob 2cl 2bn 2hn tpt ; pf"
+  },
+  {
+   "title": "Ungarische Melodie, D.817 (Schubert, Franz)",
+   "pageid": 24099,
+   "for": [
+    "piano"
+   ],
+   "files": 3,
+   "audio": 0,
+   "info": "|Work Title=Ungarische Melodie\n|Alternative Title=Hungarian Melody\n|Opus/Catalogue Number=D.817\n|Number of Movements/Sections=Allegretto\n|Dedication=\n|Key={{Key|b}}\n|Year/Date of Composition=1824-09-02\n|Year of First Publication=1928\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=pieces ; pf"
+  },
+  {
+   "title": "Valses sentimentales, D.779 (Schubert, Franz)",
+   "pageid": 7858,
+   "for": [
+    "piano"
+   ],
+   "files": 19,
+   "audio": 2,
+   "info": "|Work Title=Valses sentimentales\n|Alternative Title=\n|Opus/Catalogue Number=D.779 ; Op.50\n|Number of Movements/Sections=34 waltzes\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=1825\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "Variation on a Waltz by Diabelli, D.718 (Schubert, Franz)",
+   "pageid": 7765,
+   "for": [
+    "piano"
+   ],
+   "files": 4,
+   "audio": 1,
+   "info": "|Work Title=Variation on a Waltz by Diabelli\n|Alternative Title=\n|Opus/Catalogue Number=D.718\n|Key={{Key|c}}\n|Movements Header=\n|Number of Movements/Sections=\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=variations ; pf"
+  },
+  {
+   "title": "Vaterländischer Künstlerverein (Diabelli, Anton)",
+   "pageid": 17185,
+   "for": [
+    "piano"
+   ],
+   "collection": true,
+   "files": 2,
+   "audio": 0,
+   "info": "|Work Title=Vaterländischer Künstlerverein (Patriotic Artists' Association)\n|Alternative Title=50 Veränderungen über einen Walzer für das Piano-Forte\n|Opus/Catalogue Number=\n|Movements Header=52 (theme, 50 variations, coda)\n|Number of Movements/Sections=52 (theme, 50 variations, coda)\n* Thema. Vivace ({{K|C}}), by Anton Diabelli\n* 50 variations:\n*# {{LinkName|Ignaz|Assmayer}}: Moderato\n*# {{LinkName|Carl Maria von|Bocklet}}: Vivace\n*# {{LinkName|Leopold|Czapek}}: Vivace molto legato\n*# {{LinkName|Carl|Czerny}}\n*# {{LinkName|Joseph|Czerny}}\n*# {{LinkName|Moritz von|Dietrichstein}}: Tempo vivo del Thema\n*# {{LinkName|Joseph|Drechsler}}: Quasi Ouverture. Adagio - Allegro\n*# {{LinkName|Emanuel Aloys|Förster}}: Capriccio. Allegro\n*# {{LinkName|Franz Jakob|Freystädtler}}\n*# {{LinkName|Johann Baptist|Gänsbacher}}\n*# {{LinkName|Joseph|Gelinek}}: Presto\n*# {{LinkName|Anton|Halm}}: Dolce\n*# {{LinkName|Joachim|Hoffmann}}: (Fugato.) Vivo\n*# {{LinkName|Johann|Horzalka}}: Adagio ({{K|Ab}})\n*# {{LinkName|Joseph|Huglmann}}: Allegro ({{K|Ab}})\n*# {{LinkName|Johann Nepomuk|Hummel}}\n*# {{LinkName|Anselm|Hüttenbrenner}}: Allegro\n*# {{LinkName|Friedrich Wilhelm|Kalkbrenner}}: Allegro non troppo\n*# {{LinkName|Friedrich August|Kanne}}\n*# {{LinkName|Joseph|Kerzkowsky}}: Moderato con espressione ({{K|F}})\n*# {{LinkName|Conradin|Kreutzer}}: Vivace\n*# {{LinkName|Eduard von|Lannoy}}\n*# {{LinkName|Maximilian Joseph|Leidesdorf}}: Vivace\n*# {{LinkName|Franz|Liszt}}: Allegro ({{K|c}}) ({{LinkWork|Variation on a Waltz by Diabelli|S.147|Liszt|Franz|0}})\n*# {{LinkName|Joseph|Mayseder}}: Allegro\n*# {{LinkName|Ignaz|Moscheles}}\n*# {{LinkName|Ignaz Franz von|Mosel}}\n*# W. A. Mozart fils ({{LinkName|Franz Xaver Wolfgang|Mozart}})\n*#* 28. Con fuoco\n*#* 28a. (printed in later editions)\n*# {{LinkName|Joseph|Panny}}: Allegro con brio ({{K|a}})\n*# {{LinkName|Hieronymus|Payer}}\n*# {{LinkName|Johann Peter|Pixis}}\n*# {{LinkName|Wenzel|Plachy}}: Con fuoco\n*# {{LinkName|Gottfried|Rieger}}\n*#* 33. Allegro ma non troppo\n*#* 33a. (printed in later editions)\n*# {{LinkName|Philipp Jakob|Riotte}}: Allegro ({{K|f}}, ends {{K|F}})\n*# {{LinkName|Franz|Roser}} ({{K|Ab}})\n*# {{LinkName|Johann|Schenk}}: Caprice. Moderato\n*# {{LinkName|Franz|Schoberlechner}}\n*# {{LinkName|Franz|Schubert}} ({{K|c}}) ({{LinkWork|Variation on a Waltz by Diabelli|D.718|Schubert|Franz|0}})\n*# {{LinkName|Simon|Sechter}}: Imitatio quasi Canon, a 3 voci\n*# S. R. D. ({{LinkName|Erzherzog|Rudolph}}): Fuga. Allegro\n*# {{LinkName|Maximilian|Stadler}}\n*# {{LinkName|Joseph von|Szalay}}\n*# {{LinkName|Václav Jan|Tomášek}}: Polonaise. Tempo giusto\n*# {{LinkName|Michael|Umlauf}}: Presto\n*# {{LinkName|Bedřich Diviš|Weber}}: Con fuoco\n*# {{LinkName|Franz|Weber}}: Brillante\n*# {{LinkName|Charles Angelus|Winkhler}}: Allegro con fuoco\n*# {{LinkName|Franz|Weiss}}\n*# {{LinkName|Jan Nepomuk Augustin|Vitásek}}: Un poco moderato\n*# {{LinkName|Jan Václav|Voříšek}}\n* Coda: Vivace, by {{LinkName|Carl|Czerny}}\n|Dedication=\n|Year/Date of Composition=1819-24\n|Year of First Publication=1824\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Page Type=Collection\n|External Links=[[wikipedia:Vaterländischer Künstlerverein|Wikipedia article]]\n|Instrumentation=piano\n|Tags=variations ;  pf"
+  },
+  {
+   "title": "Waltz in A-flat major, D.978 (Schubert, Franz)",
+   "pageid": 879787,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Waltz in A-flat major\n|Alternative Title=\n|Opus/Catalogue Number=D.978\n|Key={{key|Ab}}\n|Movements Header=1 waltz\n|Number of Movements/Sections=1 waltz\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1825\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "Waltz in C major, D.980d (Schubert, Franz)",
+   "pageid": 879794,
+   "for": [
+    "piano"
+   ],
+   "files": 2,
+   "audio": 1,
+   "info": "|Work Title=Waltz in C major\n|Alternative Title=''Krähwinkler Tanz'', ''Krähwinkler Dance''\n|Opus/Catalogue Number=D.980d\n|Key={{key|C}}\n|Movements Header=1 waltz\n|Number of Movements/Sections=1 waltz\n|Average Duration=1 minute\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1828\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "Waltz in G major, D.844 (Schubert, Franz)",
+   "pageid": 7870,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Waltz in G major\n|Alternative Title=Albumblatt\n|Opus/Catalogue Number=D.844\n|Movements Header=\n|Number of Movements/Sections=\n|Dedication=\n|Year/Date of Composition=1825\n|Year of First Publication=1897\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "Waltz in G major, D.979 (Schubert, Franz)",
+   "pageid": 879789,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Waltz in G major\n|Alternative Title=\n|Opus/Catalogue Number=D.979\n|Key={{key|G}}\n|Movements Header=1 waltz\n|Number of Movements/Sections=1 waltz\n|Average Duration=1 minute\n|Dedication=\n|First Performance=\n|Year/Date of Composition=\n|Year of First Publication=1826\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "Waltz in G-flat major, D.Anh.I/14 (Schubert, Franz)",
+   "pageid": 922456,
+   "for": [
+    "piano"
+   ],
+   "files": 1,
+   "audio": 0,
+   "info": "|Work Title=Waltz in G-flat major\n|Alternative Title=Kupelwieser-Walzer\n|Opus/Catalogue Number=D.Anh.I/14\n|Key={{key|Gb}}\n|Movements Header=Ruhiges Walzertempo\n|Number of Movements/Sections=Ruhiges Walzertempo\n|Average Duration=1-2 minutes\n|Dedication=\n|First Performance=\n|Year/Date of Composition=1826 September 17\n|Year of First Publication=1970\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=waltzes ; pf"
+  },
+  {
+   "title": "Wiener Damen-Ländler und Ecossaisen, D.734 (Schubert, Franz)",
+   "pageid": 7867,
+   "for": [
+    "piano"
+   ],
+   "files": 9,
+   "audio": 0,
+   "info": "|Work Title=18 Viennese Ladies' Ländler and Ecossaises\n|Alternative Title=\n|Opus/Catalogue Number=D.734 (Op.67)\n|Number of Movements/Sections=16 landler, 2 ecossaises\n|Dedication=\n|Year/Date of Composition=\n|Year of First Publication=1826\n|Librettist=\n|Language=\n|Piece Style=Romantic\n|Instrumentation=piano\n|Tags=landler ; ecossaises ; pf"
+  }
+ ]
+}
