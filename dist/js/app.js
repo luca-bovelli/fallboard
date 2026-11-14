@@ -58,7 +58,8 @@
     play: $('playBtn'), prev: $('prevBtn'), next: $('nextBtn'),
     whereOf: $('whereOf'), tempoBox: $('tempoBox'),
     barReadout: $('barReadout'), clock: $('clock'),
-    slower: $('slower'), faster: $('faster'), speedOut: $('speedOut'),
+    speedOut: $('speedOut'), speedReset: $('speedReset'), speed: $('speed'), speedTrack: $('speedTrack'),
+    speedTicks: $('speedTicks'), speedThumb: $('speedThumb'),
     viewSeg: $('viewSeg'), handSeg: $('handSeg'),
     handSlot: $('handSlot'), handToggle: $('handToggle'), speedSlot: $('speedSlot'), speedToggle: $('speedToggle'),
     steps: $('steps'), railShield: $('railShield'),
@@ -132,7 +133,7 @@
     let busy = ms < glassUntil;
     if (footTicks > 0) {
       footTicks--;
-      glassFoot.update(el.rail.clientWidth, el.rail.clientHeight, ms, () => {}, 'page');
+      glassFoot.update(el.rail.clientWidth, el.rail.clientHeight, ms, paintRail, railScene());
       busy = true;
     }
     return busy;
@@ -676,8 +677,7 @@
     el.speedOut.textContent = Math.round(S.speed * 100) + '%';
     el.speedToggle.setAttribute('aria-label', 'Playback speed: ' + el.speedOut.textContent);
     footTicks = 20;
-    el.slower.disabled = SPEEDS.indexOf(S.speed) <= 0;
-    el.faster.disabled = SPEEDS.indexOf(S.speed) >= SPEEDS.length - 1;
+    syncSpeed();
   }
 
   let toastTimer = null;
@@ -1179,7 +1179,7 @@
     el.steps.inert = !!control;
     if (moveFocus) {
       if (control) {
-        const button = control.options.querySelector('[aria-pressed="true"]') || control.options.querySelector('button:enabled');
+        const button = control.options.querySelector('[aria-pressed="true"], [role="slider"]') || control.options.querySelector('button:enabled');
         button?.focus();
       } else previous.toggle.focus();
     }
@@ -1206,8 +1206,93 @@
   el.live.addEventListener('click', () => { attach(); kick(); });
   el.viewSeg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b && b.dataset.view !== S.view) setView(b.dataset.view); });
   el.handSeg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b && b.dataset.hand !== S.hand) setHand(b.dataset.hand); });
-  el.slower.addEventListener('click', () => { const i = SPEEDS.indexOf(S.speed); if (i > 0) setSpeed(SPEEDS[i - 1]); });
-  el.faster.addEventListener('click', () => { const i = SPEEDS.indexOf(S.speed); if (i < SPEEDS.length - 1) setSpeed(SPEEDS[i + 1]); });
+  /* ------------------------------------------------------------------ speed slider
+     Stepped: the thumb snaps to each speed in SPEEDS, evenly spaced. 100% catches the thumb from
+     further away than the other steps, so normal speed is easy to land on. A tap on the track
+     jumps there; the readout resets to 100%. While dragged, the thumb becomes a glass lens, and
+     paintRail() gives the glass the track to refract. */
+  const SPEED_HOME = SPEEDS.indexOf(1);
+  el.speedTicks.innerHTML = SPEEDS.map((v, i) => `<i${i === SPEED_HOME ? ' class="home"' : ''} style="left:${(i / (SPEEDS.length - 1)) * 100}%"></i>`).join('');
+  let speedDrag = null;
+
+  function syncSpeed() {
+    const i = Math.max(0, SPEEDS.indexOf(S.speed)), pct = Math.round(S.speed * 100) + '%';
+    el.speed.style.setProperty('--f', String(i / (SPEEDS.length - 1)));
+    el.speed.setAttribute('aria-valuenow', String(Math.round(S.speed * 100)));
+    el.speed.setAttribute('aria-valuetext', pct);
+    el.speedTicks.querySelectorAll('i').forEach((t, k) => t.classList.toggle('on', k <= i));
+  }
+  function speedStep(i) {
+    i = clamp(i, 0, SPEEDS.length - 1);
+    if (SPEEDS[i] === S.speed) return;
+    setSpeed(SPEEDS[i]);
+    try { if (navigator.vibrate) navigator.vibrate(i === SPEED_HOME ? 12 : 5); } catch (e) { /* no haptics */ }
+    footTicks = 24;
+  }
+  function speedAt(e) {
+    const r = el.speedTrack.getBoundingClientRect();
+    const raw = clamp((e.clientX - r.left) / r.width, 0, 1) * (SPEEDS.length - 1);
+    speedStep(Math.abs(raw - SPEED_HOME) < 0.8 ? SPEED_HOME : Math.round(raw));
+  }
+  el.speed.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    el.speed.focus({ preventScroll: true });
+    try { el.speed.setPointerCapture(e.pointerId); } catch (err) { /* a pointer that is already gone */ }
+    speedDrag = { id: e.pointerId };
+    el.speed.classList.add('is-dragging');
+    speedAt(e);
+    footTicks = 30;
+    kick();
+  });
+  el.speed.addEventListener('pointermove', (e) => { if (speedDrag && speedDrag.id === e.pointerId) speedAt(e); });
+  const speedEnd = (e) => {
+    if (!speedDrag || speedDrag.id !== e.pointerId) return;
+    speedDrag = null;
+    el.speed.classList.remove('is-dragging');
+    footTicks = 30;
+    kick();
+  };
+  el.speed.addEventListener('pointerup', speedEnd);
+  el.speed.addEventListener('pointercancel', speedEnd);
+  el.speed.addEventListener('keydown', (e) => {
+    const i = SPEEDS.indexOf(S.speed);
+    const to = { ArrowLeft: i - 1, ArrowDown: i - 1, ArrowRight: i + 1, ArrowUp: i + 1, PageDown: i - 2, PageUp: i + 2, Home: 0, End: SPEEDS.length - 1 }[e.key];
+    if (to === undefined) return;
+    e.preventDefault();
+    e.stopPropagation();   // the arrows step through the notes everywhere else
+    speedStep(to);
+  });
+  el.speedReset.addEventListener('click', () => speedStep(SPEED_HOME));
+
+  /* the rail's glass scene: black, except under the dragged thumb, where the slider's track,
+     fill and ticks are painted as they appear, so the lens has something to refract */
+  function paintRail(ctx) {
+    if (!speedDrag) return;
+    const o = el.rail.getBoundingClientRect(), th = el.speedThumb.getBoundingClientRect();
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(th.left - o.left - 16, th.top - o.top - 16, th.width + 32, th.height + 32);
+    ctx.clip();
+    const tr = el.speedTrack.getBoundingClientRect(), fill = el.speedTrack.firstElementChild.getBoundingClientRect();
+    ctx.fillStyle = '#3f3f42';                       // --track
+    rr(ctx, tr.left - o.left, tr.top - o.top, tr.width, tr.height, tr.height / 2);
+    ctx.fill();
+    ctx.fillStyle = '#f5f5f7';
+    rr(ctx, fill.left - o.left, fill.top - o.top, Math.max(fill.width, tr.height), fill.height, fill.height / 2);
+    ctx.fill();
+    for (const t of el.speedTicks.children) {
+      const r = t.getBoundingClientRect();
+      ctx.fillStyle = t.classList.contains('on') ? '#acacad' : '#7a7a7a';
+      rr(ctx, r.left - o.left, r.top - o.top, r.width, r.height, Math.min(r.width, r.height) / 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function railScene() {
+    if (!speedDrag) return 'page';
+    const th = el.speedThumb.getBoundingClientRect();
+    return 'speed|' + th.left.toFixed(1) + '|' + th.width.toFixed(1) + '|' + S.speed;
+  }
 
   document.addEventListener('keydown', (e) => {
     if (e.target.closest && e.target.closest('input, textarea, select')) return;
