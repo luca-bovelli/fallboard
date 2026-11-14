@@ -96,8 +96,7 @@
 
   /* Which staff (so which hand) each element belongs to, for dimming the other hand: three
      layers, data-s="0" (right hand), "1" (left hand) and "n" (neutral). Barlines and the brace
-     join both staves, so they are neutral and the app fades only their half on the other
-     hand's side. Elements that hang off a note follow the nearest notehead; beams and flags
+     join both staves, so they are neutral and always stay at full strength. Elements that hang off a note follow the nearest notehead; beams and flags
      follow the stems they touch; slurs and ties the note they start from; everything else
      (staff lines, clefs, signatures, rests, dynamics, tempo, pedal...) the nearer staff.
      Noteheads are tagged by the app, by the staff they sit on, the rule it matches them with. */

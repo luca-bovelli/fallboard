@@ -145,10 +145,10 @@
   .sys svg polyline { fill: none; }
   .sys svg g.Note > .on.r { fill: var(--note-r); }
   .sys svg g.Note > .on.l { fill: var(--note-l); }
-  /* hand focus: the other hand's notes, stems, beams, slurs and marks fade; the staff lines,
-     barlines, clefs and signatures they share stay (data-s comes from the engraving) */
-  .sys svg [data-s] { transition: opacity 0.28s; }
-  .sheet[data-hand="R"] .sys svg [data-s="1"], .sheet[data-hand="L"] .sys svg [data-s="0"] { opacity: 0.2; }
+  /* hand focus: each hand's marks are one layer (see Notation.svgFor), faded as a whole so
+     overlapping marks do not stack; barlines and the brace belong to both and stay */
+  .sys svg [data-layer] { transition: opacity 0.28s; }
+  .sheet[data-hand="R"] .sys svg [data-layer="1"], .sheet[data-hand="L"] .sys svg [data-layer="0"] { opacity: 0.2; }
   .barno {
     position: absolute; transform: translateY(calc(-100% - var(--sp, 7px) * 1.1));
     font: 600 calc(var(--sp, 7px) * 1.55)/1 var(--font); font-variant-numeric: tabular-nums;
@@ -207,7 +207,7 @@
   .names { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
   #title { flex: 0 1 auto; min-width: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #composer { flex: 0 1000 auto; min-width: 0; font-size: 13px; color: var(--c2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .piece > svg { width: 16px; height: 16px; flex: none; color: var(--c2); transition: transform 0.24s var(--ease); }
+  .piece > svg { width: 16px; height: 16px; flex: none; transition: transform 0.24s var(--ease), opacity 0.18s; }
   .piece[aria-expanded="true"] > svg { transform: rotate(180deg); }
 
   .menu {
@@ -229,7 +229,7 @@
   }
   .menu button[data-pressed="true"] { background: var(--cf); }
   @media (hover: hover) { .menu button:hover { background: var(--cf); } }
-  .menu button svg { grid-row: span 2; width: 20px; height: 20px; color: var(--c2); }
+  .menu button svg { grid-row: span 2; width: 20px; height: 20px; }
   .menu button b { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .menu button small { font-size: 12.5px; color: var(--c2); }
   .menu hr { margin: 4px 12px; border: 0; border-top: 1px solid var(--cf); }
@@ -254,6 +254,11 @@
   }
   .seg button[aria-pressed="true"] { color: var(--c1); }
   .seg button svg { width: 20px; height: 20px; flex: none; }
+  /* icons: always drawn in a solid colour; a dimmed icon fades as one layer (opacity on the
+     svg), so where its strokes and shapes overlap they never stack into brighter spots */
+  .piece > svg, .menu button svg, .seg button svg { color: var(--c1); opacity: var(--inactive-opacity); transition: opacity 0.18s; }
+  .seg button:is([aria-pressed="true"], [data-pressed="true"]) svg { opacity: 1; }
+  @media (hover: hover) { .seg button:hover svg { opacity: 1; } }
   .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
   .dot.l { background: var(--blue); }
   .dot.r { background: var(--brass); }

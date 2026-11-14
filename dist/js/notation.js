@@ -333,16 +333,21 @@
       }
       html += '<div class="cursor" hidden></div>';
       d.innerHTML = html;
-      this.noteEls[i] = d.querySelectorAll('g.Note > *');
+      // noteheads by their index in the engraving, whichever hand's layer they were moved to
+      const heads = d.querySelectorAll('g.Note > *');
+      let els = heads;
+      if (heads.length && heads[0].hasAttribute('data-k')) { els = []; for (const el of heads) els[+el.getAttribute('data-k')] = el; }
+      this.noteEls[i] = els;
       this.mounted.add(i);
       if (this.onChange) this.onChange();
     }
 
-    /* One system as a bitmap. The glass controls cannot sample the page itself, so the systems
-       that pass under them are drawn a second time into the scene they refract. */
-    /* The engraving tags every element except noteheads with the staff it belongs to (data-s);
-       noteheads are tagged here by the staff they sit on, the rule match() uses, so the other
-       hand can be faded element by element. */
+    /* A system's SVG, arranged for hand focus. The engraving tags each group with the hand it
+       belongs to (data-s "0" right, "1" left, "n" both: barlines and the brace); noteheads are
+       split here by the staff they sit on, the rule match() uses, each keeping its index in
+       data-k. The groups are then gathered into one layer per hand, so fading a hand fades its
+       layer as a whole: overlapping marks (a stem over its notehead, a beam over its stems) do
+       not stack up where they cross. Neutral marks stay at full strength. */
     svgFor(i) {
       let svg = this.svgs.get(i);
       if (svg !== undefined) return svg;
@@ -350,27 +355,28 @@
       svg = p.svg;
       if (this.score.hasHands && p.lines.length === 10) {
         const mid = (p.lines[4] + p.lines[5]) / 2, heads = p.heads;
-        svg = svg.replace(/<g class="Note">([\s\S]*?)<\/g>/, (all, inner) => {
-          if ((inner.match(/<(use|path)\b/g) || []).length * 2 !== heads.length) return all;
-          let k = 0;
-          return '<g class="Note">' + inner.replace(/<(use|path)\b/g, (m) => m + ` data-s="${heads[2 * k++ + 1] > mid ? 1 : 0}"`) + '</g>';
-        });
-        /* neutral elements (barlines, the brace) join both hands: drawn twice, each copy
-           clipped to one hand's half at the centre line, so only the other hand's half fades.
-           The halves overlap by a hair so no seam shows when nothing is faded. */
-        let neutral = '';
-        svg = svg.replace(/<g ([^>]*?) data-s="n">([\s\S]*?)<\/g>/g, (all, attrs, inner) => { neutral += `<g ${attrs}>${inner}</g>`; return ''; });
-        if (neutral) {
-          const pw = p.w || this.eng.w, top = p.y0, bot = p.y0 + p.h, id = 'fbc' + i;
-          const rect = (y0, y1) => `<rect x="${-pw}" y="${y0}" width="${3 * pw}" height="${y1 - y0}"/>`;
-          svg = `<defs><clipPath id="${id}a">${rect(top, mid + 0.5)}</clipPath><clipPath id="${id}b">${rect(mid - 0.5, bot)}</clipPath></defs>` +
-            `<g clip-path="url(#${id}a)" data-s="0">${neutral}</g><g clip-path="url(#${id}b)" data-s="1">${neutral}</g>` + svg;
+        const layer = { n: '', 0: '', 1: '' };
+        for (const g of svg.matchAll(/<g\b([^>]*)>([\s\S]*?)<\/g>/g)) {
+          const attrs = g[1], inner = g[2];
+          if (/class="Note"/.test(attrs)) {
+            const items = inner.match(/<(use|path)\b[^>]*\/>/g) || [];
+            if (items.length * 2 !== heads.length) { layer.n += g[0]; continue; }
+            const byStaff = ['', ''];
+            items.forEach((el, k) => { byStaff[heads[2 * k + 1] > mid ? 1 : 0] += el.replace(/^<(use|path)\b/, `$& data-k="${k}"`); });
+            for (const s of [0, 1]) if (byStaff[s]) layer[s] += '<g class="Note">' + byStaff[s] + '</g>';
+            continue;
+          }
+          const s = (/data-s="(\w)"/.exec(attrs) || [])[1];
+          layer[s === '0' || s === '1' ? s : 'n'] += g[0];
         }
+        svg = `<g data-layer="n">${layer.n}</g><g data-layer="0">${layer[0]}</g><g data-layer="1">${layer[1]}</g>`;
       }
       this.svgs.set(i, svg);
       return svg;
     }
 
+    /* One system as a bitmap. The glass controls cannot sample the page itself, so the systems
+       that pass under them are drawn a second time into the scene they refract. */
     image(i, inkColour) {
       if (this.noImages) return null;
       const ink = inkColour + '|' + this.hand;
@@ -389,7 +395,7 @@
         const need = new Set();
         for (const m of p.svg.matchAll(/href="#(fbg\d+)"/g)) need.add(m[1]);
         const other = this.hand === 'R' ? 1 : this.hand === 'L' ? 0 : -1;
-        const fade = other < 0 ? '' : `[data-s="${other}"]{opacity:.2}`;
+        const fade = other < 0 ? '' : `[data-layer="${other}"]{opacity:.2}`;
         let defs = '';
         for (const id of need) defs += this.defMap.get(id) || '';
         const px = clamp(Math.round((this.sys[i].clientWidth || 800) * 1.5), 300, 2400);
