@@ -338,10 +338,14 @@
   .hand-slot { grid-area: hands; justify-self: start; margin-left: var(--gutter-l); }
   .speed-slot { grid-area: tempo; justify-self: end; margin-right: var(--gutter-r); }
   .rail .rail-toggle { display: inline-grid; width: var(--control); height: var(--control); border-radius: 50%; }
-  .rail-toggle .hand-icon { width: 28px; height: 22px; }
+  /* icons share one grid: 24 units shown at 20 px, content inside 2-22 and centred, lines 1.8
+     units and every gap between parts 1.8 units (roll bars, fingers, the staff lines around the
+     note, the speed needle and its dial). Hands use the same scale; the pair in the round toggle
+     is shown 17 px tall so it fits the button. */
+  .rail-toggle .hand-icon { width: calc(17px * 40.2 / 24); height: 17px; }
   .hand-icon use { stroke: none; }
-  .seg .hand-icon.one { width: 13px; height: 18px; }
-  .seg .hand-icon.two { width: 26px; height: 18px; }
+  .seg .hand-icon.one { width: 20px; height: 20px; }
+  .seg .hand-icon.two { width: calc(20px * 40.2 / 24); height: 20px; }
   .hand-icon .left { fill: var(--blue); }
   .hand-icon .right { fill: var(--brass); }
   .hand-toggle[data-hand="L"] .right, .hand-toggle[data-hand="R"] .left {
@@ -507,7 +511,7 @@
         </div>
         <template id="builtinScoreRow">
           <button type="button">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.1 14.71V5q0-.75.74-.88l11-2Q20.9 1.93 20.9 3v13a3.9 3.9 0 1 1-1.8-3.29V4.08l-9.2 1.67V18a3.9 3.9 0 1 1-1.8-3.29ZM8.1 18a2.1 2.1 0 1 0-4.2 0 2.1 2.1 0 1 0 4.2 0ZM19.1 16a2.1 2.1 0 1 0-4.2 0 2.1 2.1 0 1 0 4.2 0Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g transform="translate(12 12) scale(0.94) translate(-11.5 -12)"><path fill-rule="evenodd" d="M8.1 14.71V5q0-.75.74-.88l11-2Q20.9 1.93 20.9 3v13a3.9 3.9 0 1 1-1.8-3.29V4.08l-9.2 1.67V18a3.9 3.9 0 1 1-1.8-3.29ZM8.1 18a2.1 2.1 0 1 0-4.2 0 2.1 2.1 0 1 0 4.2 0ZM19.1 16a2.1 2.1 0 1 0-4.2 0 2.1 2.1 0 1 0 4.2 0Z"/></g></svg>
             <b></b><small></small>
           </button>
         </template>
@@ -516,10 +520,10 @@
 
       <div class="seg views glass-material" id="viewSeg" role="group" aria-label="View" style="--n:2;--i:0">
         <button type="button" data-view="roll" aria-pressed="true" aria-label="Falling notes">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3.5" y="3" width="4.5" height="9" rx="2"/><rect x="9.75" y="9" width="4.5" height="12" rx="2"/><rect x="16" y="5" width="4.5" height="7" rx="2"/></svg><span>Roll</span>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3.45" y="3" width="4.5" height="9" rx="2"/><rect x="9.75" y="9" width="4.5" height="12" rx="2"/><rect x="16.05" y="5" width="4.5" height="7" rx="2"/></svg><span>Roll</span>
         </button>
         <button type="button" data-view="score" aria-pressed="false" aria-label="Sheet music">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><defs><mask id="fb-staff-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><ellipse cx="9.4" cy="14.6" rx="2.9" ry="2.2" transform="rotate(-22 9.4 14.6)" fill="#000" stroke="#000" stroke-width="2.6"/><path d="M12 14V4.5" stroke="#000" stroke-width="4.4"/></mask></defs><path d="M3 7h18M3 12h18M3 17h18" mask="url(#fb-staff-gap)"/><ellipse cx="9.4" cy="14.6" rx="2.9" ry="2.2" transform="rotate(-22 9.4 14.6)" fill="currentColor" stroke="none"/><path d="M12 14V4.5"/></svg><span>Score</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><defs><mask id="fb-staff-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><ellipse cx="9.4" cy="15.85" rx="2.9" ry="2.2" transform="rotate(-22 9.4 15.85)" fill="#000" stroke="#000" stroke-width="3.6"/><path d="M11.31 15.4V5.75" stroke="#000" stroke-width="5.4"/></mask></defs><path d="M3 8.25h18M3 13.25h18M3 18.25h18" mask="url(#fb-staff-gap)"/><ellipse cx="9.4" cy="15.85" rx="2.9" ry="2.2" transform="rotate(-22 9.4 15.85)" fill="currentColor" stroke="none"/><path d="M11.31 15.4V5.75"/></svg><span>Score</span>
         </button>
       </div>
     </header>
@@ -532,33 +536,33 @@
   <div class="kbd-wrap" id="kbdWrap"><canvas id="kbd" aria-label="Piano keyboard"></canvas></div>
 
   <!-- one hand, drawn once: the left hand as is, the right hand mirrored -->
-  <svg class="vh" aria-hidden="true"><defs><path id="fb-hand" d="M5.4 12.3V5.9a1.05 1.05 0 0 1 2.1 0v4.4h.7V4.4a1.05 1.05 0 0 1 2.1 0v5.9h.7V5.2a1.05 1.05 0 0 1 2.1 0v5.1h.7V7.1a1.05 1.05 0 0 1 2.1 0v6.8c0 4.2-2.2 6.8-5.8 6.8h-.5c-2.4 0-4.1-1.2-5.4-3.4l-2.3-4.1a1.2 1.2 0 0 1 1.9-1.4l1.6 1.7z"/></defs></svg>
+  <svg class="vh" aria-hidden="true"><defs><path id="fb-hand" d="M5.4 12.3V5.9a1.05 1.05 0 0 1 2.1 0v4.4h1.8V4.4a1.05 1.05 0 0 1 2.1 0v5.9h1.8V5.2a1.05 1.05 0 0 1 2.1 0v5.1h1.8V7.1a1.05 1.05 0 0 1 2.1 0v6.8c0 4.2-2.2 6.8-5.8 6.8h-3.8c-2.4 0-4.1-1.2-5.4-3.4l-2.3-4.1a1.2 1.2 0 0 1 1.9-1.4l1.6 1.7z"/></defs></svg>
 
   <footer class="rail" id="rail">
     <div class="rail-slot hand-slot" id="handSlot" hidden>
       <button type="button" class="round rail-toggle hand-toggle glass-material" id="handToggle" aria-label="Hands: Both" aria-controls="handSeg" aria-expanded="false">
-        <svg class="hand-icon" viewBox="0 0 34 24" aria-hidden="true"><use class="left" href="#fb-hand"/><use class="right" href="#fb-hand" transform="translate(34 0) scale(-1 1)"/></svg>
+        <svg class="hand-icon" viewBox="0 0 40.2 24" aria-hidden="true"><use class="left" href="#fb-hand"/><use class="right" href="#fb-hand" transform="translate(40.2 0) scale(-1 1)"/></svg>
       </button>
       <div class="seg hands rail-options glass-material" id="handSeg" role="group" aria-label="Hands" style="--n:3;--i:1">
-        <button type="button" data-hand="L" aria-pressed="false"><svg class="hand-icon one" viewBox="0 0 17 24" aria-hidden="true"><use class="left" href="#fb-hand"/></svg>Left</button>
-        <button type="button" data-hand="both" aria-pressed="true"><svg class="hand-icon two" viewBox="0 0 34 24" aria-hidden="true"><use class="left" href="#fb-hand"/><use class="right" href="#fb-hand" transform="translate(34 0) scale(-1 1)"/></svg>Both</button>
-        <button type="button" data-hand="R" aria-pressed="false"><svg class="hand-icon one" viewBox="17 0 17 24" aria-hidden="true"><use class="right" href="#fb-hand" transform="translate(34 0) scale(-1 1)"/></svg>Right</button>
+        <button type="button" data-hand="L" aria-pressed="false"><svg class="hand-icon one" viewBox="-1.5 0 24 24" aria-hidden="true"><use class="left" href="#fb-hand"/></svg>Left</button>
+        <button type="button" data-hand="both" aria-pressed="true"><svg class="hand-icon two" viewBox="0 0 40.2 24" aria-hidden="true"><use class="left" href="#fb-hand"/><use class="right" href="#fb-hand" transform="translate(40.2 0) scale(-1 1)"/></svg>Both</button>
+        <button type="button" data-hand="R" aria-pressed="false"><svg class="hand-icon one" viewBox="-1.5 0 24 24" aria-hidden="true"><use class="right" href="#fb-hand" transform="translate(21 0) scale(-1 1)"/></svg>Right</button>
       </div>
     </div>
 
     <div class="steps" id="steps">
-      <button type="button" class="round glass-material" id="prevBtn" aria-label="Previous note" title="Previous note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11.5 6.5 6 12l5.5 5.5"/></svg></button>
+      <button type="button" class="round glass-material" id="prevBtn" aria-label="Previous note" title="Previous note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H4M10.5 5.5 4 12l6.5 6.5"/></svg></button>
       <button type="button" class="round play" id="playBtn" aria-label="Play">
         <!-- equilateral, its centroid (one third in from the flat side) on the circle's centre; the round stroke softens the corners without moving it -->
         <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.54 6 L18.93 12 L8.54 18 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
         <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="4" width="4.6" height="16" rx="1.3"/><rect x="13.9" y="4" width="4.6" height="16" rx="1.3"/></svg>
       </button>
-      <button type="button" class="round glass-material" id="nextBtn" aria-label="Next note" title="Next note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12.5 6.5 18 12l-5.5 5.5"/></svg></button>
+      <button type="button" class="round glass-material" id="nextBtn" aria-label="Next note" title="Next note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M13.5 5.5 20 12l-6.5 6.5"/></svg></button>
     </div>
 
     <div class="rail-slot speed-slot" id="speedSlot">
       <button type="button" class="round rail-toggle glass-material" id="speedToggle" aria-label="Playback speed: 100%" aria-controls="tempoBox" aria-expanded="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17a8 8 0 1 1 14 0"/><path id="speedNeedle" d="M12 13.2V8.4"/><circle cx="12" cy="13.2" r="1.3" fill="currentColor" stroke="none"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.63 19.16A9 9 0 1 1 19.37 19.16"/><path id="speedNeedle" d="M12 14V8.6"/><circle cx="12" cy="14" r="1.6" fill="currentColor" stroke="none"/></svg>
       </button>
       <div class="tempo rail-options glass-material" id="tempoBox" role="group" aria-label="Playback speed">
         <button type="button" class="speed-readout" id="speedReset" title="Back to 100%">
