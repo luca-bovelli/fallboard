@@ -7,7 +7,8 @@
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const EPS = 2e-3;
   const MIN_W = 10, MAX_W = 44, BLACK_W = 0.58, BLACK_H = 0.62;
-  const SPEEDS = [0.25, 0.4, 0.5, 0.6, 0.75, 0.9, 1, 1.25, 1.5, 1.75, 2];
+  // five steps either side of normal speed, so the slider is symmetric about 100%
+  const SPEEDS = [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5];
 
   const BUILTINS = [
     { id: 'chopin-op23', file: 'ballade-op23', title: 'Ballade No. 1 in G minor', composer: 'Frédéric Chopin, Op. 23' },
@@ -505,7 +506,7 @@
     el.barReadout.classList.toggle('is-obscured', barObscured);
     el.clock.classList.toggle('is-obscured', clockObscured);
 
-    c.font = `600 10.5px ${UI_FONT}`;
+    c.font = `600 11px ${UI_FONT}`;   // --fs-xs
     c.textAlign = 'left';
     c.textBaseline = 'bottom';
     c.fillStyle = theme['grid-ink'];
@@ -1214,12 +1215,16 @@
   el.speedTicks.innerHTML = SPEEDS.map((v, i) => `<i${i === SPEED_HOME ? ' class="home"' : ''} style="left:${(i / (SPEEDS.length - 1)) * 100}%"></i>`).join('');
   let speedDrag = null;
 
+  /* thumb at f; the fill runs from 100% (h) to the thumb; ticks inside the fill are marked */
   function syncSpeed() {
-    const i = Math.max(0, SPEEDS.indexOf(S.speed)), pct = Math.round(S.speed * 100) + '%';
-    el.speed.style.setProperty('--f', String(i / (SPEEDS.length - 1)));
+    const n = SPEEDS.length - 1, i = Math.max(0, SPEEDS.indexOf(S.speed)), pct = Math.round(S.speed * 100) + '%';
+    const f = i / n, h = SPEED_HOME / n, a = Math.min(f, h), b = Math.max(f, h);
+    el.speed.style.setProperty('--f', String(f));
+    el.speed.style.setProperty('--fa', String(a));
+    el.speed.style.setProperty('--fb', String(b));
     el.speed.setAttribute('aria-valuenow', String(Math.round(S.speed * 100)));
     el.speed.setAttribute('aria-valuetext', pct);
-    el.speedTicks.querySelectorAll('i').forEach((t, k) => t.classList.toggle('on', k <= i));
+    el.speedTicks.querySelectorAll('i').forEach((t, k) => t.classList.toggle('on', k / n > a + 1e-6 && k / n < b - 1e-6));
   }
   function speedStep(i) {
     i = clamp(i, 0, SPEEDS.length - 1);
@@ -1302,7 +1307,7 @@
   const progressObserver = new ResizeObserver(() => { progressBounds = null; kick(); });
   for (const readout of readouts) progressObserver.observe(readout);
   notation.now = now;
-  notation.topInset = 68;
+  notation.topInset = 76;   // --under-top: an edge, a control and an edge
   el.notation.addEventListener('scroll', () => { scoreObscured = null; sceneV++; if (notation.detached) scrubPoke(); kick(); }, { passive: true });
   initGlass();
   piano.preload();

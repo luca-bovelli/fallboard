@@ -11,15 +11,19 @@
 <style>
   /* Layout: the music fills the page down to the keys. What you are looking at (the piece, roll
      or score) floats over the top of it as glass; how it plays back (which hands, step and play,
-     how fast) sits under the keys on the black page, below a map of the whole piece. Colour is
-     kept for meaning: one hue per hand, red for "now". The controls are the Graph Notes glass
-     material; the keyboard and the music are matte. */
+     how fast) sits under the keys on the black page. Colour is kept for meaning: one hue per hand,
+     red for "now"; everything else is white or grey. The controls are the Graph Notes glass
+     material; the keyboard and the music are matte.
+
+     Every length, size, duration and fade below comes from these tokens. One edge (16 px) sets
+     the margin on every side; controls are 44 px; gaps are 8 px. */
   :root {
+    /* the page and its greys: text, secondary text, a light wash and its dark twin */
     --bg: #000000;
     --t1: #f5f5f7;
     --t2: #a1a1a8;
     --fill: rgb(255 255 255 / 0.15);
-    --track: #3f3f42;
+    --fill-ink: rgb(0 0 0 / 0.15);
     --focus: #0a84ff;
     --brass: #d9b15c;
     --brass-lo: #9c7a2c;
@@ -57,18 +61,41 @@
     --bar-ink: #171204;
     --note-r: #efc567;
     --note-l: #80b4ff;
-    /* text and fills on glass that floats over the music */
-    --og: #f5f5f7;
-    --inactive-opacity: 0.64;
-    --og-2: rgb(235 235 245 / var(--inactive-opacity));
-    --og-fill: rgb(255 255 255 / 0.15);
-    --og-shadow: 0 10px 36px rgb(0 0 0 / 0.36);
-    --og-calm: contrast(0.8) brightness(0.72);
-    --og-read: contrast(0.6) brightness(0.5);
+    /* depth: a control floating over the music, a menu over that, a knob on a track */
+    --shadow-float: 0 10px 36px rgb(0 0 0 / 0.36);
+    --shadow-pop: 0 28px 90px rgb(0 0 0 / 0.5), var(--shadow-float);
+    --shadow-knob: 0 1px 5px rgb(0 0 0 / 0.45), 0 0 0 0.5px rgb(0 0 0 / 0.2);
+    /* glass over the music is calmed so labels hold up when notes pass beneath; surfaces meant
+       for reading are calmed further */
+    --glass-calm: contrast(0.8) brightness(0.72);
+    --glass-read: contrast(0.6) brightness(0.5);
+
+    /* fades: inactive (an unselected label or icon), dim (disabled, or behind an open control),
+       faint (the other hand, a readout with notes behind it) */
+    --o-inactive: 0.64;
+    --o-dim: 0.4;
+    --o-faint: 0.2;
 
     --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif;
-    --gutter-l: max(16px, env(safe-area-inset-left, 0px));
-    --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+    --fs-l: 15px;     /* titles */
+    --fs-m: 14px;     /* labels, buttons, values */
+    --fs-s: 13px;     /* secondary text */
+    --fs-xs: 11px;    /* units, small print */
+
+    --edge: 16px;
+    --gutter-l: max(var(--edge), env(safe-area-inset-left, 0px));
+    --gutter-r: max(var(--edge), env(safe-area-inset-right, 0px));
+    --gap: 8px;
+    --control: 44px;
+    --under-top: calc(var(--edge) + var(--control) + var(--edge));   /* clear of the controls over the music */
+    --readout: 16px;                                                  /* one line of the bar and time readout */
+    --above-readout: calc(var(--edge) + var(--readout) + var(--edge));
+    --sheet-w: 360px;  /* the scores menu and the speed control */
+
+    --dur-press: 120ms;  /* press feedback, a step of a slider */
+    --dur-state: 180ms;  /* colour and opacity changes */
+    --dur-move: 280ms;   /* things that move or open */
+    --dur-fade: 350ms;   /* slow fades out */
     --ease: cubic-bezier(0.32, 0.72, 0, 1);
     color-scheme: dark;
   }
@@ -109,7 +136,7 @@
   body {
     height: 100%; margin: 0; overflow: hidden;
     background: var(--bg); color: var(--t1);
-    font-family: var(--font); font-size: 14px; line-height: 1.3;
+    font-family: var(--font); font-size: var(--fs-m); line-height: 1.3;
     -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
     -webkit-user-select: none; user-select: none;
   }
@@ -122,7 +149,7 @@
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
   /* ---------- the music ---------- */
-  .deck { position: relative; flex: 1 1 0; min-height: 0; --c1: var(--og); --c2: var(--og-2); --cf: var(--og-fill); }
+  .deck { position: relative; flex: 1 1 0; min-height: 0; --c1: var(--t1); --c2: var(--t2); --cf: var(--fill); }
   .stage {
     position: absolute; top: 0; bottom: 0; left: env(safe-area-inset-left, 0px); right: env(safe-area-inset-right, 0px);
     overflow: hidden; background: var(--stage);
@@ -136,7 +163,7 @@
   .notation::-webkit-scrollbar { display: none; }
   .glyphs { position: absolute; width: 0; height: 0; overflow: hidden; }
   .sheet {
-    max-width: 1180px; margin: 0 auto; padding: 76px 6px 46vh;
+    max-width: 1180px; margin: 0 auto; padding: var(--under-top) 6px 46vh;
     background: var(--paper); color: var(--score-ink); min-height: 100%;
     box-shadow: 0 0 0 1px var(--paper-edge);
   }
@@ -148,8 +175,8 @@
   .sys svg g.Note > .on.l { fill: var(--note-l); }
   /* hand focus: each hand's marks are one layer (see Notation.svgFor), faded as a whole so
      overlapping marks do not stack; barlines and the brace belong to both and stay */
-  .sys svg [data-layer] { transition: opacity 0.28s; }
-  .sheet[data-hand="R"] .sys svg [data-layer="1"], .sheet[data-hand="L"] .sys svg [data-layer="0"] { opacity: 0.2; }
+  .sys svg [data-layer] { transition: opacity var(--dur-move) ease-out; }
+  .sheet[data-hand="R"] .sys svg [data-layer="1"], .sheet[data-hand="L"] .sys svg [data-layer="0"] { opacity: var(--o-faint); }
   .barno {
     position: absolute; transform: translateY(calc(-100% - var(--sp, 7px) * 1.1));
     font: 600 calc(var(--sp, 7px) * 1.55)/1 var(--font); font-variant-numeric: tabular-nums;
@@ -163,65 +190,68 @@
   .cursor::after { content: ""; position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; border-radius: 2px; background: var(--now); }
   .status {
     position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); z-index: 3;
-    max-width: calc(100% - 48px); text-align: center; text-wrap: balance;
-    font-size: 15px; font-weight: 500; color: var(--stage-ink);
+    max-width: calc(100% - var(--gutter-l) - var(--gutter-r)); text-align: center; text-wrap: balance;
+    font-size: var(--fs-l); font-weight: 500; color: var(--stage-ink);
   }
 
   /* ---------- scroll indicator ----------
      Thin and quiet like iOS's: it only shows while the view is moved by hand, and only then can
-     it be grabbed. The hit area is far wider than the pill. */
+     it be grabbed. The hit area is far wider than the pill. It runs from below the controls to
+     above the readouts, 3 px in from the edge, as on iOS. */
   .scrub {
-    position: absolute; z-index: 4; top: 66px; bottom: 34px; width: 0;
+    position: absolute; z-index: 4; top: var(--under-top); bottom: var(--above-readout); width: 0;
     right: calc(env(safe-area-inset-right, 0px) + 3px); pointer-events: none;
   }
   .scrub-thumb {
     position: absolute; top: 0; right: 0; width: 4px; height: 36px; border-radius: 4px;
-    background: rgb(235 235 245 / 0.5); box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.35);
+    background: var(--t2); box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.35);
     opacity: 0; will-change: transform; touch-action: none;
-    transition: opacity 0.35s ease-out, width 0.18s var(--ease), background-color 0.18s;
+    transition: opacity var(--dur-fade) ease-out, width var(--dur-state) var(--ease), background-color var(--dur-state) ease-out;
   }
   .scrub-thumb::before { content: ""; position: absolute; top: -10px; bottom: -10px; left: -28px; right: -4px; }
-  .scrub.is-shown .scrub-thumb { opacity: 1; pointer-events: auto; cursor: grab; transition-duration: 0.12s, 0.18s, 0.18s; }
-  .scrub.is-dragging .scrub-thumb { width: 8px; background: rgb(245 245 247 / 0.9); cursor: grabbing; }
+  .scrub.is-shown .scrub-thumb { opacity: 1; pointer-events: auto; cursor: grab; transition-duration: var(--dur-press), var(--dur-state), var(--dur-state); }
+  .scrub.is-dragging .scrub-thumb { width: 8px; background: var(--t1); cursor: grabbing; }
   .scrub-label {
-    position: absolute; top: 0; right: 22px; height: 32px; padding: 0 13px; border-radius: 16px;
+    position: absolute; top: 0; right: 24px; height: 32px; padding: 0 12px; border-radius: 16px;
     display: inline-flex; align-items: center; white-space: nowrap;
-    font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--c1);
-    box-shadow: var(--og-shadow); pointer-events: none;
+    font-size: var(--fs-s); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--c1);
+    box-shadow: var(--shadow-float); pointer-events: none;
   }
   .scrub-label span { position: relative; }
 
   /* ---------- glass over the music ---------- */
   .top {
-    position: absolute; z-index: 5; top: 12px; left: var(--gutter-l); right: var(--gutter-r);
-    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    position: absolute; z-index: 5; top: var(--edge); left: var(--gutter-l); right: var(--gutter-r);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: var(--gap);
     pointer-events: none;
   }
   .top > * { pointer-events: auto; }
   .menu-wrap { position: relative; flex: 0 1 auto; min-width: 0; }
 
   .piece {
-    display: flex; align-items: center; gap: 8px; max-width: 100%; height: 44px; padding: 0 14px 0 18px;
+    display: flex; align-items: center; gap: var(--gap); max-width: 100%; height: var(--control); padding: 0 14px 0 16px;
     border-radius: 22px; cursor: pointer; text-align: left; color: var(--c1);
-    box-shadow: var(--og-shadow);
+    box-shadow: var(--shadow-float);
   }
-  .names { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-  #title { flex: 0 1 auto; min-width: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #composer { flex: 0 1000 auto; min-width: 0; font-size: 13px; color: var(--c2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .piece > svg { width: 16px; height: 16px; flex: none; transition: transform 0.24s var(--ease), opacity 0.18s; }
+  .names { display: flex; align-items: baseline; gap: var(--gap); min-width: 0; }
+  #title { flex: 0 1 auto; min-width: 0; font-size: var(--fs-l); font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #composer { flex: 0 1000 auto; min-width: 0; font-size: var(--fs-s); color: var(--c2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .piece > svg { width: 16px; height: 16px; flex: none; transition: transform var(--dur-move) var(--ease), opacity var(--dur-state) ease-out; }
   .piece[aria-expanded="true"] > svg { transform: rotate(180deg); }
 
   .menu {
-    position: absolute; left: 0; top: calc(100% + 8px); z-index: 20; width: min(340px, calc(100vw - 32px));
+    position: absolute; left: 0; top: calc(100% + var(--gap)); z-index: 20; width: var(--sheet-w);
     padding: 6px; border-radius: 22px; color: var(--c1);
-    box-shadow: 0 28px 90px rgb(0 0 0 / 0.5), var(--og-shadow);
-    transform-origin: 24px 0; animation: pop 0.18s var(--ease);
+    box-shadow: var(--shadow-pop);
+    transform-origin: 24px 0; animation: pop var(--dur-state) var(--ease);
   }
-  .menu-content { position: relative; max-height: calc(100dvh - 80px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; }
-  /* glass over the music is calmed so labels hold up when notes pass beneath; surfaces meant
-     for reading are calmed further */
-  .deck .glass-refraction { filter: var(--og-calm); }
-  .deck :is(.menu, .toast) > .glass-refraction { filter: var(--og-read); }
+  /* the menu stops an edge short of the bottom of the screen and scrolls inside */
+  .menu-content {
+    position: relative; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - var(--edge) - var(--control) - var(--gap) - 12px - var(--edge));
+  }
+  .deck .glass-refraction { filter: var(--glass-calm); }
+  .deck :is(.menu, .toast) > .glass-refraction { filter: var(--glass-read); }
   @keyframes pop { from { opacity: 0; transform: scale(0.94); } }
   .menu button {
     position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: center; gap: 1px 12px;
@@ -231,8 +261,8 @@
   .menu button[data-pressed="true"] { background: var(--cf); }
   @media (hover: hover) { .menu button:hover { background: var(--cf); } }
   .menu button svg { grid-row: span 2; width: 20px; height: 20px; }
-  .menu button b { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .menu button small { font-size: 12.5px; color: var(--c2); }
+  .menu button b { font-weight: 600; font-size: var(--fs-l); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .menu button small { font-size: var(--fs-s); color: var(--c2); }
   .menu hr { margin: 4px 12px; border: 0; border-top: 1px solid var(--cf); }
 
   /* segmented control: one glass shell, the chosen segment marked by a pill that slides. Like
@@ -240,39 +270,39 @@
      touch area and draws its pill 2 px inside that */
   .seg {
     display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; flex: none;
-    height: 44px; padding: 2px; border-radius: 22px; color: var(--c2);
+    height: var(--control); padding: 2px; border-radius: 22px; color: var(--c2);
   }
-  .deck .seg { box-shadow: var(--og-shadow); }
+  .deck .seg { box-shadow: var(--shadow-float); }
   .seg::after {
     content: ""; position: absolute; z-index: -1; top: 4px; bottom: 4px; left: 4px;
     width: calc((100% - 4px) / var(--n, 2) - 4px); border-radius: 18px; background: var(--cf);
-    transform: translateX(calc(var(--i, 0) * (100% + 4px))); transition: transform 0.3s var(--ease);
+    transform: translateX(calc(var(--i, 0) * (100% + 4px))); transition: transform var(--dur-move) var(--ease);
   }
   .seg button {
     position: relative; min-width: 0; height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: none;
-    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-    color: inherit; font-weight: 600; font-size: 14px; cursor: pointer; transition: color 0.18s;
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--gap);
+    color: inherit; font-weight: 600; font-size: var(--fs-m); cursor: pointer; transition: color var(--dur-state) ease-out;
   }
   .seg button[aria-pressed="true"] { color: var(--c1); }
   .seg button svg { width: 20px; height: 20px; flex: none; }
   /* icons: always drawn in a solid colour; a dimmed icon fades as one layer (opacity on the
      svg), so where its strokes and shapes overlap they never stack into brighter spots */
-  .piece > svg, .menu button svg, .seg button svg { color: var(--c1); opacity: var(--inactive-opacity); transition: opacity 0.18s; }
+  .piece > svg, .menu button svg, .seg button svg { color: var(--c1); opacity: var(--o-inactive); transition: opacity var(--dur-state) ease-out; }
   .seg button:is([aria-pressed="true"], [data-pressed="true"]) svg { opacity: 1; }
   @media (hover: hover) { .seg button:hover svg { opacity: 1; } }
 
   .chip {
-    position: absolute; left: 50%; bottom: 42px; transform: translateX(-50%); z-index: 4;
-    height: 44px; padding: 0 18px 0 15px; border-radius: 22px; cursor: pointer; white-space: nowrap;
-    display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 14px; color: var(--c1);
-    box-shadow: var(--og-shadow); animation: rise 0.24s var(--ease);
+    position: absolute; left: 50%; bottom: var(--above-readout); transform: translateX(-50%); z-index: 4;
+    height: var(--control); padding: 0 16px 0 14px; border-radius: 22px; cursor: pointer; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: var(--gap); font-weight: 600; font-size: var(--fs-m); color: var(--c1);
+    box-shadow: var(--shadow-float); animation: rise var(--dur-move) var(--ease);
   }
   .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--now); }
   @keyframes rise { from { opacity: 0; transform: translate(-50%, 10px); } }
   .toast {
-    position: absolute; left: 50%; top: 68px; transform: translateX(-50%); z-index: 6;
-    width: max-content; max-width: calc(100% - 32px); padding: 12px 18px; border-radius: 22px;
-    color: var(--c1); font-size: 13.5px; line-height: 1.45; box-shadow: var(--og-shadow);
+    position: absolute; left: 50%; top: var(--under-top); transform: translateX(-50%); z-index: 6;
+    width: max-content; max-width: calc(100% - var(--gutter-l) - var(--gutter-r)); padding: 12px 16px; border-radius: 22px;
+    color: var(--c1); font-size: var(--fs-s); line-height: 1.45; box-shadow: var(--shadow-float);
   }
   .toast span { position: relative; }
 
@@ -281,7 +311,7 @@
   .kbd-wrap {
     position: relative; flex: none; height: clamp(80px, min(21vh, 26vw), 172px);
     margin-left: env(safe-area-inset-left, 0px); margin-right: env(safe-area-inset-right, 0px);
-    background: #050505;
+    background: var(--bg);
   }
   #kbd { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 
@@ -291,23 +321,23 @@
     display: grid; align-items: center;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     grid-template-areas: "hands steps tempo";
-    padding-block: 12px;
+    padding-block: var(--edge);
     background: var(--bg); touch-action: none;
   }
   .progress {
-    position: absolute; z-index: 2; bottom: 10px; left: var(--gutter-l); right: var(--gutter-r);
+    position: absolute; z-index: 2; bottom: var(--edge); left: var(--gutter-l); right: var(--gutter-r);
     display: flex; justify-content: space-between; align-items: center;
-    pointer-events: none; font-size: 12.5px; color: var(--t2);
+    pointer-events: none; font-size: var(--fs-s); line-height: var(--readout); color: var(--t2);
     font-variant-numeric: tabular-nums; white-space: nowrap;
   }
-  .progress > * { opacity: 0.78; transition: opacity 0.22s ease-out; }
-  .progress > .is-obscured { opacity: 0.16; transition-duration: 0.07s; }
+  .progress > * { transition: opacity var(--dur-state) ease-out; }
+  .progress > .is-obscured { opacity: var(--o-faint); transition-duration: var(--dur-press); }
   .progress b { font-weight: 600; color: var(--t1); }
 
   .rail-slot { position: relative; min-width: 0; }
   .hand-slot { grid-area: hands; justify-self: start; margin-left: var(--gutter-l); }
   .speed-slot { grid-area: tempo; justify-self: end; margin-right: var(--gutter-r); }
-  .rail .rail-toggle { display: inline-grid; width: 44px; height: 44px; border-radius: 50%; }
+  .rail .rail-toggle { display: inline-grid; width: var(--control); height: var(--control); border-radius: 50%; }
   .rail-toggle .hand-icon { width: 28px; height: 22px; }
   .hand-icon use { stroke: none; }
   .seg .hand-icon.one { width: 13px; height: 18px; }
@@ -315,49 +345,54 @@
   .hand-icon .left { fill: var(--blue); }
   .hand-icon .right { fill: var(--brass); }
   .hand-toggle[data-hand="L"] .right, .hand-toggle[data-hand="R"] .left {
-    fill: var(--c1); opacity: var(--inactive-opacity);
+    fill: var(--c1); opacity: var(--o-inactive);
   }
   .hands button { min-width: 72px; }
-  .steps { grid-area: steps; display: flex; align-items: center; gap: 7px; }
+  .steps { grid-area: steps; display: flex; align-items: center; gap: var(--gap); }
   .round {
-    width: 48px; height: 48px; padding: 0; border-radius: 24px; flex: none; cursor: pointer;
-    display: inline-grid; place-items: center; color: var(--t1); transition: transform 0.14s var(--ease);
+    width: 48px; height: 48px; padding: 0; border-radius: 50%; flex: none; cursor: pointer;
+    display: inline-grid; place-items: center; color: var(--t1);
   }
   .round svg { position: relative; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .round:disabled { opacity: 0.4; cursor: default; }
-  .play { position: relative; width: 56px; height: 56px; border: 0; border-radius: 28px; background: var(--t1); color: #000; isolation: isolate; --cf: rgb(0 0 0 / 0.12); }
+  .round:disabled { opacity: var(--o-dim); cursor: default; }
+  .play { position: relative; width: 56px; height: 56px; border: 0; border-radius: 50%; background: var(--t1); color: var(--bg); isolation: isolate; --cf: var(--fill-ink); }
   .play svg { width: 24px; height: 24px; fill: currentColor; stroke: none; }
   .play .i-pause, .play.is-playing .i-play { display: none; }
   .play.is-playing .i-pause { display: block; }
 
-  /* speed: the readout (tap for 100%) and a stepped slider in one glass pill. The slider snaps to
-     each speed, with a tick at every step and a taller one at 100%, which also catches the thumb
-     from a little further away. The thumb is a plain white capsule, never glass: no glass on glass.
-     Track, fill and ticks are solid colours, so a tick never brightens where it crosses the track. */
+  /* speed: the readout (tap for 100%) and a stepped slider in one glass pill. Five steps either
+     side of 100%, which sits in the middle with a taller tick and catches the thumb from a little
+     further away. The fill runs from 100% to the thumb: how far from normal speed, and which way.
+     Only the page's own colours: track --fill, fill --t2, thumb --t1, ticks --t2 (--bg on the
+     fill). The ticks are solid, so they never brighten where they cross the track. The thumb is
+     a plain white capsule, never glass: no glass on glass. */
   .tempo {
     display: flex; align-items: center;
-    height: 44px; padding: 2px; border-radius: 22px; color: var(--t1);
+    height: var(--control); padding: 2px; border-radius: 22px; color: var(--t1);
   }
   .speed-readout {
     position: relative; flex: none; width: 66px; height: 40px; padding: 0; border: 0; border-radius: 20px; background: none;
     display: grid; place-content: center; text-align: center; line-height: 1.2; font-variant-numeric: tabular-nums;
     color: inherit; cursor: pointer;
   }
-  .speed-readout output { font-size: 14px; font-weight: 600; }
-  .speed-readout .bpm { font-size: 11px; color: var(--t2); }
+  .speed-readout output { font-size: var(--fs-m); font-weight: 600; }
+  .speed-readout .bpm { font-size: var(--fs-xs); color: var(--t2); }
   .speed { --inset: 26px; position: relative; flex: 1; min-width: 0; align-self: stretch; border-radius: 20px; touch-action: none; cursor: pointer; }
   .speed:focus-visible { outline-offset: -2px; }
   .speed-track, .speed-ticks { position: absolute; left: var(--inset); right: var(--inset); top: 50%; }
-  .speed-track { height: 4px; margin-top: -2px; border-radius: 2px; background: var(--track); }
-  .speed-fill { position: absolute; inset: 0 auto 0 0; width: calc(var(--f) * 100%); border-radius: inherit; background: var(--t1); transition: width 0.14s var(--ease); }
-  .speed-ticks i { position: absolute; top: 0; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: #7c7c80; }
-  .speed-ticks i.on { background: #ababb0; }
+  .speed-track { height: 4px; margin-top: -2px; border-radius: 2px; background: var(--fill); }
+  .speed-fill {
+    position: absolute; top: 0; bottom: 0; left: calc(var(--fa) * 100%); width: calc((var(--fb) - var(--fa)) * 100%);
+    border-radius: inherit; background: var(--t2); transition: left var(--dur-press) var(--ease), width var(--dur-press) var(--ease);
+  }
+  .speed-ticks i { position: absolute; top: 0; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: var(--t2); }
+  .speed-ticks i.on { background: var(--bg); }
   .speed-ticks i.home { width: 2px; height: 10px; margin: -5px 0 0 -1px; border-radius: 1px; }
   .speed-thumb {
     position: absolute; top: 50%; left: calc(var(--inset) + (100% - 2 * var(--inset)) * var(--f));
     width: 36px; height: 24px; margin: -12px 0 0 -18px; border-radius: 12px; pointer-events: none;
-    background: #fff; box-shadow: 0 1px 5px rgb(0 0 0 / 0.45), 0 0 0 0.5px rgb(0 0 0 / 0.2);
-    transition: left 0.14s var(--ease), transform 0.12s ease-out;
+    background: var(--t1); box-shadow: var(--shadow-knob);
+    transition: left var(--dur-press) var(--ease), transform var(--dur-press) ease-out;
   }
   .speed.is-dragging .speed-thumb { transform: scale(1.035); }
 
@@ -367,7 +402,7 @@
      (data-pressed) so a quick tap is still visible. A mouse gets the same pill, fainter, on hover. */
   :is(.piece, .chip, .round, .play, .speed-readout)::after {
     content: ""; position: absolute; z-index: -1; inset: var(--pin, 4px); border-radius: 999px;
-    background: var(--cf); opacity: 0; transition: opacity 0.12s ease-out; pointer-events: none;
+    background: var(--cf); opacity: 0; transition: opacity var(--dur-press) ease-out; pointer-events: none;
   }
   .speed-readout { --pin: 2px; }
   :is(.piece, .chip, .round, .play, .speed-readout)[data-pressed="true"]::after { opacity: 1; }
@@ -375,17 +410,17 @@
      strength, and pressing moves the one pill there (js sets --i while pressed) */
   .seg button[data-pressed="true"] { color: var(--c1); }
   @media (hover: hover) {
-    :is(.piece, .chip, .round:not(:disabled), .play, .speed-readout):hover::after { opacity: 0.6; }
+    :is(.piece, .chip, .round:not(:disabled), .play, .speed-readout):hover::after { opacity: var(--o-inactive); }
     .seg button:hover { color: var(--c1); }
   }
-  .piece, .round, .play, .seg, .tempo { transition: transform 0.12s ease-out; }
+  .piece, .round, .play, .seg, .tempo { transition: transform var(--dur-press) ease-out; }
   :is(.piece, .round, .play)[data-pressed="true"], :is(.seg, .tempo):has(button[data-pressed="true"]) { transform: scale(1.035); }
-  .chip { transition: transform 0.12s ease-out; }
+  .chip { transition: transform var(--dur-press) ease-out; }
   .chip[data-pressed="true"] { transform: translateX(-50%) scale(1.035); }
 
   .rail-shield { position: absolute; z-index: 3; inset: 0; }
-  .rail > :is(.rail-slot, .steps) { transition: filter 0.2s ease, opacity 0.2s ease; }
-  .rail[data-open] > :is(.rail-slot, .steps):not(.is-open) { filter: blur(5px); opacity: 0.42; }
+  .rail > :is(.rail-slot, .steps) { transition: filter var(--dur-state) ease-out, opacity var(--dur-state) ease-out; }
+  .rail[data-open] > :is(.rail-slot, .steps):not(.is-open) { filter: blur(5px); opacity: var(--o-dim); }
   .rail .rail-slot.is-open { z-index: 4; }
 
   .rail-slot:not(.is-open) .rail-options { display: none; }
@@ -394,31 +429,33 @@
     position: absolute; top: 0; width: max-content; max-width: calc(100vw - var(--gutter-l) - var(--gutter-r));
     /* A mask reveals the pill without changing its buttons' hit targets. */
     mask: linear-gradient(#000, #000) left / 100% 100% no-repeat;
-    animation: reveal-options 0.22s var(--ease);
+    animation: reveal-options var(--dur-move) var(--ease);
   }
   .hand-slot .rail-options { left: 0; }
   .speed-slot .rail-options { right: 0; mask-position: right; }
-  .speed-slot .tempo.rail-options { width: min(360px, calc(100vw - var(--gutter-l) - var(--gutter-r))); }
+  .speed-slot .tempo.rail-options { width: var(--sheet-w); }
+  /* A sheet that would leave less than twice the edge beside it fills the width instead, so it
+     never sits a few pixels off-centre: 360 + 3 x 16 = 408. */
+  @media (max-width: 407.98px) {
+    .menu, .speed-slot .tempo.rail-options { width: calc(100vw - var(--gutter-l) - var(--gutter-r)); }
+  }
   @media (max-width: 680px) {
     .hands button { min-width: 0; padding: 0 12px; }
-    .steps .round { width: 44px; height: 44px; border-radius: 50%; }
+    .steps .round { width: var(--control); height: var(--control); }
     .steps .play { width: 52px; height: 52px; }
   }
   @keyframes reveal-options {
-    from { mask-size: 44px 100%; }
+    from { mask-size: var(--control) 100%; }
     to { mask-size: 100% 100%; }
   }
   @media (max-width: 640px) {
-    .top { top: 10px; gap: 8px; }
     #composer { display: none; }
     .views button span { display: none; }
-    .views button { padding: 0 15px; }
+    .views button { padding: 0 16px; }
   }
   @media (max-height: 540px) {
-    .top { top: 8px; }
-    .sheet { padding-top: 60px; }
     .kbd-wrap { height: clamp(58px, 20vh, 104px); }
-    .rail { padding-block: 8px; }
+    .rail { padding-block: var(--gap); }   /* a phone on its side: the keys need the height */
     .steps .play { width: 48px; height: 48px; }
   }
   @media (max-width: 900px) and (max-height: 540px) and (orientation: landscape) {
@@ -526,7 +563,7 @@
           <output id="speedOut">100%</output>
           <span class="bpm"><span id="tempo">60</span> bpm</span>
         </button>
-        <div class="speed" id="speed" role="slider" tabindex="0" aria-label="Playback speed" aria-valuemin="25" aria-valuemax="200" aria-valuenow="100" aria-valuetext="100%" style="--f:0.6">
+        <div class="speed" id="speed" role="slider" tabindex="0" aria-label="Playback speed" aria-valuemin="25" aria-valuemax="200" aria-valuenow="100" aria-valuetext="100%" style="--f:0.5;--fa:0.5;--fb:0.5">
           <div class="speed-track" id="speedTrack"><div class="speed-fill"></div></div>
           <div class="speed-ticks" id="speedTicks"></div>
           <div class="speed-thumb" id="speedThumb"></div>
