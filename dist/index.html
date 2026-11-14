@@ -332,8 +332,8 @@
 
   /* speed: the readout (tap for 100%) and a stepped slider in one glass pill. The slider snaps to
      each speed, with a tick at every step and a taller one at 100%, which also catches the thumb
-     from a little further away. The thumb is a white capsule; while it is dragged it grows into
-     a glass lens over the track (the app paints the track into the scene the glass refracts). */
+     from a little further away. The thumb is a plain white capsule, never glass: no glass on glass.
+     Track, fill and ticks are solid colours, so a tick never brightens where it crosses the track. */
   .tempo {
     display: flex; align-items: center;
     height: 44px; padding: 2px; border-radius: 22px; color: var(--t1);
@@ -348,23 +348,18 @@
   .speed { --inset: 26px; position: relative; flex: 1; min-width: 0; align-self: stretch; border-radius: 20px; touch-action: none; cursor: pointer; }
   .speed:focus-visible { outline-offset: -2px; }
   .speed-track, .speed-ticks { position: absolute; left: var(--inset); right: var(--inset); top: 50%; }
-  /* solid, not translucent: the pill's glass beneath may show the lens's copy of the track */
   .speed-track { height: 4px; margin-top: -2px; border-radius: 2px; background: var(--track); }
   .speed-fill { position: absolute; inset: 0 auto 0 0; width: calc(var(--f) * 100%); border-radius: inherit; background: var(--t1); transition: width 0.14s var(--ease); }
-  .speed-ticks i { position: absolute; top: 0; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: rgb(255 255 255 / 0.4); }
-  .speed-ticks i.on { background: rgb(0 0 0 / 0.3); }
+  .speed-ticks i { position: absolute; top: 0; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: #7c7c80; }
+  .speed-ticks i.on { background: #ababb0; }
   .speed-ticks i.home { width: 2px; height: 10px; margin: -5px 0 0 -1px; border-radius: 1px; }
   .speed-thumb {
     position: absolute; top: 50%; left: calc(var(--inset) + (100% - 2 * var(--inset)) * var(--f));
     width: 36px; height: 24px; margin: -12px 0 0 -18px; border-radius: 12px; pointer-events: none;
-    transition: left 0.14s var(--ease), transform 0.22s var(--ease);
+    background: #fff; box-shadow: 0 1px 5px rgb(0 0 0 / 0.45), 0 0 0 0.5px rgb(0 0 0 / 0.2);
+    transition: left 0.14s var(--ease), transform 0.12s ease-out;
   }
-  .speed-thumb::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; background: #fff;
-    box-shadow: 0 1px 5px rgb(0 0 0 / 0.45), 0 0 0 0.5px rgb(0 0 0 / 0.2); transition: opacity 0.18s;
-  }
-  .speed.is-dragging .speed-thumb { transform: scale(1.5); }
-  .speed.is-dragging .speed-thumb[data-refracted="true"]::before { opacity: 0; }
+  .speed.is-dragging .speed-thumb { transform: scale(1.035); }
 
   /* ---------- press and hover ----------
      Pressing any control shows a highlight pill 4 px inside its glass edge and scales the whole
@@ -534,7 +529,7 @@
         <div class="speed" id="speed" role="slider" tabindex="0" aria-label="Playback speed" aria-valuemin="25" aria-valuemax="200" aria-valuenow="100" aria-valuetext="100%" style="--f:0.6">
           <div class="speed-track" id="speedTrack"><div class="speed-fill"></div></div>
           <div class="speed-ticks" id="speedTicks"></div>
-          <div class="speed-thumb glass-material" id="speedThumb"></div>
+          <div class="speed-thumb" id="speedThumb"></div>
         </div>
       </div>
     </div>
