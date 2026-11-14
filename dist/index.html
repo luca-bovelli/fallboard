@@ -7,7 +7,6 @@
 <meta name="theme-color" content="#000000">
 <title>Fallboard Piano</title>
 <link rel="license" href="credits.html">
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap">
 <style>
   /* Layout: the music fills the page down to the keys. What you are looking at (the piece, roll
@@ -19,7 +18,6 @@
     --bg: #000000;
     --t1: #f5f5f7;
     --t2: #a1a1a8;
-    --t3: #6c6c73;
     --fill: rgb(255 255 255 / 0.15);
     --focus: #0a84ff;
     --brass: #d9b15c;
@@ -132,8 +130,9 @@
   #roll:active { cursor: grabbing; }
   .notation {
     position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
-    background: var(--stage); -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+    background: var(--stage); -webkit-overflow-scrolling: touch; scrollbar-width: none;
   }
+  .notation::-webkit-scrollbar { display: none; }
   .glyphs { position: absolute; width: 0; height: 0; overflow: hidden; }
   .sheet {
     max-width: 1180px; margin: 0 auto; padding: 76px 6px 46vh;
@@ -166,6 +165,30 @@
     max-width: calc(100% - 48px); text-align: center; text-wrap: balance;
     font-size: 15px; font-weight: 500; color: var(--stage-ink);
   }
+
+  /* ---------- scroll indicator ----------
+     Thin and quiet like iOS's: it only shows while the view is moved by hand, and only then can
+     it be grabbed. The hit area is far wider than the pill. */
+  .scrub {
+    position: absolute; z-index: 4; top: 66px; bottom: 34px; width: 0;
+    right: calc(env(safe-area-inset-right, 0px) + 3px); pointer-events: none;
+  }
+  .scrub-thumb {
+    position: absolute; top: 0; right: 0; width: 4px; height: 36px; border-radius: 4px;
+    background: rgb(235 235 245 / 0.5); box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.35);
+    opacity: 0; will-change: transform; touch-action: none;
+    transition: opacity 0.35s ease-out, width 0.18s var(--ease), background-color 0.18s;
+  }
+  .scrub-thumb::before { content: ""; position: absolute; top: -10px; bottom: -10px; left: -28px; right: -4px; }
+  .scrub.is-shown .scrub-thumb { opacity: 1; pointer-events: auto; cursor: grab; transition-duration: 0.12s, 0.18s, 0.18s; }
+  .scrub.is-dragging .scrub-thumb { width: 8px; background: rgb(245 245 247 / 0.9); cursor: grabbing; }
+  .scrub-label {
+    position: absolute; top: 0; right: 22px; height: 32px; padding: 0 13px; border-radius: 16px;
+    display: inline-flex; align-items: center; white-space: nowrap;
+    font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--c1);
+    box-shadow: var(--og-shadow); pointer-events: none;
+  }
+  .scrub-label span { position: relative; }
 
   /* ---------- glass over the music ---------- */
   .top {
@@ -396,9 +419,14 @@
       <div class="status" id="status" role="status" hidden></div>
     </main>
 
-    <div class="progress" aria-label="Playback progress">
+    <div class="progress">
       <span id="barReadout">Bar <b id="where">1</b> <span id="whereOf"></span></span>
-      <span id="clock" aria-label="Elapsed and total playback time">0:00 / 0:00</span>
+      <span id="clock">0:00 / 0:00</span>
+    </div>
+
+    <div class="scrub" id="scrub" aria-hidden="true">
+      <div class="scrub-thumb" id="scrubThumb"></div>
+      <div class="scrub-label glass-material" id="scrubLabel" hidden><span id="scrubText"></span></div>
     </div>
 
     <header class="top">
@@ -486,10 +514,10 @@
 </div>
 
 <script src="js/score.js"></script>
-<script src="js/audio.js?v=6"></script>
+<script src="js/audio.js"></script>
 <script src="js/glass.js"></script>
 <script src="js/engrave-core.js"></script>
-<script src="js/notation.js?v=5"></script>
-<script src="js/app.js?v=7"></script>
+<script src="js/notation.js"></script>
+<script src="js/app.js"></script>
 
 </body></html>

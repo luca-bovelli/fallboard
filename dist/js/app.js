@@ -13,7 +13,7 @@
     { id: 'chopin-op23', file: 'ballade-op23', title: 'Ballade No. 1 in G minor', composer: 'Frédéric Chopin, Op. 23' },
     { id: 'rachmaninoff-op3-2', file: 'rach-cs', title: 'Prelude in C♯ minor', composer: 'Sergei Rachmaninoff, Op. 3 No. 2' },
     { id: 'rachmaninoff-op23-5', file: 'rach-gm', title: 'Prelude in G minor', composer: 'Sergei Rachmaninoff, Op. 23 No. 5' },
-    { id: 'rachmaninoff-op23-2', file: 'rach-bb', revision: 2, title: 'Prelude in B♭ major', composer: 'Sergei Rachmaninoff, Op. 23 No. 2' },
+    { id: 'rachmaninoff-op23-2', file: 'rach-bb', title: 'Prelude in B♭ major', composer: 'Sergei Rachmaninoff, Op. 23 No. 2' },
     { id: 'chopin-op10-12', file: 'revolutionary', title: 'Revolutionary Étude', composer: 'Frédéric Chopin, Op. 10 No. 12' },
   ];
 
@@ -64,6 +64,7 @@
     steps: $('steps'), railShield: $('railShield'),
     menuBtn: $('menuBtn'), menu: $('menu'), openBtn: $('openBtn'), builtinScores: $('builtinScores'), file: $('fileInput'),
     deck: $('deck'), rail: $('rail'), toastText: $('toastText'),
+    scrub: $('scrub'), scrubThumb: $('scrubThumb'), scrubLabel: $('scrubLabel'), scrubText: $('scrubText'),
   };
   const rc = el.roll.getContext('2d');
   const kc = el.kbd.getContext('2d');
@@ -650,6 +651,7 @@
       readouts.forEach((readout, i) => readout.classList.toggle('is-obscured', scoreObscured[i]));
     }
     drawKbd(heldAt(t, S.playing));
+    scrubFrame();
     if (updateGlass(ms)) busy = true;
     if (busy) kick();
   }
@@ -719,6 +721,7 @@
     syncSegs();
     sceneV++;
     glassKick();
+    scrubPoke();
     resize();
     persist();
   }
@@ -767,6 +770,7 @@
     resize();
     // fetch the engraved pages while the roll is on screen, so the score view opens at once
     setTimeout(() => notation.preload(), 600);
+    scrubPoke();
   }
 
   let scoreRequest = 0;
@@ -793,13 +797,13 @@
   }
 
   function loadBuiltin(piece) {
+    // no cache-busting queries: the host sends max-age=0, must-revalidate with ETags, so every load revalidates
     const base = 'scores/' + piece.file;
-    const revision = piece.revision ? '?v=' + piece.revision : '';
     return selectScore('Loading the score…', async () => {
-      const r = await fetch(base + '.musicxml' + revision);
+      const r = await fetch(base + '.musicxml');
       if (!r.ok) throw new Error('Score download failed');
       return r.text();
-    }, () => ({ ...piece, engraved: base + '.{layout}.json' + revision }), 'This piece could not be loaded. Try selecting it again.');
+    }, () => ({ ...piece, engraved: base + '.{layout}.json' }), 'This piece could not be loaded. Try selecting it again.');
   }
 
   function openFile(file) {
@@ -1041,6 +1045,119 @@
   };
   for (const type of ['pointerup', 'touchend', 'click', 'keydown']) document.addEventListener(type, unlockAudio, true);
 
+  /* ------------------------------------------------------------------ scroll indicator
+     The iOS pattern: a thin pill on the right edge that appears while the view is moved by
+     hand, shows where the view sits in the piece, and fades a second later. While it shows it
+     can be grabbed and dragged; it widens and a glass bubble names the bar. In the roll the
+     piece runs upward (its start is at the bottom, where the keys are); in the score it runs
+     down like any page. Dragging moves the view only, like scrolling: playback stays put. */
+  const SCRUB = { shown: false, hover: false, drag: null, hideAt: 0, timer: null, lastView: null, top: 0, size: 36, travel: 0 };
+
+  function scrubPoke() {
+    if (!S.score) return;
+    SCRUB.hideAt = performance.now() + 1100;
+    if (!SCRUB.shown) { SCRUB.shown = true; el.scrub.classList.add('is-shown'); }
+    clearTimeout(SCRUB.timer);
+    SCRUB.timer = setTimeout(scrubMaybeHide, 1150);
+    kick();
+  }
+  function scrubMaybeHide() {
+    if (SCRUB.drag || SCRUB.hover) return;
+    const left = SCRUB.hideAt - performance.now();
+    if (left > 0) { SCRUB.timer = setTimeout(scrubMaybeHide, left + 20); return; }
+    SCRUB.shown = false;
+    el.scrub.classList.remove('is-shown');
+  }
+
+  /* where the view is: fraction through the piece, and the share of it on screen */
+  function scrubPosition() {
+    const sc = S.score;
+    if (!sc || !sc.duration) return null;
+    if (S.view === 'roll') {
+      const span = R.h / S.pps;
+      return { f: clamp(dispTime() / sc.duration, 0, 1), vis: span / (sc.duration + span), up: true };
+    }
+    const box = el.notation, max = box.scrollHeight - box.clientHeight;
+    if (!notation.eng || max <= 0) return null;
+    return { f: clamp(box.scrollTop / max, 0, 1), vis: box.clientHeight / box.scrollHeight, up: false };
+  }
+
+  function scrubFrame() {
+    if (S.view === 'roll' && S.viewT !== null && S.viewT !== SCRUB.lastView) scrubPoke();
+    SCRUB.lastView = S.view === 'roll' ? S.viewT : null;
+    if (!SCRUB.shown || SCRUB.drag) return;
+    const pos = scrubPosition();
+    if (!pos) return;
+    const H = el.scrub.clientHeight;
+    SCRUB.size = Math.round(clamp(H * pos.vis, 36, H * 0.5));
+    SCRUB.travel = Math.max(0, H - SCRUB.size);
+    SCRUB.top = (pos.up ? 1 - pos.f : pos.f) * SCRUB.travel;
+    el.scrubThumb.style.height = SCRUB.size + 'px';
+    el.scrubThumb.style.transform = 'translateY(' + SCRUB.top.toFixed(1) + 'px)';
+  }
+
+  function scrubLabel() {
+    if (S.view === 'roll') return S.score.measures[S.score.measureAt(S.viewT !== null ? S.viewT : dispTime())].number;
+    return notation.barAtTop();
+  }
+
+  el.scrubThumb.addEventListener('pointerdown', (e) => {
+    if (!SCRUB.shown || !S.score) return;
+    e.preventDefault();
+    el.scrubThumb.setPointerCapture(e.pointerId);
+    SCRUB.drag = { id: e.pointerId, y: e.clientY, top: SCRUB.top };
+    el.scrub.classList.add('is-dragging');
+    S.inertia = 0;
+    scrubMove(e);
+  });
+  function scrubMove(e) {
+    const d = SCRUB.drag;
+    if (!d || d.id !== e.pointerId) return;
+    const top = clamp(d.top + e.clientY - d.y, 0, SCRUB.travel);
+    const f = SCRUB.travel ? top / SCRUB.travel : 0;
+    if (S.view === 'roll') {
+      S.viewT = (1 - f) * S.score.duration;
+      S.offset = 0;
+      syncLiveBtn();
+    } else {
+      notation.detach();
+      el.notation.scrollTop = f * (el.notation.scrollHeight - el.notation.clientHeight);
+    }
+    SCRUB.top = top;
+    el.scrubThumb.style.transform = 'translateY(' + top.toFixed(1) + 'px)';
+    const bar = scrubLabel();
+    el.scrubLabel.hidden = bar === null || bar === undefined;
+    if (!el.scrubLabel.hidden) {
+      el.scrubText.textContent = 'Bar ' + bar;
+      const lh = el.scrubLabel.offsetHeight || 32;
+      el.scrubLabel.style.transform = 'translateY(' + clamp(top + SCRUB.size / 2 - lh / 2, 0, el.scrub.clientHeight - lh).toFixed(1) + 'px)';
+    }
+    SCRUB.hideAt = performance.now() + 1100;
+    glassKick();
+  }
+  el.scrubThumb.addEventListener('pointermove', scrubMove);
+  const scrubEnd = (e) => {
+    if (!SCRUB.drag || SCRUB.drag.id !== e.pointerId) return;
+    SCRUB.drag = null;
+    el.scrub.classList.remove('is-dragging');
+    el.scrubLabel.hidden = true;
+    persist();
+    glassKick();
+    scrubPoke();
+  };
+  el.scrubThumb.addEventListener('pointerup', scrubEnd);
+  el.scrubThumb.addEventListener('pointercancel', scrubEnd);
+  /* with a mouse, the indicator also shows while the pointer rests near the right edge */
+  el.deck.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const r = el.scrub.getBoundingClientRect();
+    const near = e.clientX > r.right - 36 && e.clientY > r.top - 12 && e.clientY < r.bottom + 12;
+    if (near === SCRUB.hover) return;
+    SCRUB.hover = near;
+    if (near) scrubPoke(); else scrubMaybeHide();
+  });
+  el.deck.addEventListener('pointerleave', () => { if (SCRUB.hover) { SCRUB.hover = false; scrubMaybeHide(); } });
+
   /* ------------------------------------------------------------------ controls */
   const railControls = [
     { slot: el.handSlot, toggle: el.handToggle, options: el.handSeg },
@@ -1137,11 +1254,11 @@
   for (const readout of readouts) progressObserver.observe(readout);
   notation.now = now;
   notation.topInset = 68;
-  el.notation.addEventListener('scroll', () => { scoreObscured = null; sceneV++; kick(); }, { passive: true });
+  el.notation.addEventListener('scroll', () => { scoreObscured = null; sceneV++; if (notation.detached) scrubPoke(); kick(); }, { passive: true });
   initGlass();
   piano.preload();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { footTicks = 20; sceneV++; glassKick(); });
-  function backgroundPlayback() {
+  function stopInBackground() {
     pageActive = false;
     if (waitingForPiano) {
       waitingForPiano = null;
@@ -1154,10 +1271,10 @@
     kdrag = null;
   }
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) backgroundPlayback();
+    if (document.hidden) stopInBackground();
     else { pageActive = true; kick(); }
   });
-  window.addEventListener('pagehide', backgroundPlayback);
+  window.addEventListener('pagehide', stopInBackground);
   window.addEventListener('pageshow', () => { pageActive = !document.hidden; });
   setInterval(() => { if (S.playing) persist(); }, 5000);
 
