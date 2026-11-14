@@ -1,0 +1,12 @@
+{
+  "name": "fallboard",
+  "private": true,
+  "description": "Fallboard Piano: the site lives in dist/; these scripts engrave the built-in scores and serve a local preview.",
+  "scripts": {
+    "engrave": "node tools/engrave.js",
+    "dev": "node dev-server.js"
+  },
+  "devDependencies": {
+    "webmscore": "1.2.1"
+  }
+}

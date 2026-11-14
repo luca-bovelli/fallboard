@@ -355,6 +355,17 @@
           let k = 0;
           return '<g class="Note">' + inner.replace(/<(use|path)\b/g, (m) => m + ` data-s="${heads[2 * k++ + 1] > mid ? 1 : 0}"`) + '</g>';
         });
+        /* neutral elements (barlines, the brace) join both hands: drawn twice, each copy
+           clipped to one hand's half at the centre line, so only the other hand's half fades.
+           The halves overlap by a hair so no seam shows when nothing is faded. */
+        let neutral = '';
+        svg = svg.replace(/<g ([^>]*?) data-s="n">([\s\S]*?)<\/g>/g, (all, attrs, inner) => { neutral += `<g ${attrs}>${inner}</g>`; return ''; });
+        if (neutral) {
+          const pw = p.w || this.eng.w, top = p.y0, bot = p.y0 + p.h, id = 'fbc' + i;
+          const rect = (y0, y1) => `<rect x="${-pw}" y="${y0}" width="${3 * pw}" height="${y1 - y0}"/>`;
+          svg = `<defs><clipPath id="${id}a">${rect(top, mid + 0.5)}</clipPath><clipPath id="${id}b">${rect(mid - 0.5, bot)}</clipPath></defs>` +
+            `<g clip-path="url(#${id}a)" data-s="0">${neutral}</g><g clip-path="url(#${id}b)" data-s="1">${neutral}</g>` + svg;
+        }
       }
       this.svgs.set(i, svg);
       return svg;

@@ -797,13 +797,13 @@
   }
 
   function loadBuiltin(piece) {
-    // no cache-busting queries: the host sends max-age=0, must-revalidate with ETags, so every load revalidates
-    const base = 'scores/' + piece.file;
+    // a deploy that caches files stamps itself (tools/stamp.js); the score files take the same version
+    const base = 'scores/' + piece.file, v = window.FB_VERSION ? '?v=' + window.FB_VERSION : '';
     return selectScore('Loading the score…', async () => {
-      const r = await fetch(base + '.musicxml');
+      const r = await fetch(base + '.musicxml' + v);
       if (!r.ok) throw new Error('Score download failed');
       return r.text();
-    }, () => ({ ...piece, engraved: base + '.{layout}.json' }), 'This piece could not be loaded. Try selecting it again.');
+    }, () => ({ ...piece, engraved: base + '.{layout}.json' + v }), 'This piece could not be loaded. Try selecting it again.');
   }
 
   function openFile(file) {

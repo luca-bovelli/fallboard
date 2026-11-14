@@ -94,15 +94,19 @@
   /* page numbers and bar numbers are drawn by the app, in its own type */
   const DROP = new Set(['Page', 'InstrumentName', 'MeasureNumber']);
 
-  /* Which staff (so which hand) each element belongs to, for dimming the other hand. The frame
-     of the music stays: staff lines, barlines, clefs, signatures, tempo and pedal. Elements
-     that hang off a note follow the nearest notehead; beams and flags follow the stems they
-     touch; slurs and ties the note they start from; the rest the nearer staff. Noteheads go by
-     the staff they sit on, the same rule the app uses to match them to notes. */
-  const FRAME = new Set(['StaffLines', 'BarLine', 'Bracket', 'Clef', 'KeySig', 'TimeSig', 'Tempo', 'PedalSegment', 'Note']);
+  /* Which staff (so which hand) each element belongs to, for dimming the other hand: three
+     layers, data-s="0" (right hand), "1" (left hand) and "n" (neutral). Barlines and the brace
+     join both staves, so they are neutral and the app fades only their half on the other
+     hand's side. Elements that hang off a note follow the nearest notehead; beams and flags
+     follow the stems they touch; slurs and ties the note they start from; everything else
+     (staff lines, clefs, signatures, rests, dynamics, tempo, pedal...) the nearer staff.
+     Noteheads are tagged by the app, by the staff they sit on, the rule it matches them with. */
+  const NEUTRAL = new Set(['BarLine', 'Bracket']);
   const ON_NOTE = new Set(['LedgerLine', 'Stem', 'Accidental', 'Articulation', 'NoteDot', 'Arpeggio', 'StemSlash', 'Fingering', 'Fermata', 'Tuplet', 'Tremolo', 'Glissando', 'GlissandoSegment']);
   const ON_STEMS = new Set(['Beam', 'Hook']);
   const FROM_START = new Set(['SlurSegment', 'TieSegment']);
+  /* drawn in several parts (figure, line, hooks); the parts of one must not be split between hands */
+  const MULTI = new Set(['OttavaSegment', 'PedalSegment', 'TextLineSegment', 'HairpinSegment', 'Tuplet']);
 
   function assignStaves(items, lines, sp) {
     const L = lines;
@@ -123,7 +127,9 @@
     };
     const stems = [];
     for (const it of items) {
-      if (FRAME.has(it.cls) || !it.box) continue;
+      if (it.cls === 'Note') continue;
+      if (NEUTRAL.has(it.cls)) { it.staff = 'n'; continue; }
+      if (!it.box) continue;
       if (ON_NOTE.has(it.cls)) it.staff = nearestHead(it.box);
       else if (FROM_START.has(it.cls) && it.start) it.staff = nearestHead([it.start[0], it.start[1], it.start[0], it.start[1]]);
       if (it.staff === undefined && !ON_STEMS.has(it.cls)) it.staff = nearestBand(it.box);
@@ -138,6 +144,27 @@
       }
       it.staff = votes[0] || votes[1] ? (votes[1] > votes[0] ? 1 : 0) : nearestHead(b);
       if (it.staff === undefined) it.staff = nearestBand(b);
+    }
+
+    const byCls = new Map();
+    for (const it of items) if (MULTI.has(it.cls) && it.box) (byCls.get(it.cls) || byCls.set(it.cls, []).get(it.cls)).push(it);
+    const near = (a, b) => a.box[0] - sp * 1.5 <= b.box[2] && b.box[0] - sp * 1.5 <= a.box[2] && a.box[1] - sp * 1.5 <= b.box[3] && b.box[1] - sp * 1.5 <= a.box[3];
+    for (const [cls, list] of byCls) {
+      const seen = new Set();
+      for (const first of list) {
+        if (seen.has(first)) continue;
+        const parts = [first];
+        seen.add(first);
+        for (let k = 0; k < parts.length; k++) for (const o of list) if (!seen.has(o) && near(parts[k], o)) { seen.add(o); parts.push(o); }
+        /* the nearer staff, weighted by the size of each part */
+        let staff;
+        {
+          const votes = [0, 0];
+          for (const p of parts) if (p.staff === 0 || p.staff === 1) votes[p.staff] += (p.box[2] - p.box[0]) + (p.box[3] - p.box[1]);
+          staff = votes[1] > votes[0] ? 1 : 0;
+        }
+        for (const p of parts) p.staff = staff;
+      }
     }
   }
 
@@ -187,7 +214,7 @@
         const x = t[4], y = t[5];
         const box = [x + g.box[0], y + g.box[1], x + g.box[2], y + g.box[3]];
         extent(box, page);
-        const it = { cls, extra, box, el: `<use href="#${g.id}" x="${r1(x)}" y="${r1(y)}"/>` };
+        const it = { cls, extra, box, use: true, el: `<use href="#${g.id}" x="${r1(x)}" y="${r1(y)}"/>` };
         if (cls === 'Note') {
           it.head = [Math.round((x + (g.box[0] + g.box[2]) / 2) * 10) / 10, Math.round(y * 10) / 10];
           heads.push(it.head[0], it.head[1]);
@@ -206,7 +233,7 @@
         let i = 0;
         const rel = d.replace(NUM, (v) => r1(+v - (i++ % 2 ? oy : ox)));
         const g = glyph('rel|' + rel, rel, 1, 1);
-        items.push({ cls, extra, box, start, el: `<use href="#${g.id}" x="${r1(ox)}" y="${r1(oy)}"/>` });
+        items.push({ cls, extra, box, start, use: true, el: `<use href="#${g.id}" x="${r1(ox)}" y="${r1(oy)}"/>` });
         continue;
       }
       const it = { cls, extra, box, start, el: `<path${a.transform ? ` transform="${a.transform}"` : ''} d="${d.replace(NUM, r1)}"/>` };
