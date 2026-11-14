@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.wasm binary
+*.mp3 binary
+*.mid binary

@@ -1,0 +1,458 @@
+<title>Fallboard Piano</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap">
+<style>
+  /* Layout: the music fills the page down to the keys. What you are looking at (the piece, roll
+     or score) floats over the top of it as glass; how it plays back (which hands, step and play,
+     how fast) sits under the keys on the black page, below a map of the whole piece. Colour is
+     kept for meaning: one hue per hand, red for "now". The controls are the Graph Notes glass
+     material; the keyboard and the music are matte. */
+  :root {
+    /* chrome: the same in both themes */
+    --bg: #000000;
+    --matte: #161618;
+    --t1: #f5f5f7;
+    --t2: #a1a1a8;
+    --t3: #6c6c73;
+    --fill: rgb(255 255 255 / 0.15);
+    --focus: #0a84ff;
+    --brass: #d9b15c;
+    --brass-lo: #9c7a2c;
+    --blue: #5b9df5;
+    --blue-lo: #2f6bc4;
+    --felt: #8f1a25;
+    --now: #f0475a;
+    --key-a: #fbf8f0;
+    --key-b: #ebe5d7;
+    --key-c: #cfc7b4;
+    --key-ink: #6f6858;
+    --ebony-a: #3b3b41;
+    --ebony-b: #1a1a1d;
+    --ebony-c: #0a0a0b;
+    --glass-fill: rgb(76 76 76 / 42%);
+    --glass-filter: blur(8px) saturate(150%) brightness(1.08);
+    --glass-lighting-brightness: 1;
+
+    /* the music: follows the theme */
+    --stage: #f2f1ed;
+    --lane: #eae8e2;
+    --grid: #e3e0d9;
+    --grid-2: #cfcbc1;
+    --grid-ink: #8f897c;
+    --stage-ink: #55514a;
+    --paper: #fdfcf9;
+    --paper-edge: rgb(30 24 10 / 0.1);
+    --score-ink: #1b1a17;
+    --rh: #c99b33;
+    --rh-key: #a37a1f;
+    --rh-hot: #edbf4e;
+    --lh: #3b80db;
+    --lh-key: #2a63b5;
+    --lh-hot: #6ea8f3;
+    --bar-ink: #1d1706;
+    --note-r: #a8750a;
+    --note-l: #1f63c2;
+    /* text and fills on glass that floats over the music */
+    --og: #0c0c0d;
+    --og-2: rgb(0 0 0 / 0.62);
+    --og-fill: rgb(255 255 255 / 0.4);
+    --og-shadow: 0 10px 36px rgb(0 0 0 / 0.16);
+    --og-calm: contrast(0.42) brightness(1.5);
+    --og-read: contrast(0.25) brightness(1.75);
+
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif;
+    --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+    --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+    --ease: cubic-bezier(0.32, 0.72, 0, 1);
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --stage: #0b0c0e; --lane: #121317; --grid: #18191e; --grid-2: #2b2d33; --grid-ink: #77756e; --stage-ink: #a39d90;
+      --paper: #121315; --paper-edge: rgb(255 255 255 / 0.06); --score-ink: #e9e3d6;
+      --rh: #d2a94f; --rh-key: #a17c2d; --rh-hot: #f8dc94;
+      --lh: #4f8fe6; --lh-key: #2f64b3; --lh-hot: #abcdfb;
+      --bar-ink: #171204; --note-r: #efc567; --note-l: #80b4ff;
+      --og: #f5f5f7; --og-2: rgb(235 235 245 / 0.64); --og-fill: rgb(255 255 255 / 0.15); --og-shadow: 0 10px 36px rgb(0 0 0 / 0.36); --og-calm: contrast(0.8) brightness(0.72); --og-read: contrast(0.6) brightness(0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --stage: #0b0c0e; --lane: #121317; --grid: #18191e; --grid-2: #2b2d33; --grid-ink: #77756e; --stage-ink: #a39d90;
+    --paper: #121315; --paper-edge: rgb(255 255 255 / 0.06); --score-ink: #e9e3d6;
+    --rh: #d2a94f; --rh-key: #a17c2d; --rh-hot: #f8dc94;
+    --lh: #4f8fe6; --lh-key: #2f64b3; --lh-hot: #abcdfb;
+    --bar-ink: #171204; --note-r: #efc567; --note-l: #80b4ff;
+    --og: #f5f5f7; --og-2: rgb(235 235 245 / 0.64); --og-fill: rgb(255 255 255 / 0.15); --og-shadow: 0 10px 36px rgb(0 0 0 / 0.36); --og-calm: contrast(0.8) brightness(0.72); --og-read: contrast(0.6) brightness(0.5);
+  }
+
+  /* ---------- glass material (Graph Notes, src/rendering/glass/material.css) ----------
+     The element's CSS box and radius define the surface; js/glass.js draws it. Without WebGL,
+     or with reduced transparency, these rules are what shows. */
+  .glass-material {
+    position: relative;
+    isolation: isolate;
+    background: var(--glass-fill);
+    border: 0;
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+  }
+  [data-refracted="true"] { isolation: isolate; }
+  html .glass-material[data-refracted="true"] {
+    background: transparent !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .glass-refraction {
+    position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;
+    border-radius: 0 !important; display: none;
+  }
+  [data-refracted="true"] > .glass-refraction { display: block; }
+  @media (prefers-contrast: more) {
+    .glass-material { background: #202023; outline: 1px solid #85858d; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+
+  /* ---------- page ---------- */
+  html { height: 100%; box-sizing: border-box; background: var(--bg); }
+  body {
+    height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--t1);
+    font-family: var(--font); font-size: 14px; line-height: 1.3;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none; user-select: none;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  button { font: inherit; color: inherit; margin: 0; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .app { height: 100%; display: flex; flex-direction: column; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* ---------- the music ---------- */
+  .deck { position: relative; flex: 1 1 0; min-height: 0; --c1: var(--og); --c2: var(--og-2); --cf: var(--og-fill); }
+  .stage {
+    position: absolute; top: 0; bottom: 0; left: env(safe-area-inset-left, 0px); right: env(safe-area-inset-right, 0px);
+    overflow: hidden; background: var(--stage);
+  }
+  #roll { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  #roll:active { cursor: grabbing; }
+  .notation {
+    position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
+    background: var(--stage); -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+  }
+  .glyphs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  .sheet {
+    max-width: 1180px; margin: 0 auto; padding: 76px 6px 46vh;
+    background: var(--paper); color: var(--score-ink); min-height: 100%;
+    box-shadow: 0 0 0 1px var(--paper-edge);
+  }
+  .sys { position: relative; width: 100%; max-width: 100%; margin-block: 2px; cursor: pointer; }
+  .sys svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .sys svg g[stroke-width] { stroke: currentColor; }
+  .sys svg polyline { fill: none; }
+  .sys svg g.Note > .on.r { fill: var(--note-r); }
+  .sys svg g.Note > .on.l { fill: var(--note-l); }
+  .veil { position: absolute; left: 0; right: 0; background: var(--paper); opacity: 0; pointer-events: none; transition: opacity 0.28s; }
+  .veil.hi { top: 0; }
+  .veil.lo { bottom: 0; }
+  .sheet[data-hand="R"] .veil.lo, .sheet[data-hand="L"] .veil.hi { opacity: 0.8; }
+  .barno {
+    position: absolute; transform: translateY(calc(-100% - var(--sp, 7px) * 1.1));
+    font: 600 calc(var(--sp, 7px) * 1.55)/1 var(--font); font-variant-numeric: tabular-nums;
+    color: var(--grid-ink); pointer-events: none;
+  }
+  .cursor { position: absolute; width: 0; pointer-events: none; }
+  .cursor::before {
+    content: ""; position: absolute; top: 0; bottom: 0; left: calc(var(--sp, 7px) * -1); width: calc(var(--sp, 7px) * 2);
+    border-radius: 3px; background: color-mix(in srgb, var(--now) 13%, transparent);
+  }
+  .cursor::after { content: ""; position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; border-radius: 2px; background: var(--now); }
+  .status {
+    position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); z-index: 3;
+    max-width: calc(100% - 48px); text-align: center; text-wrap: balance;
+    font-size: 15px; font-weight: 500; color: var(--stage-ink);
+  }
+
+  /* ---------- glass over the music ---------- */
+  .top {
+    position: absolute; z-index: 5; top: 12px; left: var(--gutter-l); right: var(--gutter-r);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    pointer-events: none;
+  }
+  .top > * { pointer-events: auto; }
+  .menu-wrap { position: relative; flex: 0 1 auto; min-width: 0; }
+
+  .piece {
+    display: flex; align-items: center; gap: 8px; max-width: 100%; height: 44px; padding: 0 14px 0 18px;
+    border-radius: 22px; cursor: pointer; text-align: left; color: var(--c1);
+    box-shadow: var(--og-shadow);
+  }
+  .names { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  #title { flex: 0 1 auto; min-width: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #composer { flex: 0 1000 auto; min-width: 0; font-size: 13px; color: var(--c2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .piece > svg { width: 16px; height: 16px; flex: none; color: var(--c2); transition: transform 0.24s var(--ease); }
+  .piece[aria-expanded="true"] > svg { transform: rotate(180deg); }
+
+  .menu {
+    position: absolute; left: 0; top: calc(100% + 8px); z-index: 20; width: min(340px, calc(100vw - 32px));
+    padding: 6px; border-radius: 22px; color: var(--c1);
+    box-shadow: 0 28px 90px rgb(0 0 0 / 0.5), var(--og-shadow);
+    transform-origin: 24px 0; animation: pop 0.18s var(--ease);
+  }
+  /* glass over the music is calmed so labels hold up when notes pass beneath; surfaces meant
+     for reading are calmed further */
+  .deck .glass-refraction { filter: var(--og-calm); }
+  .deck :is(.menu, .toast) > .glass-refraction { filter: var(--og-read); }
+  @keyframes pop { from { opacity: 0; transform: scale(0.94); } }
+  .menu button {
+    position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: center; gap: 1px 12px;
+    width: 100%; min-height: 54px; padding: 8px 12px; border: 0; border-radius: 16px;
+    background: none; color: inherit; text-align: left; cursor: pointer;
+  }
+  .menu button[data-pressed="true"] { background: var(--cf); }
+  @media (hover: hover) { .menu button:hover { background: var(--cf); } }
+  .menu button svg { grid-row: span 2; width: 20px; height: 20px; color: var(--c2); }
+  .menu button b { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .menu button small { font-size: 12.5px; color: var(--c2); }
+  .menu p { position: relative; margin: 6px 12px 8px; padding-top: 10px; border-top: 1px solid var(--cf); font-size: 11.5px; line-height: 1.5; color: var(--c2); }
+
+  /* segmented control: one glass shell, the chosen segment marked by a pill that slides. Like
+     every highlight here it sits 4 px inside the glass edge: each 40 px segment keeps its full
+     touch area and draws its pill 2 px inside that */
+  .seg {
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; flex: none;
+    height: 44px; padding: 2px; border-radius: 22px; color: var(--c2);
+  }
+  .deck .seg { box-shadow: var(--og-shadow); }
+  .seg::after {
+    content: ""; position: absolute; z-index: -1; top: 4px; bottom: 4px; left: 4px;
+    width: calc((100% - 4px) / var(--n, 2) - 4px); border-radius: 18px; background: var(--cf);
+    transform: translateX(calc(var(--i, 0) * (100% + 4px))); transition: transform 0.3s var(--ease);
+  }
+  .seg button {
+    position: relative; min-width: 0; height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    color: inherit; font-weight: 600; font-size: 14px; cursor: pointer; transition: color 0.18s;
+  }
+  .seg button[aria-pressed="true"] { color: var(--c1); }
+  .seg button svg { width: 20px; height: 20px; flex: none; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .dot.l { background: var(--blue); }
+  .dot.r { background: var(--brass); }
+
+  .chip {
+    position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 4;
+    height: 44px; padding: 0 18px 0 15px; border-radius: 22px; cursor: pointer; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 14px; color: var(--c1);
+    box-shadow: var(--og-shadow); animation: rise 0.24s var(--ease);
+  }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--now); }
+  @keyframes rise { from { opacity: 0; transform: translate(-50%, 10px); } }
+  .toast {
+    position: absolute; left: 50%; top: 68px; transform: translateX(-50%); z-index: 6;
+    width: max-content; max-width: calc(100% - 32px); padding: 12px 18px; border-radius: 22px;
+    color: var(--c1); font-size: 13.5px; line-height: 1.45; box-shadow: var(--og-shadow);
+  }
+  .toast span { position: relative; }
+
+  /* ---------- keys ---------- */
+  .felt { flex: none; height: 4px; background: var(--felt); }
+  .kbd-wrap {
+    /* never much taller than a quarter of the screen's width: on an upright phone the keys stay in proportion */
+    position: relative; flex: none; height: clamp(80px, min(21vh, 26vw), 172px);
+    margin-left: env(safe-area-inset-left, 0px); margin-right: env(safe-area-inset-right, 0px);
+    background: #050505;
+  }
+  #kbd { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+  /* ---------- playback ---------- */
+  .rail {
+    flex: none; position: relative; --c1: var(--t1); --c2: var(--t2); --cf: var(--fill);
+    display: grid; align-items: center; gap: 12px 14px;
+    grid-template-columns: minmax(104px, max-content) minmax(0, 1fr) auto minmax(0, 1fr) minmax(104px, max-content);
+    grid-template-areas: "bar seek seek seek clock" "hands hands steps tempo tempo";
+    padding-block: 14px 14px; padding-left: var(--gutter-l); padding-right: var(--gutter-r);
+    background: var(--bg);
+  }
+  .read { font-size: 12.5px; color: var(--t2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .bar { grid-area: bar; }
+  .bar b { font-weight: 600; color: var(--t1); }
+  .clock { grid-area: clock; text-align: right; }
+  .seek { grid-area: seek; position: relative; height: 32px; border-radius: 10px; background: var(--matte); cursor: pointer; touch-action: none; }
+  #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: 10px; }
+  .seek .thumb { position: absolute; top: -3px; bottom: -3px; left: 0; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--t1); pointer-events: none; }
+  .seek .window { position: absolute; top: 3px; bottom: 3px; width: 10px; margin-left: -5px; border-radius: 4px; box-shadow: inset 0 0 0 1.5px var(--t2); pointer-events: none; }
+
+  .hands { grid-area: hands; justify-self: start; }
+  .hands button { min-width: 72px; }
+  .steps { grid-area: steps; display: flex; align-items: center; gap: 14px; }
+  .round {
+    width: 48px; height: 48px; padding: 0; border-radius: 24px; flex: none; cursor: pointer;
+    display: inline-grid; place-items: center; color: var(--t1); transition: transform 0.14s var(--ease);
+  }
+  .round svg { position: relative; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .round:disabled { opacity: 0.4; cursor: default; }
+  .play { position: relative; width: 56px; height: 56px; border: 0; border-radius: 28px; background: var(--t1); color: #000; isolation: isolate; --cf: rgb(0 0 0 / 0.12); }
+  .play svg { width: 24px; height: 24px; fill: currentColor; stroke: none; }
+  .play .i-pause, .play.is-playing .i-play { display: none; }
+  .play.is-playing .i-pause { display: block; }
+
+  .tempo {
+    grid-area: tempo; justify-self: end;
+    display: inline-grid; grid-template-columns: 40px auto 40px; align-items: center;
+    height: 44px; padding: 2px; border-radius: 22px; color: var(--t1);
+  }
+  .tempo button {
+    position: relative; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 20px; background: none;
+    display: grid; place-items: center; color: inherit; cursor: pointer;
+  }
+  .tempo button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+  .tempo button:disabled { opacity: 0.3; cursor: default; }
+
+  /* ---------- press and hover ----------
+     Pressing any control shows a highlight pill 4 px inside its glass edge and scales the whole
+     shell up a little (Graph Notes' Pressable: 1.035 over 120 ms). The state comes from JS
+     (data-pressed) so a quick tap is still visible. A mouse gets the same pill, fainter, on hover. */
+  :is(.piece, .chip, .round, .play, .tempo button)::after {
+    content: ""; position: absolute; z-index: -1; inset: var(--pin, 4px); border-radius: 999px;
+    background: var(--cf); opacity: 0; transition: opacity 0.12s ease-out; pointer-events: none;
+  }
+  .tempo button { --pin: 2px; }
+  :is(.piece, .chip, .round, .play, .tempo button)[data-pressed="true"]::after { opacity: 1; }
+  /* a tab bar never shows a second pill: the label under the finger or pointer goes to full
+     strength, and pressing moves the one pill there (js sets --i while pressed) */
+  .seg button[data-pressed="true"] { color: var(--c1); }
+  @media (hover: hover) {
+    :is(.piece, .chip, .round:not(:disabled), .play, .tempo button:not(:disabled)):hover::after { opacity: 0.6; }
+    .seg button:hover { color: var(--c1); }
+  }
+  .piece, .round, .play, .seg, .tempo { transition: transform 0.12s ease-out; }
+  :is(.piece, .round, .play)[data-pressed="true"], :is(.seg, .tempo):has(button[data-pressed="true"]) { transform: scale(1.035); }
+  .chip { transition: transform 0.12s ease-out; }
+  .chip[data-pressed="true"] { transform: translateX(-50%) scale(1.035); }
+  .tempo .mark { position: relative; min-width: 66px; padding: 0 4px; text-align: center; display: grid; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .tempo output { font-size: 14px; font-weight: 600; }
+  .tempo .bpm { font-size: 11px; color: var(--t2); }
+
+  /* phone, upright: the map, then the transport, then the two settings side by side */
+  @media (max-width: 640px) {
+    .top { top: 10px; gap: 8px; }
+    #composer { display: none; }
+    .views button span { display: none; }
+    .views button { padding: 0 15px; }
+    .rail {
+      grid-template-columns: minmax(0, 1fr) auto; gap: 10px 8px; padding-block: 10px 12px;
+      grid-template-areas: "bar clock" "seek seek" "steps steps" "hands tempo";
+    }
+    .bar, .clock { margin-bottom: -4px; }
+    .steps { justify-self: center; gap: 20px; margin-block: 2px; }
+    .hands { justify-self: stretch; }
+    .hands button { min-width: 0; padding: 0 6px; }
+    .tempo .mark { min-width: 60px; }
+  }
+  /* a phone on its side: everything under the keys shares one row */
+  @media (max-height: 540px) {
+    .top { top: 8px; }
+    .sheet { padding-top: 60px; }
+    .kbd-wrap { height: clamp(58px, 20vh, 104px); }
+    .rail {
+      grid-template-columns: auto auto auto minmax(0, 1fr) auto; gap: 10px; padding-block: 8px 8px;
+      grid-template-areas: "hands steps bar seek tempo";
+    }
+    .clock, #whereOf { display: none; }
+    .bar { min-width: 3.6em; margin: 0; }
+    .steps { gap: 8px; margin: 0; }
+    .round { width: 44px; height: 44px; }
+    .play { width: 48px; height: 48px; }
+    .hands button { min-width: 0; padding: 0 11px; }
+    .tempo .mark { min-width: 58px; }
+  }
+  @media (max-height: 540px) and (max-width: 900px) { .bar { display: none; } .rail { grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-areas: "hands steps seek tempo"; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<div class="app" id="app" data-view="roll">
+  <div class="deck" id="deck">
+    <main class="stage" id="stage">
+      <canvas id="roll" aria-label="Falling notes"></canvas>
+      <div class="notation" id="notation" tabindex="0" aria-label="Sheet music" hidden><div class="sheet" id="pages" data-hand="both"></div></div>
+      <div class="status" id="status" role="status" hidden></div>
+    </main>
+
+    <header class="top">
+      <div class="menu-wrap">
+        <button type="button" class="piece glass-material" id="menuBtn" aria-haspopup="true" aria-expanded="false" title="Choose a score">
+          <span class="names"><span id="title">Fallboard</span><span id="composer"></span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="menu glass-material" id="menu" hidden>
+          <button type="button" id="builtinBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
+            <b>Ballade No. 1 in G minor</b><small>Chopin, Op. 23</small>
+          </button>
+          <button type="button" id="openBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>
+            <b>Open a score file</b><small>MusicXML: .musicxml, .xml or .mxl</small>
+          </button>
+          <p>Engraved by MuseScore's engine (webmscore, GPL). Piano from the Salamander Grand Piano by Alexander Holm (CC BY 3.0). Ballade edition from the ASAP dataset (CC BY-NC-SA 4.0).</p>
+        </div>
+        <input type="file" id="fileInput" accept=".musicxml,.xml,.mxl,application/vnd.recordare.musicxml+xml,application/vnd.recordare.musicxml" hidden>
+      </div>
+
+      <div class="seg views glass-material" id="viewSeg" role="group" aria-label="View" style="--n:2;--i:0">
+        <button type="button" data-view="roll" aria-pressed="true" aria-label="Falling notes">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3.5" y="3" width="4.5" height="9" rx="2"/><rect x="9.75" y="9" width="4.5" height="12" rx="2"/><rect x="16" y="5" width="4.5" height="7" rx="2"/></svg><span>Roll</span>
+        </button>
+        <button type="button" data-view="score" aria-pressed="false" aria-label="Sheet music">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/><ellipse cx="9.4" cy="14.6" rx="2.9" ry="2.2" transform="rotate(-22 9.4 14.6)" fill="currentColor" stroke="none"/><path d="M12 14V4.5" stroke-width="1.8"/></svg><span>Score</span>
+        </button>
+      </div>
+    </header>
+
+    <button type="button" class="chip glass-material" id="liveBtn" hidden><i></i>Back to playback</button>
+    <div class="toast glass-material" id="toast" role="alert" hidden><span id="toastText"></span></div>
+  </div>
+
+  <div class="felt"></div>
+  <div class="kbd-wrap" id="kbdWrap"><canvas id="kbd" aria-label="Piano keyboard"></canvas></div>
+
+  <footer class="rail" id="rail">
+    <span class="read bar">Bar <b id="where">1</b> <span id="whereOf"></span></span>
+    <div class="seek" id="seek" role="slider" tabindex="0" aria-label="Position in the piece" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <canvas id="map" aria-hidden="true"></canvas>
+      <div class="window" id="seekWindow" hidden></div>
+      <div class="thumb" id="seekThumb"></div>
+    </div>
+    <output class="read clock" id="clock">0:00 / 0:00</output>
+
+    <div class="seg hands glass-material" id="handSeg" role="group" aria-label="Hands" style="--n:3;--i:1" hidden>
+      <button type="button" data-hand="L" aria-pressed="false"><i class="dot l"></i>Left</button>
+      <button type="button" data-hand="both" aria-pressed="true">Both</button>
+      <button type="button" data-hand="R" aria-pressed="false"><i class="dot r"></i>Right</button>
+    </div>
+
+    <div class="steps">
+      <button type="button" class="round glass-material" id="prevBtn" aria-label="Previous note" title="Previous note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11.5 6.5 6 12l5.5 5.5"/></svg></button>
+      <button type="button" class="round play" id="playBtn" aria-label="Play">
+        <!-- equilateral, its centroid (one third in from the flat side) on the circle's centre; the round stroke softens the corners without moving it -->
+        <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.54 6 L18.93 12 L8.54 18 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="4" width="4.6" height="16" rx="1.3"/><rect x="13.9" y="4" width="4.6" height="16" rx="1.3"/></svg>
+      </button>
+      <button type="button" class="round glass-material" id="nextBtn" aria-label="Next note" title="Next note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12.5 6.5 18 12l-5.5 5.5"/></svg></button>
+    </div>
+
+    <div class="tempo glass-material" id="tempoBox" role="group" aria-label="Tempo">
+      <button type="button" id="slower" aria-label="Slower" title="Slower"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+      <div class="mark">
+        <output id="speedOut">100%</output>
+        <span class="bpm"><span id="tempo">60</span> bpm</span>
+      </div>
+      <button type="button" id="faster" aria-label="Faster" title="Faster"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12M12 6v12"/></svg></button>
+    </div>
+  </footer>
+</div>
+
+<script src="js/score.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/glass.js"></script>
+<script src="js/engrave-core.js"></script>
+<script src="js/notation.js"></script>
+<script src="js/app.js"></script>
