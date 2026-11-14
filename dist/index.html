@@ -145,10 +145,10 @@
   .sys svg polyline { fill: none; }
   .sys svg g.Note > .on.r { fill: var(--note-r); }
   .sys svg g.Note > .on.l { fill: var(--note-l); }
-  .veil { position: absolute; left: 0; right: 0; background: var(--paper); opacity: 0; pointer-events: none; transition: opacity 0.28s; }
-  .veil.hi { top: 0; }
-  .veil.lo { bottom: 0; }
-  .sheet[data-hand="R"] .veil.lo, .sheet[data-hand="L"] .veil.hi { opacity: 0.8; }
+  /* hand focus: the other hand's notes, stems, beams, slurs and marks fade; the staff lines,
+     barlines, clefs and signatures they share stay (data-s comes from the engraving) */
+  .sys svg [data-s] { transition: opacity 0.28s; }
+  .sheet[data-hand="R"] .sys svg [data-s="1"], .sheet[data-hand="L"] .sys svg [data-s="0"] { opacity: 0.2; }
   .barno {
     position: absolute; transform: translateY(calc(-100% - var(--sp, 7px) * 1.1));
     font: 600 calc(var(--sp, 7px) * 1.55)/1 var(--font); font-variant-numeric: tabular-nums;

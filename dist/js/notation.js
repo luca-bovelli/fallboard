@@ -77,6 +77,7 @@
       if (this.imgs) for (const e of this.imgs.values()) URL.revokeObjectURL(e.url);
       this.imgs = new Map();      // system index -> { img, ready, url }: copies for the glass to refract
       this.imgInk = '';
+      this.svgs = new Map();      // system index -> its SVG with each notehead tagged by staff
       this.defMap = null;
       this.eng = null;
       this.layoutKey = null;
@@ -323,11 +324,7 @@
       if (this.mounted.has(i) || !this.eng) return;
       const eng = this.eng, p = eng.pages[i], d = this.sys[i];
       const pw = p.w || eng.w;
-      let html = `<svg viewBox="0 ${p.y0} ${pw} ${p.h}" fill="currentColor" aria-hidden="true">${p.svg}</svg>`;
-      if (this.score.hasHands && p.lines.length === 10) {
-        const split = (((p.lines[4] + p.lines[5]) / 2 - p.y0) / p.h) * 100;
-        html += `<div class="veil hi" style="height:${split.toFixed(2)}%"></div><div class="veil lo" style="top:${split.toFixed(2)}%"></div>`;
-      }
+      let html = `<svg viewBox="0 ${p.y0} ${pw} ${p.h}" fill="currentColor" aria-hidden="true">${this.svgFor(i)}</svg>`;
       const fb = this.firstBar[i];
       if (fb >= 0 && this.score.docNumbers && this.score.docNumbers[fb] !== undefined && p.lines.length) {
         const m = eng.meas[fb];
@@ -343,8 +340,29 @@
 
     /* One system as a bitmap. The glass controls cannot sample the page itself, so the systems
        that pass under them are drawn a second time into the scene they refract. */
-    image(i, ink) {
+    /* The engraving tags every element except noteheads with the staff it belongs to (data-s);
+       noteheads are tagged here by the staff they sit on, the rule match() uses, so the other
+       hand can be faded element by element. */
+    svgFor(i) {
+      let svg = this.svgs.get(i);
+      if (svg !== undefined) return svg;
+      const p = this.eng.pages[i];
+      svg = p.svg;
+      if (this.score.hasHands && p.lines.length === 10) {
+        const mid = (p.lines[4] + p.lines[5]) / 2, heads = p.heads;
+        svg = svg.replace(/<g class="Note">([\s\S]*?)<\/g>/, (all, inner) => {
+          if ((inner.match(/<(use|path)\b/g) || []).length * 2 !== heads.length) return all;
+          let k = 0;
+          return '<g class="Note">' + inner.replace(/<(use|path)\b/g, (m) => m + ` data-s="${heads[2 * k++ + 1] > mid ? 1 : 0}"`) + '</g>';
+        });
+      }
+      this.svgs.set(i, svg);
+      return svg;
+    }
+
+    image(i, inkColour) {
       if (this.noImages) return null;
+      const ink = inkColour + '|' + this.hand;
       if (this.imgInk !== ink) {
         for (const e of this.imgs.values()) URL.revokeObjectURL(e.url);
         this.imgs.clear();
@@ -359,12 +377,14 @@
         }
         const need = new Set();
         for (const m of p.svg.matchAll(/href="#(fbg\d+)"/g)) need.add(m[1]);
+        const other = this.hand === 'R' ? 1 : this.hand === 'L' ? 0 : -1;
+        const fade = other < 0 ? '' : `[data-s="${other}"]{opacity:.2}`;
         let defs = '';
         for (const id of need) defs += this.defMap.get(id) || '';
         const px = clamp(Math.round((this.sys[i].clientWidth || 800) * 1.5), 300, 2400);
         const pw = p.w || eng.w;
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 ${p.y0} ${pw} ${p.h}" width="${px}" height="${Math.max(1, Math.round((px * p.h) / pw))}" fill="${ink}" color="${ink}">` +
-          `<style>g[stroke-width]{stroke:${ink}}polyline{fill:none}</style><defs>${defs}</defs>${p.svg}</svg>`;
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 ${p.y0} ${pw} ${p.h}" width="${px}" height="${Math.max(1, Math.round((px * p.h) / pw))}" fill="${inkColour}" color="${inkColour}">` +
+          `<style>g[stroke-width]{stroke:${inkColour}}polyline{fill:none}${fade}</style><defs>${defs}</defs>${this.svgFor(i)}</svg>`;
         const img = new Image();
         e = { img, ready: false, url: URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })) };
         img.onload = () => {
@@ -412,14 +432,6 @@
           // until the bitmap is ready: the staff lines alone
           ctx.fillStyle = theme['score-ink'];
           for (const ly of p.lines) ctx.fillRect(x + r.width * 0.06, y + ((ly - p.y0) / p.h) * r.height, r.width * 0.93, 1);
-        }
-        if (this.hand !== 'both' && this.score.hasHands && p.lines.length === 10) {
-          const split = (((p.lines[4] + p.lines[5]) / 2 - p.y0) / p.h) * r.height;
-          ctx.fillStyle = theme.paper;
-          ctx.globalAlpha = 0.8;
-          if (this.hand === 'R') ctx.fillRect(x, y + split, r.width, r.height - split);
-          else ctx.fillRect(x, y, r.width, split);
-          ctx.globalAlpha = 1;
         }
       }
     }

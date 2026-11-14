@@ -94,17 +94,57 @@
   /* page numbers and bar numbers are drawn by the app, in its own type */
   const DROP = new Set(['Page', 'InstrumentName', 'MeasureNumber']);
 
-  /* one MuseScore page -> { svg, w, right, y0, h, heads, lines } or null when the page is empty.
-     Elements are grouped by class so shared attributes are written once; noteheads keep their
-     order, which is how the app tells them apart. */
-  function compact(svg, glyphs) {
-    const groups = new Map();
-    const put = (cls, extra, el) => {
-      const key = cls === 'Note' ? 'Note' : cls + extra;
-      let g = groups.get(key);
-      if (!g) groups.set(key, (g = { open: `<g class="${cls}"${cls === 'Note' ? '' : extra}>`, items: [] }));
-      g.items.push(el);
+  /* Which staff (so which hand) each element belongs to, for dimming the other hand. The frame
+     of the music stays: staff lines, barlines, clefs, signatures, tempo and pedal. Elements
+     that hang off a note follow the nearest notehead; beams and flags follow the stems they
+     touch; slurs and ties the note they start from; the rest the nearer staff. Noteheads go by
+     the staff they sit on, the same rule the app uses to match them to notes. */
+  const FRAME = new Set(['StaffLines', 'BarLine', 'Bracket', 'Clef', 'KeySig', 'TimeSig', 'Tempo', 'PedalSegment', 'Note']);
+  const ON_NOTE = new Set(['LedgerLine', 'Stem', 'Accidental', 'Articulation', 'NoteDot', 'Arpeggio', 'StemSlash', 'Fingering', 'Fermata', 'Tuplet', 'Tremolo', 'Glissando', 'GlissandoSegment']);
+  const ON_STEMS = new Set(['Beam', 'Hook']);
+  const FROM_START = new Set(['SlurSegment', 'TieSegment']);
+
+  function assignStaves(items, lines, sp) {
+    const L = lines;
+    if (L.length !== 10) return;
+    const mid = (L[4] + L[5]) / 2, bands = [[L[0], L[4]], [L[5], L[9]]];
+    const heads = [];
+    for (const it of items) if (it.cls === 'Note' && it.head) heads.push({ x: it.head[0], y: it.head[1], s: it.head[1] > mid ? 1 : 0 });
+    const toBox = (b, x, y) => Math.hypot(Math.max(b[0] - x, 0, x - b[2]), Math.max(b[1] - y, 0, y - b[3]));
+    const nearestHead = (b) => {
+      let best = null, bd = Infinity;
+      for (const h of heads) { const d = toBox(b, h.x, h.y); if (d < bd) { bd = d; best = h; } }
+      return best && bd < sp * 8 ? best.s : undefined;
     };
+    const nearestBand = (b) => {
+      const cy = (b[1] + b[3]) / 2;
+      const d0 = Math.max(bands[0][0] - cy, 0, cy - bands[0][1]), d1 = Math.max(bands[1][0] - cy, 0, cy - bands[1][1]);
+      return d1 < d0 ? 1 : 0;
+    };
+    const stems = [];
+    for (const it of items) {
+      if (FRAME.has(it.cls) || !it.box) continue;
+      if (ON_NOTE.has(it.cls)) it.staff = nearestHead(it.box);
+      else if (FROM_START.has(it.cls) && it.start) it.staff = nearestHead([it.start[0], it.start[1], it.start[0], it.start[1]]);
+      if (it.staff === undefined && !ON_STEMS.has(it.cls)) it.staff = nearestBand(it.box);
+      if (it.cls === 'Stem' && it.staff !== undefined) stems.push(it);
+    }
+    for (const it of items) {
+      if (!ON_STEMS.has(it.cls) || !it.box) continue;
+      const b = it.box, votes = [0, 0];
+      for (const st of stems) {
+        const s = st.box;
+        if (s[2] >= b[0] - sp * 0.4 && s[0] <= b[2] + sp * 0.4 && s[3] >= b[1] - sp * 0.6 && s[1] <= b[3] + sp * 0.6) votes[st.staff]++;
+      }
+      it.staff = votes[0] || votes[1] ? (votes[1] > votes[0] ? 1 : 0) : nearestHead(b);
+      if (it.staff === undefined) it.staff = nearestBand(b);
+    }
+  }
+
+  /* one MuseScore page -> { svg, w, right, y0, h, heads, lines } or null when the page is empty.
+     Elements are grouped by class (and staff) so shared attributes are written once; noteheads
+     stay in one group, in order, which is how the app tells them apart. */
+  function compact(svg, glyphs, wsp) {
     const glyph = (key, d, sx, sy) => {
       let g = glyphs.map.get(key);
       if (!g) {
@@ -116,16 +156,16 @@
       }
       return g;
     };
+    const items = [];
     const heads = [];
     const lines = [];
     const page = [Infinity, Infinity, -Infinity, -Infinity];
     const size = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg);
-    let count = 0;
+    const sp = (size ? +size[1] : 1000) / wsp;     // one staff space in SVG units
     for (const m of svg.matchAll(/<(path|polyline)\b([^>]*?)\/>/g)) {
       const a = attrs(m[2]);
       const cls = a.class || 'x';
       if (DROP.has(cls)) continue;
-      count++;
       let extra = a.stroke && a.stroke !== 'none' && a['stroke-width'] ? ` stroke-width="${r1(+a['stroke-width'])}"` : '';
       if (a.fill === 'none') extra += ' fill="none"';
       if (a['stroke-dasharray']) extra += ` stroke-dasharray="${a['stroke-dasharray'].replace(NUM, r1)}"`;
@@ -133,9 +173,10 @@
 
       if (m[1] === 'polyline') {
         const nums = (a.points || '').match(NUM) || [];
+        const box = extent(nums, [Infinity, Infinity, -Infinity, -Infinity]);
         extent(nums, page);
         if (cls === 'StaffLines' && nums.length >= 4) lines.push(Math.round(+nums[1] * 10) / 10);
-        put(cls, extra, `<polyline points="${nums.map(r1).join(' ')}"/>`);
+        items.push({ cls, extra, box, el: `<polyline points="${nums.map(r1).join(' ')}"/>` });
         continue;
       }
 
@@ -144,13 +185,20 @@
       if (t && t.length === 6 && t[1] === 0 && t[2] === 0) {
         const g = glyph(d + '|' + t[0].toFixed(4) + '|' + t[3].toFixed(4), d, t[0], t[3]);
         const x = t[4], y = t[5];
-        extent([x + g.box[0], y + g.box[1], x + g.box[2], y + g.box[3]], page);
-        if (cls === 'Note') heads.push(Math.round((x + (g.box[0] + g.box[2]) / 2) * 10) / 10, Math.round(y * 10) / 10);
-        put(cls, extra, `<use href="#${g.id}" x="${r1(x)}" y="${r1(y)}"/>`);
+        const box = [x + g.box[0], y + g.box[1], x + g.box[2], y + g.box[3]];
+        extent(box, page);
+        const it = { cls, extra, box, el: `<use href="#${g.id}" x="${r1(x)}" y="${r1(y)}"/>` };
+        if (cls === 'Note') {
+          it.head = [Math.round((x + (g.box[0] + g.box[2]) / 2) * 10) / 10, Math.round(y * 10) / 10];
+          heads.push(it.head[0], it.head[1]);
+        }
+        items.push(it);
         continue;
       }
       const nums = d.match(NUM) || [];
+      const box = t ? (t.length >= 6 ? [t[4], t[5], t[4], t[5]] : null) : extent(nums, [Infinity, Infinity, -Infinity, -Infinity]);
       if (!t) extent(nums, page);
+      const start = !t && nums.length >= 2 ? [+nums[0], +nums[1]] : null;
       /* text set as outlines (dynamics, tuplet figures, tempo words): the same shape recurs at
          many positions, so store it once relative to its first point */
       if (!t && !extra && d.length > 160 && nums.length >= 4 && !/[HhVvAaSsQqTtmlc]/.test(d)) {
@@ -158,13 +206,25 @@
         let i = 0;
         const rel = d.replace(NUM, (v) => r1(+v - (i++ % 2 ? oy : ox)));
         const g = glyph('rel|' + rel, rel, 1, 1);
-        put(cls, extra, `<use href="#${g.id}" x="${r1(ox)}" y="${r1(oy)}"/>`);
+        items.push({ cls, extra, box, start, el: `<use href="#${g.id}" x="${r1(ox)}" y="${r1(oy)}"/>` });
         continue;
       }
-      if (t && cls === 'Note') heads.push(t[4], t[5]);
-      put(cls, extra, `<path${a.transform ? ` transform="${a.transform}"` : ''} d="${d.replace(NUM, r1)}"/>`);
+      const it = { cls, extra, box, start, el: `<path${a.transform ? ` transform="${a.transform}"` : ''} d="${d.replace(NUM, r1)}"/>` };
+      if (t && cls === 'Note') { it.head = [t[4], t[5]]; heads.push(t[4], t[5]); }
+      items.push(it);
     }
-    if (!count || !(page[3] > page[1])) return null;
+    if (!items.length || !(page[3] > page[1])) return null;
+    const staffLines = [...new Set(lines)].sort((p, q) => p - q);
+    assignStaves(items, staffLines, sp);
+
+    const groups = new Map();
+    for (const it of items) {
+      const st = it.cls === 'Note' || it.staff === undefined ? '' : ` data-s="${it.staff}"`;
+      const key = it.cls === 'Note' ? 'Note' : it.cls + it.extra + st;
+      let g = groups.get(key);
+      if (!g) groups.set(key, (g = { open: `<g class="${it.cls}"${it.cls === 'Note' ? '' : it.extra}${st}>`, items: [] }));
+      g.items.push(it.el);
+    }
     const pad = 10;
     const y0 = Math.floor(page[1] - pad), y1 = Math.ceil(page[3] + pad);
     let out = '';
@@ -175,7 +235,7 @@
       y0, h: y1 - y0,
       svg: out,
       heads,
-      lines: [...new Set(lines)].sort((p, q) => p - q),
+      lines: staffLines,
     };
   }
 
@@ -190,7 +250,7 @@
       const pages = [];
       const pageMap = new Map();
       for (let i = 0; i < n; i++) {
-        const pg = compact(await score.saveSvg(i, false), glyphs);
+        const pg = compact(await score.saveSvg(i, false), glyphs, wsp);
         if (pg) { pageMap.set(i, pages.length); pages.push(pg); }
         if (onProgress) onProgress((i + 1) / n);
       }

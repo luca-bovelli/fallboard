@@ -20,7 +20,7 @@ if (!src || !prefix || !modPath) {
 if (!only) {
   // each layout runs in its own process: the engine does not survive loading a second score
   for (const layout of core.LAYOUTS) {
-    execFileSync(process.execPath, [__filename, src, prefix, modPath, layout.key], { stdio: ['ignore', 'inherit', 'ignore'] });
+    execFileSync(process.execPath, [__filename, src, prefix, modPath, layout.key], { stdio: ['ignore', 'inherit', 'inherit'] });
   }
 } else {
   (async () => {
