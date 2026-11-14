@@ -145,13 +145,6 @@
   [hidden]:not([hidden=until-found i]) { display: none !important; }
   button { font: inherit; color: inherit; margin: 0; }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-  /* icons: Lucide, the Graph Notes design system's set, or drawn in its grammar: a 24-unit grid,
-     2-unit strokes with round caps and joins, shown at 20 px, so every line renders 1.67 px wide.
-     A smaller icon gets a heavier stroke so its lines match; transport glyphs are filled. */
-  .ico { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .ico-sm { width: 16px; height: 16px; stroke-width: 2.5; }
-  .ico-lg { width: 24px; height: 24px; }
-  .ico-solid { fill: currentColor; }
   .app { height: 100%; display: flex; flex-direction: column; }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
@@ -243,7 +236,7 @@
   .names { display: flex; align-items: baseline; gap: var(--gap); min-width: 0; }
   #title { flex: 0 1 auto; min-width: 0; font-size: var(--fs-l); font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #composer { flex: 0 1000 auto; min-width: 0; font-size: var(--fs-s); color: var(--c2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .piece > svg { transition: transform var(--dur-move) var(--ease), opacity var(--dur-state) ease-out; }
+  .piece > svg { width: 16px; height: 16px; flex: none; transition: transform var(--dur-move) var(--ease), opacity var(--dur-state) ease-out; }
   .piece[aria-expanded="true"] > svg { transform: rotate(180deg); }
 
   .menu {
@@ -267,7 +260,7 @@
   }
   .menu button[data-pressed="true"] { background: var(--cf); }
   @media (hover: hover) { .menu button:hover { background: var(--cf); } }
-  .menu button svg { grid-row: span 2; }
+  .menu button svg { grid-row: span 2; width: 20px; height: 20px; }
   .menu button b { font-weight: 600; font-size: var(--fs-l); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .menu button small { font-size: var(--fs-s); color: var(--c2); }
   .menu hr { margin: 4px 12px; border: 0; border-top: 1px solid var(--cf); }
@@ -291,6 +284,7 @@
     color: inherit; font-weight: 600; font-size: var(--fs-m); cursor: pointer; transition: color var(--dur-state) ease-out;
   }
   .seg button[aria-pressed="true"] { color: var(--c1); }
+  .seg button svg { width: 20px; height: 20px; flex: none; }
   /* icons: always drawn in a solid colour; a dimmed icon fades as one layer (opacity on the
      svg), so where its strokes and shapes overlap they never stack into brighter spots */
   .piece > svg, .menu button svg, .seg button svg { color: var(--c1); opacity: var(--o-inactive); transition: opacity var(--dur-state) ease-out; }
@@ -344,13 +338,14 @@
   .hand-slot { grid-area: hands; justify-self: start; margin-left: var(--gutter-l); }
   .speed-slot { grid-area: tempo; justify-self: end; margin-right: var(--gutter-r); }
   .rail .rail-toggle { display: inline-grid; width: var(--control); height: var(--control); border-radius: 50%; }
-  /* two hands side by side: a 46 x 24 drawing */
-  .rail-toggle .hand-icon { width: calc(16px * 46 / 24); height: 16px; stroke-width: 2.5; }
-  .seg .hand-icon.two { width: calc(20px * 46 / 24); }
-  .hand-icon .left { stroke: var(--blue); }
-  .hand-icon .right { stroke: var(--brass); }
+  .rail-toggle .hand-icon { width: 28px; height: 22px; }
+  .hand-icon use { stroke: none; }
+  .seg .hand-icon.one { width: 13px; height: 18px; }
+  .seg .hand-icon.two { width: 26px; height: 18px; }
+  .hand-icon .left { fill: var(--blue); }
+  .hand-icon .right { fill: var(--brass); }
   .hand-toggle[data-hand="L"] .right, .hand-toggle[data-hand="R"] .left {
-    stroke: var(--c1); opacity: var(--o-inactive);
+    fill: var(--c1); opacity: var(--o-inactive);
   }
   .hands button { min-width: 72px; }
   .steps { grid-area: steps; display: flex; align-items: center; gap: var(--gap); }
@@ -358,8 +353,12 @@
     width: 48px; height: 48px; padding: 0; border-radius: 50%; flex: none; cursor: pointer;
     display: inline-grid; place-items: center; color: var(--t1);
   }
+  /* outlined icons all draw 1.5 px lines: 1.8 units of a 24-unit icon at 20 px (the 16 px
+     chevron uses 2.25 to match) */
+  .round svg { position: relative; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .round:disabled { opacity: var(--o-dim); cursor: default; }
   .play { position: relative; width: 56px; height: 56px; border: 0; border-radius: 50%; background: var(--t1); color: var(--bg); isolation: isolate; --cf: var(--fill-ink); }
+  .play svg { width: 24px; height: 24px; fill: currentColor; stroke: none; }
   .play .i-pause, .play.is-playing .i-play { display: none; }
   .play.is-playing .i-pause { display: block; }
 
@@ -494,12 +493,12 @@
       <div class="menu-wrap">
         <button type="button" class="piece glass-material" id="menuBtn" aria-haspopup="true" aria-expanded="false" title="Choose a score">
           <span class="names"><span id="title">Fallboard</span><span id="composer"></span></span>
-          <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="menu glass-material" id="menu" hidden>
           <div class="menu-content">
             <button type="button" id="openBtn">
-              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 12v6"/><path d="m15 15-3-3-3 3"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>
               <b>Upload your own score</b><small>MusicXML (.musicxml, .xml, .mxl)</small>
             </button>
             <hr>
@@ -508,7 +507,7 @@
         </div>
         <template id="builtinScoreRow">
           <button type="button">
-            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.1 14.71V5q0-.75.74-.88l11-2Q20.9 1.93 20.9 3v13a3.9 3.9 0 1 1-1.8-3.29V4.08l-9.2 1.67V18a3.9 3.9 0 1 1-1.8-3.29ZM8.1 18a2.1 2.1 0 1 0-4.2 0 2.1 2.1 0 1 0 4.2 0ZM19.1 16a2.1 2.1 0 1 0-4.2 0 2.1 2.1 0 1 0 4.2 0Z"/></svg>
             <b></b><small></small>
           </button>
         </template>
@@ -517,10 +516,10 @@
 
       <div class="seg views glass-material" id="viewSeg" role="group" aria-label="View" style="--n:2;--i:0">
         <button type="button" data-view="roll" aria-pressed="true" aria-label="Falling notes">
-          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v6"/><path d="M12 6v4"/><path d="M18 3v3"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M9 14v7"/><path d="M15 14v7"/></svg><span>Roll</span>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3.5" y="3" width="4.5" height="9" rx="2"/><rect x="9.75" y="9" width="4.5" height="12" rx="2"/><rect x="16" y="5" width="4.5" height="7" rx="2"/></svg><span>Roll</span>
         </button>
         <button type="button" data-view="score" aria-pressed="false" aria-label="Sheet music">
-          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 22H18a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v8.4"/><path d="M8 18v-7.7L16 9v7"/><circle cx="14" cy="16" r="2"/><circle cx="6" cy="18" r="2"/></svg><span>Score</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><defs><mask id="fb-staff-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><ellipse cx="9.4" cy="14.6" rx="2.9" ry="2.2" transform="rotate(-22 9.4 14.6)" fill="#000" stroke="#000" stroke-width="2.6"/><path d="M12 14V4.5" stroke="#000" stroke-width="4.4"/></mask></defs><path d="M3 7h18M3 12h18M3 17h18" mask="url(#fb-staff-gap)"/><ellipse cx="9.4" cy="14.6" rx="2.9" ry="2.2" transform="rotate(-22 9.4 14.6)" fill="currentColor" stroke="none"/><path d="M12 14V4.5"/></svg><span>Score</span>
         </button>
       </div>
     </header>
@@ -532,35 +531,34 @@
   <div class="felt"></div>
   <div class="kbd-wrap" id="kbdWrap"><canvas id="kbd" aria-label="Piano keyboard"></canvas></div>
 
-  <!-- Lucide's hand, drawn once: a right hand seen from above, thumb to the left; the left hand
-       is its mirror image, and in "both" the thumbs meet in the middle as on the keys -->
-  <svg class="vh" aria-hidden="true"><defs><g id="fb-hand"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></g></defs></svg>
+  <!-- one hand, drawn once: the left hand as is, the right hand mirrored -->
+  <svg class="vh" aria-hidden="true"><defs><path id="fb-hand" d="M5.4 12.3V5.9a1.05 1.05 0 0 1 2.1 0v4.4h.7V4.4a1.05 1.05 0 0 1 2.1 0v5.9h.7V5.2a1.05 1.05 0 0 1 2.1 0v5.1h.7V7.1a1.05 1.05 0 0 1 2.1 0v6.8c0 4.2-2.2 6.8-5.8 6.8h-.5c-2.4 0-4.1-1.2-5.4-3.4l-2.3-4.1a1.2 1.2 0 0 1 1.9-1.4l1.6 1.7z"/></defs></svg>
 
   <footer class="rail" id="rail">
     <div class="rail-slot hand-slot" id="handSlot" hidden>
       <button type="button" class="round rail-toggle hand-toggle glass-material" id="handToggle" aria-label="Hands: Both" aria-controls="handSeg" aria-expanded="false">
-        <svg class="ico hand-icon" viewBox="0 0 46 24" aria-hidden="true"><use class="left" href="#fb-hand" transform="translate(24 0) scale(-1 1)"/><use class="right" href="#fb-hand" transform="translate(22 0)"/></svg>
+        <svg class="hand-icon" viewBox="0 0 34 24" aria-hidden="true"><use class="left" href="#fb-hand"/><use class="right" href="#fb-hand" transform="translate(34 0) scale(-1 1)"/></svg>
       </button>
       <div class="seg hands rail-options glass-material" id="handSeg" role="group" aria-label="Hands" style="--n:3;--i:1">
-        <button type="button" data-hand="L" aria-pressed="false"><svg class="ico hand-icon" viewBox="0 0 24 24" aria-hidden="true"><use class="left" href="#fb-hand" transform="translate(24 0) scale(-1 1)"/></svg>Left</button>
-        <button type="button" data-hand="both" aria-pressed="true"><svg class="ico hand-icon two" viewBox="0 0 46 24" aria-hidden="true"><use class="left" href="#fb-hand" transform="translate(24 0) scale(-1 1)"/><use class="right" href="#fb-hand" transform="translate(22 0)"/></svg>Both</button>
-        <button type="button" data-hand="R" aria-pressed="false"><svg class="ico hand-icon" viewBox="0 0 24 24" aria-hidden="true"><use class="right" href="#fb-hand"/></svg>Right</button>
+        <button type="button" data-hand="L" aria-pressed="false"><svg class="hand-icon one" viewBox="0 0 17 24" aria-hidden="true"><use class="left" href="#fb-hand"/></svg>Left</button>
+        <button type="button" data-hand="both" aria-pressed="true"><svg class="hand-icon two" viewBox="0 0 34 24" aria-hidden="true"><use class="left" href="#fb-hand"/><use class="right" href="#fb-hand" transform="translate(34 0) scale(-1 1)"/></svg>Both</button>
+        <button type="button" data-hand="R" aria-pressed="false"><svg class="hand-icon one" viewBox="17 0 17 24" aria-hidden="true"><use class="right" href="#fb-hand" transform="translate(34 0) scale(-1 1)"/></svg>Right</button>
       </div>
     </div>
 
     <div class="steps" id="steps">
-      <button type="button" class="round glass-material" id="prevBtn" aria-label="Previous note" title="Previous note"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></button>
+      <button type="button" class="round glass-material" id="prevBtn" aria-label="Previous note" title="Previous note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11.5 6.5 6 12l5.5 5.5"/></svg></button>
       <button type="button" class="round play" id="playBtn" aria-label="Play">
         <!-- equilateral, its centroid (one third in from the flat side) on the circle's centre; the round stroke softens the corners without moving it -->
-        <svg class="ico ico-lg ico-solid i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.54 6 L18.93 12 L8.54 18 Z"/></svg>
-        <svg class="ico ico-lg ico-solid i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6" width="3" height="12" rx="1"/><rect x="14.5" y="6" width="3" height="12" rx="1"/></svg>
+        <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.54 6 L18.93 12 L8.54 18 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="4" width="4.6" height="16" rx="1.3"/><rect x="13.9" y="4" width="4.6" height="16" rx="1.3"/></svg>
       </button>
-      <button type="button" class="round glass-material" id="nextBtn" aria-label="Next note" title="Next note"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+      <button type="button" class="round glass-material" id="nextBtn" aria-label="Next note" title="Next note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12.5 6.5 18 12l-5.5 5.5"/></svg></button>
     </div>
 
     <div class="rail-slot speed-slot" id="speedSlot">
       <button type="button" class="round rail-toggle glass-material" id="speedToggle" aria-label="Playback speed: 100%" aria-controls="tempoBox" aria-expanded="false">
-        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17a8 8 0 1 1 14 0"/><path id="speedNeedle" d="M12 13.2V8.4"/><circle cx="12" cy="13.2" r="1.3" fill="currentColor" stroke="none"/></svg>
       </button>
       <div class="tempo rail-options glass-material" id="tempoBox" role="group" aria-label="Playback speed">
         <button type="button" class="speed-readout" id="speedReset" title="Back to 100%">
