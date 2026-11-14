@@ -43,7 +43,7 @@
       const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
       const dec = OAC ? new OAC(2, 2, 44100) : null;
       const decode = (buf) => new Promise((res, rej) => {
-        const target = dec || this.ensure();
+        const target = dec || this.ensure(false);
         const p = target.decodeAudioData(buf, res, rej);
         if (p && p.then) p.then(res, rej);
       });
@@ -92,7 +92,6 @@
           a.setAttribute('x-webkit-airplay', 'deny');
           a.disableRemotePlayback = true;
           a.volume = 0.01;
-          document.addEventListener('visibilitychange', () => { if (document.hidden) a.pause(); });
         }
         if (this.keeper.paused && !document.hidden) {
           const p = this.keeper.play();
@@ -102,7 +101,7 @@
       return ctx;
     }
 
-    ensure() {
+    ensure(resume = true) {
       if (!this.ctx) {
         const AC = window.AudioContext || window.webkitAudioContext;
         const ctx = (this.ctx = new AC({ latencyHint: 'interactive' }));
@@ -121,8 +120,20 @@
         send.gain.value = 0.16;
         this.bus.connect(send); send.connect(hall); hall.connect(limit);
       }
-      if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
+      if (resume && this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
       return this.ctx;
+    }
+
+    deactivate() {
+      this.keeper?.pause();
+      const ctx = this.ctx;
+      if (!ctx) return;
+      // Discard scheduled notes and reverb while keeping the decoded samples.
+      ctx.onstatechange = null;
+      this.ctx = this.bus = null;
+      this.primed = false;
+      this.voices.clear();
+      ctx.close().catch(() => {});
     }
 
     /* a small concert room: a sparse cluster of early reflections, then a darkening tail */

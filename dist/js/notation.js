@@ -158,7 +158,10 @@
         return eng;
       })();
       this.pending.set(layout.key, job);
-      job.then(() => this.pending.delete(layout.key), () => this.pending.delete(layout.key));
+      const clearPending = () => {
+        if (this.pending.get(layout.key) === job) this.pending.delete(layout.key);
+      };
+      job.then(clearPending, clearPending);
       return job;
     }
 
@@ -191,6 +194,7 @@
       this.reset();
       this.eng = eng;
       this.layoutKey = key;
+      this.pagesEl.style.setProperty('--sp', (this.pagesEl.clientWidth - 12) / eng.wsp + 'px');
       this.defs.innerHTML = '<defs>' + eng.defs + '</defs>';
       this.match();
       const firstBar = eng.pages.map(() => -1);
@@ -399,12 +403,27 @@
       }
     }
 
+    hasNoteBehind(readout) {
+      for (const i of this.mounted) {
+        const system = this.sys[i].getBoundingClientRect();
+        if (system.bottom < readout.top - 8 || system.top > readout.bottom + 8 ||
+            system.right < readout.left - 8 || system.left > readout.right + 8) continue;
+        for (const note of this.noteEls[i]) {
+          const box = note.getBoundingClientRect();
+          if (box.right > readout.left - 2 && box.left < readout.right + 2 &&
+              box.bottom > readout.top - 2 && box.top < readout.bottom + 2) return true;
+        }
+      }
+      return false;
+    }
+
     unmount(i) {
       if (!this.mounted.has(i)) return;
       for (const el of this.lit) if (el.ownerSVGElement && this.sys[i].contains(el)) this.lit.delete(el);
       this.sys[i].textContent = '';
       this.noteEls[i] = null;
       this.mounted.delete(i);
+      if (this.onChange) this.onChange();
     }
 
     /* where a score time sits on the page: bar, position in the bar, and x in page units */

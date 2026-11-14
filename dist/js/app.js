@@ -7,15 +7,15 @@
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const EPS = 2e-3;
   const MIN_W = 10, MAX_W = 44, BLACK_W = 0.58, BLACK_H = 0.62;
-  const SPEEDS = [0.25, 0.4, 0.5, 0.6, 0.75, 0.9, 1, 1.25];
+  const SPEEDS = [0.25, 0.4, 0.5, 0.6, 0.75, 0.9, 1, 1.25, 1.5, 1.75, 2];
 
-  const BUILTIN = {
-    id: 'chopin-op23',
-    title: 'Ballade No. 1 in G minor',
-    composer: 'Frédéric Chopin, Op. 23',
-    url: 'scores/ballade-op23.musicxml',
-    engraved: 'scores/ballade-op23.{layout}.json',
-  };
+  const BUILTINS = [
+    { id: 'chopin-op23', file: 'ballade-op23', title: 'Ballade No. 1 in G minor', composer: 'Frédéric Chopin, Op. 23' },
+    { id: 'rachmaninoff-op3-2', file: 'rach-cs', title: 'Prelude in C♯ minor', composer: 'Sergei Rachmaninoff, Op. 3 No. 2' },
+    { id: 'rachmaninoff-op23-5', file: 'rach-gm', title: 'Prelude in G minor', composer: 'Sergei Rachmaninoff, Op. 23 No. 5' },
+    { id: 'rachmaninoff-op23-2', file: 'rach-bb', revision: 2, title: 'Prelude in B♭ major', composer: 'Sergei Rachmaninoff, Op. 23 No. 2' },
+    { id: 'chopin-op10-12', file: 'revolutionary', title: 'Revolutionary Étude', composer: 'Frédéric Chopin, Op. 10 No. 12' },
+  ];
 
   /* white-key bookkeeping, counted from A0 (MIDI 21) */
   const WB = new Int16Array(130);       // white keys in [21, m)
@@ -56,16 +56,17 @@
     notation: $('notation'), pages: $('pages'),
     live: $('liveBtn'), status: $('status'), toast: $('toast'),
     play: $('playBtn'), prev: $('prevBtn'), next: $('nextBtn'),
-    seek: $('seek'), map: $('map'), thumb: $('seekThumb'), win: $('seekWindow'),
     whereOf: $('whereOf'), tempoBox: $('tempoBox'),
-    clock: $('clock'), slower: $('slower'), faster: $('faster'), speedOut: $('speedOut'),
+    barReadout: $('barReadout'), clock: $('clock'),
+    slower: $('slower'), faster: $('faster'), speedOut: $('speedOut'),
     viewSeg: $('viewSeg'), handSeg: $('handSeg'),
-    menuBtn: $('menuBtn'), menu: $('menu'), openBtn: $('openBtn'), builtinBtn: $('builtinBtn'), file: $('fileInput'),
+    handSlot: $('handSlot'), handToggle: $('handToggle'), speedSlot: $('speedSlot'), speedToggle: $('speedToggle'),
+    steps: $('steps'), railShield: $('railShield'),
+    menuBtn: $('menuBtn'), menu: $('menu'), openBtn: $('openBtn'), builtinScores: $('builtinScores'), file: $('fileInput'),
     deck: $('deck'), rail: $('rail'), toastText: $('toastText'),
   };
   const rc = el.roll.getContext('2d');
   const kc = el.kbd.getContext('2d');
-  const mc = el.map.getContext('2d');
 
   /* ------------------------------------------------------------------ helpers */
   const handOK = (n) => S.hand === 'both' || (S.hand === 'R' ? n.hand === 0 : n.hand === 1);
@@ -145,6 +146,7 @@
 
   /* ------------------------------------------------------------------ transport */
   let timer = null, wakeLock = null;
+  let pageActive = !document.hidden;
 
   function schedule() {
     if (!S.playing) return;
@@ -177,17 +179,27 @@
     syncLiveBtn();
   }
 
-  let waitingForPiano = false;
+  let waitingForPiano = null;
   function play() {
-    if (!S.score || S.playing) return;
+    if (!pageActive || !S.score || S.playing) return;
     if (!piano.usable && !piano.ready) {
       // the recordings are still arriving: start as soon as they are in
       piano.ensure();
       if (waitingForPiano) return;
-      waitingForPiano = true;
+      const request = (waitingForPiano = {});
       status('Tuning the piano…');
-      piano.preload().then(() => { waitingForPiano = false; status(null); if (!piano.failed) play(); else toast('The piano recordings could not be loaded. Check the connection and reload.'); });
+      piano.preload().then(() => {
+        if (waitingForPiano !== request) return;
+        waitingForPiano = null;
+        status(null);
+        if (!piano.failed) play();
+        else toast('The piano recordings could not be loaded. Check the connection and reload.');
+      });
       return;
+    }
+    if (waitingForPiano) {
+      waitingForPiano = null;
+      status(null);
     }
     if (S.t >= S.score.duration - 0.05) S.t = 0;
     const shown = dispTime();
@@ -197,9 +209,12 @@
     S.playing = true;
     attach(shown);
     clearInterval(timer);
-    timer = setInterval(schedule, 25);
+    const playbackTimer = (timer = setInterval(schedule, 25));
     schedule();
-    try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then((l) => { wakeLock = l; }).catch(() => {}); } catch (e) { /* optional */ }
+    navigator.wakeLock?.request('screen').then((lock) => {
+      if (pageActive && S.playing && timer === playbackTimer) wakeLock = lock;
+      else return lock.release();
+    }).catch(() => {});
     syncPlayBtn();
     kick();
   }
@@ -210,9 +225,13 @@
     S.t = now();
     S.playing = false;
     clearInterval(timer);
+    timer = null;
     piano.stopAll();
     attach(shown);
-    if (wakeLock) { try { wakeLock.release(); } catch (e) { /* gone */ } wakeLock = null; }
+    if (wakeLock) {
+      wakeLock.release().catch(() => {});
+      wakeLock = null;
+    }
     syncPlayBtn();
     persist();
     kick();
@@ -231,6 +250,7 @@
   }
 
   function soundOnset(t) {
+    if (!pageActive) return;
     const notes = S.score.notes;
     const ctx = piano.ensure();
     for (let i = lowerT0(t - EPS); i < notes.length && notes[i].t0 <= t + EPS; i++) {
@@ -330,7 +350,6 @@
   function readTheme() {
     const cs = getComputedStyle(document.documentElement);
     for (const k of TOKENS) theme[k] = cs.getPropertyValue('--' + k).trim();
-    mapDirty = true;
     sceneV++;
   }
   /* '#rrggbb' -> 'rgba(r,g,b,a)' */
@@ -367,6 +386,21 @@
   const beatUnit = (time) => (time.beatType === 8 && time.beats % 3 === 0 && time.beats > 3 ? 1.5 : 4 / time.beatType);
   const UI_FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif';
 
+  const readouts = [el.barReadout, el.clock];
+  let progressBounds = null, scoreObscured = null;
+  function measureProgress() {
+    const stage = el.stage.getBoundingClientRect();
+    const readoutRects = readouts.map((readout) => readout.getBoundingClientRect());
+    progressBounds = {
+      readouts: readoutRects,
+      roll: readoutRects.map((rect) => ({
+        left: rect.left - stage.left - 2, right: rect.right - stage.left + 2,
+        top: rect.top - stage.top - 2, bottom: rect.bottom - stage.top + 2,
+      })),
+    };
+    scoreObscured = null;
+  }
+
   function drawRoll(disp, live) {
     const c = rc, w = R.w, h = R.h, pps = S.pps, sc = S.score;
     c.fillStyle = theme.stage;
@@ -384,7 +418,10 @@
       c.fillStyle = pc === 0 ? theme['grid-2'] : theme.grid;
       c.fillRect(Math.round((WB[m] - left) * W), 0, 1, h);
     }
-    if (!sc) return;
+    if (!sc) {
+      for (const readout of readouts) readout.classList.remove('is-obscured');
+      return;
+    }
     const Y = (t) => h - (t - disp) * pps;
     const tTop = disp + h / pps;
 
@@ -417,6 +454,8 @@
     const fontPx = clamp(W * 0.46, 8.5, 11.5);
     const inset = Math.min(1.5, W * 0.07);
     const hot = [];
+    const [bar, clock] = progressBounds.roll;
+    let barObscured = false, clockObscured = false;
     c.textAlign = 'center';
     c.textBaseline = 'alphabetic';
     c.font = `700 ${fontPx}px ${UI_FONT}`;
@@ -430,6 +469,8 @@
         if (x > w || x + bwid < 0) continue;
         const y1 = Y(n.t0), y0 = Y(n.t1);
         const bh = Math.max(4, y1 - y0 - 1.5);
+        if (!barObscured && y1 > bar.top && y1 - bh < bar.bottom && x < bar.right && x + bwid > bar.left) barObscured = true;
+        if (!clockObscured && y1 > clock.top && y1 - bh < clock.bottom && x < clock.right && x + bwid > clock.left) clockObscured = true;
         const hk = n.hand === 0 ? 'rh' : 'lh';
         const rad = Math.min(5, bwid * 0.3);
         if (n.t0 <= live + EPS && n.t1 > live + EPS) { hot.push([n, x, bwid, y1, bh, hk, rad]); continue; }
@@ -459,12 +500,20 @@
       c.fill();
       if (bwid >= 14 && bh >= 22) { c.fillStyle = theme['bar-ink']; c.fillText(n.name, x + bwid / 2, Math.min(y1, h) - 8); }
     }
+    el.barReadout.classList.toggle('is-obscured', barObscured);
+    el.clock.classList.toggle('is-obscured', clockObscured);
 
     c.font = `600 10.5px ${UI_FONT}`;
     c.textAlign = 'left';
     c.textBaseline = 'bottom';
     c.fillStyle = theme['grid-ink'];
-    for (const [num, y] of labels) if (y > 16) c.fillText(num, 7, y - 3);
+    for (const [num, y] of labels) {
+      if (y <= 16) continue;
+      // Fade grid numbers out before they reach the playback readouts.
+      c.globalAlpha = clamp((h - y - 26) / 42, 0, 1);
+      if (c.globalAlpha > 0) c.fillText(num, 7, y - 3);
+    }
+    c.globalAlpha = 1;
 
     /* playback line, shown when the view has been scrolled away from it */
     if (S.viewT !== null) {
@@ -548,48 +597,6 @@
     c.fillRect(0, 0, w, 16);
   }
 
-  /* the piece at a glance: how busy each hand is from first bar to last, right hand above the
-     line and left hand below, bright up to the playback position */
-  const MAP = { w: 0, h: 0, bins: null, key: '' };
-  let mapDirty = true, mapPx = -1;
-  function drawMap(t) {
-    const sc = S.score, c = mc, w = MAP.w, h = MAP.h;
-    if (!w) return;
-    const step = 3, n = Math.max(1, Math.floor((w - 8) / step));
-    const key = sc ? (S.meta && S.meta.id) + '|' + n : '';
-    if (sc && MAP.key !== key) {
-      const bins = [new Float32Array(n), new Float32Array(n)];
-      for (const note of sc.notes) {
-        const b = Math.min(n - 1, Math.floor((note.t0 / sc.duration) * n));
-        bins[note.hand === 1 ? 1 : 0][b] += 1;
-      }
-      const all = [...bins[0], ...bins[1]].filter((v) => v > 0).sort((a, b) => a - b);
-      const top = all.length ? all[Math.floor(all.length * 0.96)] || 1 : 1;
-      for (const arr of bins) for (let i = 0; i < n; i++) arr[i] = arr[i] ? Math.min(1, Math.sqrt(arr[i] / top)) : 0;
-      MAP.bins = bins; MAP.key = key; mapDirty = true;
-    }
-    const px = sc && sc.duration ? Math.floor((t / sc.duration) * n) : -1;
-    if (!mapDirty && px === mapPx) return;
-    mapDirty = false; mapPx = px;
-    c.clearRect(0, 0, w, h);
-    if (!sc || !MAP.bins) return;
-    const mid = Math.round(h / 2), amp = h / 2 - 4, x0 = (w - n * step) / 2;
-    const rows = [[MAP.bins[0], 'brass', -1, S.hand !== 'L'], [MAP.bins[1], 'blue', 1, S.hand !== 'R']];
-    for (const [arr, col, dir, active] of rows) {
-      for (let pass = 0; pass < 2; pass++) {
-        c.fillStyle = theme[col];
-        c.globalAlpha = !active ? 0.13 : pass === 0 ? 1 : 0.3;
-        const a = pass === 0 ? 0 : Math.max(0, px + 1), b = pass === 0 ? Math.min(n, px + 1) : n;
-        for (let i = a; i < b; i++) {
-          if (!arr[i]) continue;
-          const len = Math.max(1.5, arr[i] * amp);
-          c.fillRect(x0 + i * step, dir < 0 ? mid - 0.5 - len : mid + 0.5, 2, len);
-        }
-      }
-    }
-    c.globalAlpha = 1;
-  }
-
   /* ------------------------------------------------------------------ frame */
   let lastMs = 0, lastUi = '';
   function frame(ms) {
@@ -618,20 +625,8 @@
       if (Math.abs(G.W - G.tW) < 0.01 && Math.abs(G.left - G.tLeft) < 0.002) { G.W = G.tW; G.left = G.tLeft; } else busy = true;
     }
 
-    if (S.view === 'roll') drawRoll(dispTime(), t);
-    else notation.update(t, S.playing);
-    drawKbd(heldAt(t, S.playing));
-
-    drawMap(t);
     if (S.score) {
       const d = S.score.duration;
-      const f = d > 0 ? t / d : 0;
-      // the scrubber's bars are inset by a few pixels; keep the thumb on the same scale
-      const span = MAP.w ? Math.floor((MAP.w - 8) / 3) * 3 : 0, x0 = (MAP.w - span) / 2;
-      el.thumb.style.left = (x0 + f * span).toFixed(1) + 'px';
-      const showWin = S.view === 'roll' && S.viewT !== null;
-      el.win.hidden = !showWin;
-      if (showWin) el.win.style.left = (x0 + (S.viewT / d) * span).toFixed(1) + 'px';
       const o = S.score.measures[S.score.measureAt(t)];
       const bpm = Math.round(S.score.tempoAt(t).bpm * S.speed);
       const ui = o.number + '|' + bpm + '|' + Math.round(t / S.speed) + '|' + S.speed;
@@ -641,9 +636,20 @@
         el.whereOf.textContent = 'of ' + S.score.measures[S.score.measures.length - 1].number;
         el.tempo.textContent = bpm;
         el.clock.textContent = fmt(t / S.speed) + ' / ' + fmt(d / S.speed);
-        el.seek.setAttribute('aria-valuenow', String(Math.round(f * 100)));
+        progressBounds = null;
       }
     }
+    if (!progressBounds) measureProgress();
+    if (S.view === 'roll') {
+      drawRoll(dispTime(), t);
+    } else {
+      notation.update(t, S.playing);
+      if (!scoreObscured) {
+        scoreObscured = progressBounds.readouts.map((rect) => notation.hasNoteBehind(rect));
+      }
+      readouts.forEach((readout, i) => readout.classList.toggle('is-obscured', scoreObscured[i]));
+    }
+    drawKbd(heldAt(t, S.playing));
     if (updateGlass(ms)) busy = true;
     if (busy) kick();
   }
@@ -662,9 +668,11 @@
     for (const b of el.handSeg.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.hand === S.hand));
     el.viewSeg.style.setProperty('--i', S.view === 'score' ? 1 : 0);
     el.handSeg.style.setProperty('--i', ['L', 'both', 'R'].indexOf(S.hand));
-    el.handSeg.hidden = !(S.score && S.score.hasHands);
+    el.handSlot.hidden = !(S.score && S.score.hasHands);
+    el.handToggle.dataset.hand = S.hand;
+    el.handToggle.setAttribute('aria-label', 'Hands: ' + { L: 'Left', both: 'Both', R: 'Right' }[S.hand]);
     el.speedOut.textContent = Math.round(S.speed * 100) + '%';
-    mapDirty = true;
+    el.speedToggle.setAttribute('aria-label', 'Playback speed: ' + el.speedOut.textContent);
     footTicks = 20;
     el.slower.disabled = SPEEDS.indexOf(S.speed) <= 0;
     el.faster.disabled = SPEEDS.indexOf(S.speed) >= SPEEDS.length - 1;
@@ -691,7 +699,7 @@
     pages: el.pages,
     onStatus: status,
     onDetach: () => syncLiveBtn(),
-    onChange: () => { sceneV++; kick(); },
+    onChange: () => { scoreObscured = null; sceneV++; kick(); },
     onSeek: (t) => {
       const on = S.score.onsets.both;
       let lo = 0, hi = on.length - 1;
@@ -761,43 +769,51 @@
     setTimeout(() => notation.preload(), 600);
   }
 
-  async function loadBuiltin() {
-    status('Loading the score…');
-    try {
-      const r = await fetch(BUILTIN.url);
-      if (!r.ok) throw new Error('missing');
-      const score = FB.parseMusicXML(await r.text());
-      status(null);
-      setScore(score, BUILTIN);
-    } catch (e) {
-      status(null);
-      toast('The built-in score could not be loaded. Reload the page, or open a MusicXML file from the Scores menu.');
-    }
-  }
+  let scoreRequest = 0;
+  let scoreLoading = false;
 
-  async function openFile(file) {
-    status('Reading ' + file.name + '…');
+  async function selectScore(message, readXml, getMeta, fallbackError) {
+    const request = ++scoreRequest;
+    scoreLoading = true;
+    status(message);
     try {
-      const xml = await FB.readScoreFile(file);
+      const xml = await readXml();
+      if (request !== scoreRequest) return;
       const score = FB.parseMusicXML(xml);
       if (!score.notes.length) throw new Error('This score has no notes to play.');
       status(null);
-      setScore(score, {
-        id: 'file:' + file.name,
-        title: score.title || file.name.replace(/\.(musicxml|xml|mxl)$/i, ''),
-        composer: score.composer || '',
-      });
+      setScore(score, getMeta(score));
     } catch (e) {
+      if (request !== scoreRequest) return;
       status(null);
-      toast(e.message || 'This file could not be opened.');
+      toast(fallbackError || e.message || 'This file could not be opened.');
+    } finally {
+      if (request === scoreRequest) scoreLoading = false;
     }
+  }
+
+  function loadBuiltin(piece) {
+    const base = 'scores/' + piece.file;
+    const revision = piece.revision ? '?v=' + piece.revision : '';
+    return selectScore('Loading the score…', async () => {
+      const r = await fetch(base + '.musicxml' + revision);
+      if (!r.ok) throw new Error('Score download failed');
+      return r.text();
+    }, () => ({ ...piece, engraved: base + '.{layout}.json' + revision }), 'This piece could not be loaded. Try selecting it again.');
+  }
+
+  function openFile(file) {
+    return selectScore('Reading ' + file.name + '…', () => FB.readScoreFile(file), (score) => ({
+      id: 'file:' + file.name,
+      title: score.title || file.name.replace(/\.(musicxml|xml|mxl)$/i, ''),
+      composer: score.composer || '',
+    }));
   }
 
   /* ------------------------------------------------------------------ layout */
   function resize() {
     [G.width, G.height] = sizeCanvas(el.kbd, kc, el.kbdWrap);
-    [MAP.w, MAP.h] = sizeCanvas(el.map, mc, el.seek);
-    mapDirty = true;
+    progressBounds = null;
     sceneV++;
     footTicks = 20;
     if (S.view === 'roll') {
@@ -807,7 +823,8 @@
       notation.ensure();
       // one staff space in CSS pixels: bar numbers and the cursor scale with the engraving
       const lay = notation.layout();
-      if (lay && el.pages.clientWidth) el.pages.style.setProperty('--sp', (el.pages.clientWidth - 12) / lay.wsp + 'px');
+      const engraving = notation.layoutKey === lay?.key ? notation.eng : null;
+      if (lay && el.pages.clientWidth) el.pages.style.setProperty('--sp', (el.pages.clientWidth - 12) / (engraving?.wsp || lay.wsp) + 'px');
     }
     if (!S.pps) S.pps = 120;
     fitKeys(false);
@@ -965,6 +982,7 @@
   }
   let kdrag = null;
   el.kbd.addEventListener('pointerdown', (e) => {
+    if (!pageActive) return;
     el.kbd.setPointerCapture(e.pointerId);
     const m = midiAt(e.offsetX, e.offsetY);
     const ctx = piano.ensure();
@@ -995,11 +1013,11 @@
      As in Graph Notes: a pressed control scales up slightly and shows a highlight pill inset from
      its edge. The state is held for at least 140 ms so a quick tap is still seen, and the glass is
      redrawn while the shell changes size. */
-  const PRESSABLE = 'button:not(:disabled), .seek';
+  const PRESSABLE = 'button:not(:disabled)';
   function pressGlass(b) { if (el.rail.contains(b)) footTicks = 24; else glassKick(); }
   document.addEventListener('pointerdown', (e) => {
     const b = e.target.closest && e.target.closest(PRESSABLE);
-    if (!b || b.matches('.seek')) return;
+    if (!b) return;
     b.dataset.pressed = 'true';
     b._pressedAt = performance.now();
     // in a tab bar the pill itself follows the press; the click commits it, anything else puts it back
@@ -1017,12 +1035,54 @@
 
   /* audio may only start inside a tap: every tap and key press makes sure it is running */
   const unlockAudio = () => {
+    if (!pageActive) return;
     const c = piano.ctx;
     if (!c || c.state !== 'running' || !piano.primed || (FB.Piano.IOS && (!piano.keeper || piano.keeper.paused))) piano.unlock();
   };
   for (const type of ['pointerup', 'touchend', 'click', 'keydown']) document.addEventListener(type, unlockAudio, true);
 
   /* ------------------------------------------------------------------ controls */
+  const railControls = [
+    { slot: el.handSlot, toggle: el.handToggle, options: el.handSeg },
+    { slot: el.speedSlot, toggle: el.speedToggle, options: el.tempoBox },
+  ];
+  let openRailControl = null;
+
+  function setRailControl(control, moveFocus = false) {
+    const previous = openRailControl;
+    if (previous === control) return;
+    openRailControl = control;
+    el.rail.toggleAttribute('data-open', !!control);
+    el.railShield.hidden = !control;
+    for (const item of railControls) {
+      item.slot.classList.toggle('is-open', item === control);
+      item.slot.inert = !!control && item !== control;
+      item.toggle.setAttribute('aria-expanded', String(item === control));
+    }
+    el.steps.inert = !!control;
+    if (moveFocus) {
+      if (control) {
+        const button = control.options.querySelector('[aria-pressed="true"]') || control.options.querySelector('button:enabled');
+        button?.focus();
+      } else previous.toggle.focus();
+    }
+    footTicks = 24;
+    kick();
+  }
+
+  for (const control of railControls) {
+    control.toggle.addEventListener('click', (e) => setRailControl(control, e.detail === 0));
+  }
+  function dismissRailControl(e) {
+    if (openRailControl && !openRailControl.slot.contains(e.target)) setRailControl(null);
+  }
+  document.addEventListener('pointerdown', dismissRailControl, true);
+  document.addEventListener('wheel', dismissRailControl, { capture: true, passive: true });
+  // Safari's native page gesture is separate from the roll's pointer-based pinch.
+  for (const type of ['gesturestart', 'gesturechange']) {
+    document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
+  }
+
   el.play.addEventListener('click', () => (S.playing ? pause() : play()));
   el.next.addEventListener('click', () => step(1));
   el.prev.addEventListener('click', () => step(-1));
@@ -1032,31 +1092,15 @@
   el.slower.addEventListener('click', () => { const i = SPEEDS.indexOf(S.speed); if (i > 0) setSpeed(SPEEDS[i - 1]); });
   el.faster.addEventListener('click', () => { const i = SPEEDS.indexOf(S.speed); if (i < SPEEDS.length - 1) setSpeed(SPEEDS[i + 1]); });
 
-  let seeking = false;
-  const seekTo = (e) => {
-    if (!S.score) return;
-    const r = el.seek.getBoundingClientRect();
-    const span = Math.max(3, Math.floor((r.width - 8) / 3) * 3), x0 = (r.width - span) / 2;
-    seek(clamp((e.clientX - r.left - x0) / span, 0, 1) * S.score.duration, { snap: true });
-  };
-  el.seek.addEventListener('pointerdown', (e) => { el.seek.setPointerCapture(e.pointerId); seeking = true; seekTo(e); });
-  el.seek.addEventListener('pointermove', (e) => { if (seeking) seekTo(e); });
-  const seekEnd = () => { if (seeking) { seeking = false; persist(); } };
-  el.seek.addEventListener('pointerup', seekEnd);
-  el.seek.addEventListener('pointercancel', seekEnd);
-  el.seek.addEventListener('keydown', (e) => {
-    if (!S.score) return;
-    const oi = S.score.measureAt(now());
-    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { seek(S.score.measures[Math.min(oi + 1, S.score.measures.length - 1)].t, { snap: true }); e.preventDefault(); e.stopPropagation(); }
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { seek(S.score.measures[Math.max(oi - 1, 0)].t, { snap: true }); e.preventDefault(); e.stopPropagation(); }
-  });
-
   document.addEventListener('keydown', (e) => {
     if (e.target.closest && e.target.closest('input, textarea, select')) return;
     if (e.key === ' ' || e.code === 'Space') { if (e.target.tagName !== 'BUTTON') { e.preventDefault(); S.playing ? pause() : play(); } }
     else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
-    else if (e.key === 'Escape') closeMenu();
+    else if (e.key === 'Escape') {
+      if (openRailControl) setRailControl(null, true);
+      else closeMenu();
+    }
   });
 
   function closeMenu() { el.menu.hidden = true; el.menuBtn.setAttribute('aria-expanded', 'false'); }
@@ -1068,24 +1112,53 @@
   });
   document.addEventListener('pointerdown', (e) => { if (!el.menu.hidden && !el.menu.contains(e.target) && e.target !== el.menuBtn && !el.menuBtn.contains(e.target)) closeMenu(); });
   el.openBtn.addEventListener('click', () => { closeMenu(); el.file.click(); });
-  el.builtinBtn.addEventListener('click', () => { closeMenu(); if (!S.meta || S.meta.id !== BUILTIN.id) loadBuiltin(); });
+  for (const piece of BUILTINS) {
+    const button = $('builtinScoreRow').content.firstElementChild.cloneNode(true);
+    button.querySelector('b').textContent = piece.title;
+    button.querySelector('small').textContent = piece.composer;
+    button.addEventListener('click', () => {
+      closeMenu();
+      if (S.meta?.id !== piece.id) loadBuiltin(piece);
+      else if (scoreLoading) {
+        scoreRequest++;
+        scoreLoading = false;
+        status(null);
+      }
+    });
+    el.builtinScores.appendChild(button);
+  }
   el.file.addEventListener('change', () => { const f = el.file.files && el.file.files[0]; if (f) openFile(f); el.file.value = ''; });
 
   /* ------------------------------------------------------------------ boot */
   readTheme();
-  const themeChanged = () => { readTheme(); kick(); };
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeChanged);
-  new MutationObserver(themeChanged).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   new ResizeObserver(resize).observe(el.stage);
   new ResizeObserver(resize).observe(el.kbdWrap);
-  new ResizeObserver(resize).observe(el.seek);
+  const progressObserver = new ResizeObserver(() => { progressBounds = null; kick(); });
+  for (const readout of readouts) progressObserver.observe(readout);
   notation.now = now;
   notation.topInset = 68;
-  el.notation.addEventListener('scroll', () => { sceneV++; kick(); }, { passive: true });
+  el.notation.addEventListener('scroll', () => { scoreObscured = null; sceneV++; kick(); }, { passive: true });
   initGlass();
   piano.preload();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { footTicks = 20; sceneV++; glassKick(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
+  function backgroundPlayback() {
+    pageActive = false;
+    if (waitingForPiano) {
+      waitingForPiano = null;
+      status(null);
+    }
+    if (S.playing) pause();
+    else persist();
+    piano.deactivate();
+    pressed.clear();
+    kdrag = null;
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) backgroundPlayback();
+    else { pageActive = true; kick(); }
+  });
+  window.addEventListener('pagehide', backgroundPlayback);
+  window.addEventListener('pageshow', () => { pageActive = !document.hidden; });
   setInterval(() => { if (S.playing) persist(); }, 5000);
 
   el.app.dataset.view = S.view;
@@ -1094,7 +1167,7 @@
   syncSegs();
   syncPlayBtn();
   resize();
-  loadBuiltin();
+  loadBuiltin(BUILTINS[0]);
 
   FB.debug = { S, G, R, seek, play, pause, step, notation, piano, openFile, glass: () => [glassTop, glassFoot] };
 })();
