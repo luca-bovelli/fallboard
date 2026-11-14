@@ -7,8 +7,8 @@
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const EPS = 2e-3;
   const MIN_W = 10, MAX_W = 44, BLACK_W = 0.58, BLACK_H = 0.62;
-  // five steps either side of normal speed, so the slider is symmetric about 100%
-  const SPEEDS = [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5];
+  // three stops either side of normal speed, so 100% sits in the middle of the slider
+  const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
   const BUILTINS = [
     { id: 'chopin-op23', file: 'ballade-op23', title: 'Ballade No. 1 in G minor', composer: 'Frédéric Chopin, Op. 23' },
