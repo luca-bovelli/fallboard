@@ -536,7 +536,7 @@
   <div class="kbd-wrap" id="kbdWrap"><canvas id="kbd" aria-label="Piano keyboard"></canvas></div>
 
   <!-- one hand, drawn once: the left hand as is, the right hand mirrored -->
-  <svg class="vh" aria-hidden="true"><defs><path id="fb-hand" d="M5.4 12.3V5.9a1.05 1.05 0 0 1 2.1 0v4.4h1.8V4.4a1.05 1.05 0 0 1 2.1 0v5.9h1.8V5.2a1.05 1.05 0 0 1 2.1 0v5.1h1.8V7.1a1.05 1.05 0 0 1 2.1 0v6.8c0 4.2-2.2 6.8-5.8 6.8h-3.8c-2.4 0-4.1-1.2-5.4-3.4l-2.3-4.1a1.2 1.2 0 0 1 1.9-1.4l1.6 1.7z"/></defs></svg>
+  <svg class="vh" aria-hidden="true"><defs><path id="fb-hand" d="M5.4 12.3V5.9a1.05 1.05 0 0 1 2.1 0v3.5a0.9 0.9 0 0 0 1.8 0V4.4a1.05 1.05 0 0 1 2.1 0v5a0.9 0.9 0 0 0 1.8 0V5.2a1.05 1.05 0 0 1 2.1 0v4.2a0.9 0.9 0 0 0 1.8 0V7.1a1.05 1.05 0 0 1 2.1 0v6.8c0 4.2-2.2 6.8-5.8 6.8h-3.8c-2.4 0-4.1-1.2-5.4-3.4l-2.3-4.1a1.2 1.2 0 0 1 1.9-1.4L4.78 12.85Q5.4 13.5 5.4 12.6z"/></defs></svg>
 
   <footer class="rail" id="rail">
     <div class="rail-slot hand-slot" id="handSlot" hidden>
@@ -562,7 +562,7 @@
 
     <div class="rail-slot speed-slot" id="speedSlot">
       <button type="button" class="round rail-toggle glass-material" id="speedToggle" aria-label="Playback speed: 100%" aria-controls="tempoBox" aria-expanded="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.63 19.16A9 9 0 1 1 19.37 19.16"/><path id="speedNeedle" d="M12 14V8.6"/><circle cx="12" cy="14" r="1.6" fill="currentColor" stroke="none"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="fb-dial-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path id="speedNeedleGap" d="M12 12V0" stroke="#000" stroke-width="5.4"/></mask></defs><path d="M4.63 17.16A9 9 0 1 1 19.37 17.16" mask="url(#fb-dial-gap)"/><path id="speedNeedle" d="M12 12V3"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>
       </button>
       <div class="tempo rail-options glass-material" id="tempoBox" role="group" aria-label="Playback speed">
         <button type="button" class="speed-readout" id="speedReset" title="Back to 100%">

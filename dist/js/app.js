@@ -60,7 +60,7 @@
     whereOf: $('whereOf'), tempoBox: $('tempoBox'),
     barReadout: $('barReadout'), clock: $('clock'),
     speedOut: $('speedOut'), speedReset: $('speedReset'), speed: $('speed'), speedTrack: $('speedTrack'),
-    speedTicks: $('speedTicks'), speedThumb: $('speedThumb'), speedNeedle: $('speedNeedle'),
+    speedTicks: $('speedTicks'), speedThumb: $('speedThumb'), speedNeedle: $('speedNeedle'), speedNeedleGap: $('speedNeedleGap'),
     viewSeg: $('viewSeg'), handSeg: $('handSeg'),
     handSlot: $('handSlot'), handToggle: $('handToggle'), speedSlot: $('speedSlot'), speedToggle: $('speedToggle'),
     steps: $('steps'), railShield: $('railShield'),
@@ -1225,9 +1225,12 @@
     el.speed.setAttribute('aria-valuenow', String(Math.round(S.speed * 100)));
     el.speed.setAttribute('aria-valuetext', pct);
     el.speedTicks.querySelectorAll('i').forEach((t, k) => t.classList.toggle('on', k / n > a + 1e-6 && k / n < b - 1e-6));
-    // the speed button's needle: straight up at 100%, 35 degrees per stop either way (the dial's
-    // arc reaches 125 degrees from upright, so the slowest and fastest stops sit inside its ends)
-    el.speedNeedle.setAttribute('transform', 'rotate(' + (((i - SPEED_HOME) / SPEED_HOME) * 105).toFixed(1) + ' 12 14)');
+    // the speed button's needle: straight up at 100%, 30 degrees per stop, so 25% points left and
+    // 200% right; the cut in the dial turns with it (the dial reaches 125 degrees from upright, so
+    // a short piece of dial stays beyond the cut at either end)
+    const needle = 'rotate(' + (((i - SPEED_HOME) / SPEED_HOME) * 90).toFixed(1) + ' 12 12)';
+    el.speedNeedle.setAttribute('transform', needle);
+    el.speedNeedleGap.setAttribute('transform', needle);
   }
   /* touch: a short vibration per step, a firmer one at 100% (where the platform allows it) */
   function speedStep(i, touch) {
