@@ -41,6 +41,10 @@
     let x = xml.replace(/<!DOCTYPE[^>]*>/i, '');
     x = x.replace(/<defaults>[\s\S]*?<\/defaults>\s*/, '');
     x = x.replace(/<credit[\s>][\s\S]*?<\/credit>\s*/g, '');
+    /* MuseScore builds a title block from these when there are no credits; the app already shows the title */
+    x = x.replace(/<work>[\s\S]*?<\/work>\s*/g, '');
+    x = x.replace(/<(movement-title|movement-number|rights)\b[^>]*>[\s\S]*?<\/\1>\s*/g, '');
+    x = x.replace(/<creator\b[^>]*>[\s\S]*?<\/creator>\s*/g, '');
     x = x.replace(/<print\b[^>]*\/>\s*/g, '').replace(/<print\b[^>]*>[\s\S]*?<\/print>\s*/g, '');
     x = x.replace(/\s(?:default-x|default-y|relative-x|relative-y|width)="[^"]*"/g, '');
     /* "Ped." and "*" written as loose symbols lose their place once the page is re-flowed, so
@@ -90,7 +94,7 @@
   /* page numbers and bar numbers are drawn by the app, in its own type */
   const DROP = new Set(['Page', 'InstrumentName', 'MeasureNumber']);
 
-  /* one MuseScore page -> { svg, y0, h, heads, lines } or null when the page is empty.
+  /* one MuseScore page -> { svg, w, right, y0, h, heads, lines } or null when the page is empty.
      Elements are grouped by class so shared attributes are written once; noteheads keep their
      order, which is how the app tells them apart. */
   function compact(svg, glyphs) {
@@ -167,6 +171,7 @@
     for (const g of groups.values()) out += g.open + g.items.join('') + '</g>';
     return {
       w: size ? Math.round(+size[1] * 10) / 10 : Math.ceil(page[2]),
+      right: page[2],
       y0, h: y1 - y0,
       svg: out,
       heads,
@@ -195,7 +200,12 @@
         .slice()
         .sort((a, b) => a.id - b.id)
         .map((e) => (pageMap.has(e.page) ? [pageMap.get(e.page), r(e.x), r(e.y), r(e.sx), r(e.sy)] : null));
-      return { v: 2, wsp, w: pages[0].w, defs: glyphs.defs.join(''), pages: pages.map(({ w, ...p }) => p), meas };
+      /* A bar too dense for the width runs past the page edge (MuseScore reports a justification
+         error and leaves it). Such a system keeps its own, wider width, so the app draws it
+         scaled down to fit the screen; every other system keeps the common staff size. */
+      const w = pages[0].w, pad = (w / wsp) * 1.2;
+      const fit = ({ w: _, right, ...p }) => (right > w + 1 ? { ...p, w: Math.ceil(right + pad) } : p);
+      return { v: 2, wsp, w, defs: glyphs.defs.join(''), pages: pages.map(fit), meas };
     } finally {
       try { score.destroy(); } catch (e) { /* already gone */ }
     }

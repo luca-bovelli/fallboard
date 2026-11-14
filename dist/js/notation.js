@@ -64,7 +64,7 @@
         }
       }, { root: box, rootMargin: '100% 0px' });
 
-      const userScroll = () => { if (this.eng && !this.detached) { this.detached = true; this.onDetach(true); } };
+      const userScroll = () => this.detach();
       box.addEventListener('wheel', userScroll, { passive: true });
       box.addEventListener('touchmove', userScroll, { passive: true });
       // dragging the scrollbar itself: the only pointer press that lands on the scroller outside its content
@@ -108,6 +108,25 @@
 
     show() { this.visible = true; this.box.hidden = false; this.ensure(); this.attach(); }
     hide() { this.visible = false; this.box.hidden = true; }
+
+    /* the reader took over the scrolling: stop following playback */
+    detach() {
+      if (this.eng && !this.detached) { this.detached = true; this.onDetach(true); }
+    }
+
+    /* the bar printed first in the system at the top of the view */
+    barAtTop() {
+      if (!this.eng || !this.score.docNumbers) return null;
+      const top = this.box.scrollTop + (this.topInset || 0);
+      for (let i = 0; i < this.sys.length; i++) {
+        const d = this.sys[i];
+        if (d.offsetTop + d.offsetHeight > top) {
+          for (let j = i; j >= 0; j--) if (this.firstBar[j] >= 0) return this.score.docNumbers[this.firstBar[j]];
+          return null;
+        }
+      }
+      return null;
+    }
 
     attach() {
       this.forceScroll = true;
@@ -204,7 +223,7 @@
         const d = document.createElement('div');
         d.className = 'sys';
         d.dataset.i = i;
-        d.style.aspectRatio = `${eng.w} / ${p.h}`;
+        d.style.aspectRatio = `${p.w || eng.w} / ${p.h}`;
         this.pagesEl.appendChild(d);
         this.io.observe(d);
         return d;
@@ -303,7 +322,8 @@
     mount(i) {
       if (this.mounted.has(i) || !this.eng) return;
       const eng = this.eng, p = eng.pages[i], d = this.sys[i];
-      let html = `<svg viewBox="0 ${p.y0} ${eng.w} ${p.h}" fill="currentColor" aria-hidden="true">${p.svg}</svg>`;
+      const pw = p.w || eng.w;
+      let html = `<svg viewBox="0 ${p.y0} ${pw} ${p.h}" fill="currentColor" aria-hidden="true">${p.svg}</svg>`;
       if (this.score.hasHands && p.lines.length === 10) {
         const split = (((p.lines[4] + p.lines[5]) / 2 - p.y0) / p.h) * 100;
         html += `<div class="veil hi" style="height:${split.toFixed(2)}%"></div><div class="veil lo" style="top:${split.toFixed(2)}%"></div>`;
@@ -312,7 +332,7 @@
       if (fb >= 0 && this.score.docNumbers && this.score.docNumbers[fb] !== undefined && p.lines.length) {
         const m = eng.meas[fb];
         const top = ((p.lines[0] - p.y0) / p.h) * 100;
-        html += `<span class="barno" style="left:${((m[1] / eng.w) * 100).toFixed(2)}%;top:${top.toFixed(2)}%">${this.score.docNumbers[fb]}</span>`;
+        html += `<span class="barno" style="left:${((m[1] / pw) * 100).toFixed(2)}%;top:${top.toFixed(2)}%">${this.score.docNumbers[fb]}</span>`;
       }
       html += '<div class="cursor" hidden></div>';
       d.innerHTML = html;
@@ -342,7 +362,8 @@
         let defs = '';
         for (const id of need) defs += this.defMap.get(id) || '';
         const px = clamp(Math.round((this.sys[i].clientWidth || 800) * 1.5), 300, 2400);
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 ${p.y0} ${eng.w} ${p.h}" width="${px}" height="${Math.max(1, Math.round((px * p.h) / eng.w))}" fill="${ink}" color="${ink}">` +
+        const pw = p.w || eng.w;
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 ${p.y0} ${pw} ${p.h}" width="${px}" height="${Math.max(1, Math.round((px * p.h) / pw))}" fill="${ink}" color="${ink}">` +
           `<style>g[stroke-width]{stroke:${ink}}polyline{fill:none}</style><defs>${defs}</defs>${p.svg}</svg>`;
         const img = new Image();
         e = { img, ready: false, url: URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })) };
@@ -403,15 +424,21 @@
       }
     }
 
+    /* is any printed notehead behind this screen rectangle? Worked out from the engraving's own
+       notehead positions: one box measured per system on screen, the rest is arithmetic */
     hasNoteBehind(readout) {
+      const eng = this.eng;
+      if (!eng) return false;
+      const sp = eng.w / eng.wsp, hw = sp * 0.65, hh = sp * 0.5;
       for (const i of this.mounted) {
-        const system = this.sys[i].getBoundingClientRect();
-        if (system.bottom < readout.top - 8 || system.top > readout.bottom + 8 ||
-            system.right < readout.left - 8 || system.left > readout.right + 8) continue;
-        for (const note of this.noteEls[i]) {
-          const box = note.getBoundingClientRect();
-          if (box.right > readout.left - 2 && box.left < readout.right + 2 &&
-              box.bottom > readout.top - 2 && box.top < readout.bottom + 2) return true;
+        const r = this.sys[i].getBoundingClientRect();
+        if (r.bottom < readout.top - 8 || r.top > readout.bottom + 8 || !r.width) continue;
+        const p = eng.pages[i], k = (p.w || eng.w) / r.width;
+        const x0 = (readout.left - 2 - r.left) * k - hw, x1 = (readout.right + 2 - r.left) * k + hw;
+        const y0 = p.y0 + (readout.top - 2 - r.top) * k - hh, y1 = p.y0 + (readout.bottom + 2 - r.top) * k + hh;
+        const heads = p.heads;
+        for (let j = 0; j < heads.length; j += 2) {
+          if (heads[j] > x0 && heads[j] < x1 && heads[j + 1] > y0 && heads[j + 1] < y1) return true;
         }
       }
       return false;
@@ -484,7 +511,7 @@
       const y0 = (at.box[2] - pad - pg.y0) / pg.h, y1 = (at.box[2] + at.box[4] + pad - pg.y0) / pg.h;
       if (c && c.className === 'cursor') {
         c.hidden = false;
-        c.style.left = ((at.x / eng.w) * 100).toFixed(3) + '%';
+        c.style.left = ((at.x / (pg.w || eng.w)) * 100).toFixed(3) + '%';
         c.style.top = (y0 * 100).toFixed(2) + '%';
         c.style.height = ((y1 - y0) * 100).toFixed(2) + '%';
       }
@@ -519,7 +546,7 @@
       if (!d) return;
       const i = +d.dataset.i, eng = this.eng, pg = eng.pages[i], sc = this.score;
       const r = d.getBoundingClientRect();
-      const x = ((e.clientX - r.left) / r.width) * eng.w;
+      const x = ((e.clientX - r.left) / r.width) * (pg.w || eng.w);
       const y = pg.y0 + ((e.clientY - r.top) / r.height) * pg.h;
       /* the nearest notehead wins; a tap in open space falls back to the bar under the finger */
       let di = -1, q = 0, best = 60 * 60;
