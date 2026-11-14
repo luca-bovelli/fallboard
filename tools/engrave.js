@@ -1,5 +1,5 @@
 /* Pre-engraves a MusicXML score with MuseScore's engine at every layout width.
-   Usage: node tools/engrave.js <score.musicxml> <out-prefix> <path to webmscore.nodejs.cjs>
+   Usage: node tools/engrave.js dist/scores/<name>.musicxml dist/scores/<name> <path to webmscore.nodejs.cjs>
    Writes <out-prefix>.narrow.json, .medium.json and .wide.json */
 'use strict';
 // webmscore's Node build predates Node's own fetch and read-only navigator
@@ -9,7 +9,7 @@ Object.defineProperty(globalThis, 'navigator', { value: {}, writable: true, conf
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const core = require('../js/engrave-core.js');
+const core = require('../dist/js/engrave-core.js');
 
 const [, , src, prefix, modPath, only] = process.argv;
 if (!src || !prefix || !modPath) {
