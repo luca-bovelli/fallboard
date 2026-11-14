@@ -1226,16 +1226,17 @@
     el.speed.setAttribute('aria-valuetext', pct);
     el.speedTicks.querySelectorAll('i').forEach((t, k) => t.classList.toggle('on', k / n > a + 1e-6 && k / n < b - 1e-6));
   }
-  function speedStep(i) {
+  /* touch: a short vibration per step, a firmer one at 100% (where the platform allows it) */
+  function speedStep(i, touch) {
     i = clamp(i, 0, SPEEDS.length - 1);
     if (SPEEDS[i] === S.speed) return;
     setSpeed(SPEEDS[i]);
-    try { if (navigator.vibrate) navigator.vibrate(i === SPEED_HOME ? 12 : 5); } catch (e) { /* no haptics */ }
+    if (touch && navigator.vibrate) { try { navigator.vibrate(i === SPEED_HOME ? 12 : 5); } catch (e) { /* no haptics */ } }
   }
   function speedAt(e) {
     const r = el.speedTrack.getBoundingClientRect();
     const raw = clamp((e.clientX - r.left) / r.width, 0, 1) * (SPEEDS.length - 1);
-    speedStep(Math.abs(raw - SPEED_HOME) < 0.8 ? SPEED_HOME : Math.round(raw));
+    speedStep(Math.abs(raw - SPEED_HOME) < 0.8 ? SPEED_HOME : Math.round(raw), e.pointerType === 'touch');
   }
   el.speed.addEventListener('pointerdown', (e) => {
     e.preventDefault();
