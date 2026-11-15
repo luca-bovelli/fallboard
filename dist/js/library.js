@@ -361,7 +361,7 @@
 
   /* ------------------------------------------------------------------ ornaments
      Drawn in a 100-unit square laid over the cover, in its line colour, from parts the cover's
-     hash picks: rules, corners and borders after engraved editions, with music's own ornaments
+     hash picks: rules and borders after engraved editions, with music's own ornaments
      as centrepieces (the turn, the mordent, the fermata, a star, a diamond). */
   const stroke = (w) => `stroke="currentColor" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
   const CENTRE = [
@@ -397,17 +397,6 @@
       case 2: return `<rect ${r(inset)} ${stroke(0.6)} stroke-dasharray="0.01 1.5"/><rect ${r(inset + 2.2)} ${stroke(0.3)}/>`;
       default: return `<rect ${r(inset)} ${stroke(1.1)}/><rect ${r(inset + 2.4)} ${stroke(0.3)}/><rect ${r(inset + 3.6)} ${stroke(0.3)}/>`;
     }
-  }
-  /* the same piece at each corner of a frame, turned to face inward */
-  function corners(pick, at) {
-    const style = pick(4), out = [];
-    for (const [x, y, dx, dy] of [[at, at, 1, 1], [100 - at, at, -1, 1], [at, 100 - at, 1, -1], [100 - at, 100 - at, -1, -1]]) {
-      if (style === 0) out.push(`<path d="M${x + dx * 7} ${y}H${x}V${y + dy * 7}" ${stroke(0.5)}/><circle cx="${x + dx * 2.2}" cy="${y + dy * 2.2}" r="0.7" fill="currentColor"/>`);
-      else if (style === 1) out.push(`<path d="M${x + dx * 8} ${y}A8 8 0 0 ${dx * dy > 0 ? 0 : 1} ${x} ${y + dy * 8}M${x + dx * 5} ${y}A5 5 0 0 ${dx * dy > 0 ? 0 : 1} ${x} ${y + dy * 5}" ${stroke(0.35)}/>`);
-      else if (style === 2) out.push(`<g transform="translate(${x} ${y}) scale(${dx} ${dy})"><path d="M1 1C4 0.5 6.5 2 7 4.5C4.5 4 2 3 1 1ZM1 1C0.5 4 2 6.5 4.5 7C4 4.5 3 2 1 1Z" fill="currentColor"/></g>`);
-      else out.push(CENTRE[4](x + dx * 2.6, y + dy * 2.6, 1.6));
-    }
-    return out.join('');
   }
   /* printer's marks: crop marks at two corners and a registration target */
   function marks(pick) {
@@ -503,13 +492,13 @@
     /* a word drawn in SVG, in the cover's 100-unit square: filled in ink, or as an outline that
        lies outside the letters only (a stroke twice as wide, the letters masked out of it), so
        the outline never eats into the letter's own shape */
-    const word = (text, x, y, size, fam, style, weight, outline, anchor = 'start') => {
+    const word = (text, x, y, size, fam, style, weight, outline, anchor = 'start', fade = 1) => {
       const font = `font-family="${fam.replace(/"/g, "'")}" font-style="${style}" font-weight="${weight}" font-size="${size}" text-anchor="${anchor}" letter-spacing="${(-0.01 * size).toFixed(2)}"`;
       const glyphs = `<text x="${x}" y="${y}" ${font}>${esc(text)}</text>`;
       if (!outline) return glyphs.replace('<text ', '<text style="fill: var(--ink)" ');
       const id = 'cvm' + (++maskSeq);
       return `<mask id="${id}" maskUnits="userSpaceOnUse" x="-60" y="-60" width="220" height="220"><rect x="-60" y="-60" width="220" height="220" fill="#fff"/>${glyphs.replace('<text ', '<text fill="#000" ')}</mask>` +
-        glyphs.replace('<text ', `<text fill="none" stroke="currentColor" stroke-width="${outline * 2}" stroke-linejoin="round" mask="url(#${id})" `);
+        glyphs.replace('<text ', `<text fill="none" stroke="currentColor" stroke-width="${outline * 2}" stroke-opacity="${fade}" stroke-linejoin="round" mask="url(#${id})" `);
     };
     const [fam, fstyle, fweight] = [FACE[face][0], FACE[face][2], FACE[face][3]];
     const [ofam, ostyle, oweight] = [FACE.outline[0], FACE.outline[2], FACE.outline[3]];
@@ -526,7 +515,7 @@
       if (t.cat) part('cat', t.cat);
     } else if (layout === 'frame') {
       c.style.setProperty('--ts', fitSize(t.main, face, 72, 30, 17) + 'cqw');
-      art(layer(border(pick, 4.5) + corners(pick, 10)));
+      art(layer(border(pick, 4.5)));
       const stack = part('stack');
       stack.appendChild(make('span', 'who', t.who));
       stack.insertAdjacentHTML('beforeend', `<svg class="divider" viewBox="0 0 100 8" aria-hidden="true">${rule(pick, 8, 92, 4, 1.7)}</svg>`);
@@ -539,7 +528,7 @@
          it keeps clear of the composer and number at the top left */
       const big = t.num || (t.main.match(/\p{L}/u) || ['·'])[0];
       const size = Math.min(82, 56 / Math.max(widthOf(big, 'outline'), 0.01));
-      art(layer(word(big, 104, 70, size.toFixed(2), ofam, ostyle, oweight, 0.4, 'end')));
+      art(layer(word(big, 104, 70, size.toFixed(2), ofam, ostyle, oweight, 0.3, 'end', 0.5)));
       part('who', t.who);
       if (t.cat) part('cat', t.cat);
       part('main', t.main);
