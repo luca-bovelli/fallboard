@@ -1337,7 +1337,7 @@
     if (L.viewer) return;
     /* the same smooth S as the CSS mask (index.html .lib-scroll), read from it as it changes */
     const S_CURVE = [[0.25, 0.156], [0.5, 0.5], [0.75, 0.844]];
-    const sc = getComputedStyle(el.scroll);
+    const sc = getComputedStyle(el.lib);
     const tb = parseFloat(sc.getPropertyValue('--top-black')), ts = parseFloat(sc.getPropertyValue('--top-span'));
     if (ts > 0) fade(tb, tb + ts, true, S_CURVE, parseFloat(sc.getPropertyValue('--top-floor')) || 0);
     const bar = el.bottom.getBoundingClientRect();
@@ -1370,6 +1370,7 @@
       }
     }
     titleCheck();
+    setFade(true);   // the top fade grows with the first bit of scrolling
     sceneV++;
     kick();
   }
@@ -1402,22 +1403,30 @@
      frame, over --dur-move; the glass's scene is repainted along with it */
   const FADE_MS = 280;
   let fadeNow = null, fadeFrom = null, fadeTo = null, fadeAt = 0;
-  function fadeTarget() {
+  /* the top bar's depth (a button and an edge): the top fade's height at rest */
+  const barDepth = () => {
     const cs = getComputedStyle(document.documentElement);
-    const control = parseFloat(cs.getPropertyValue('--control')) || 44, edge = parseFloat(cs.getPropertyValue('--edge')) || 16;
-    const c = el.lib.classList;
-    return { floor: c.contains('has-hero') && !c.contains('is-titled') ? 0.5 : 0, span: 2 * ((c.contains('tabs-pinned') ? 2 * control : control) + edge) };
+    return { control: parseFloat(cs.getPropertyValue('--control')) || 44, edge: parseFloat(cs.getPropertyValue('--edge')) || 16 };
+  };
+  /* what is eased: the floor, and how much further the fade reaches while the tabs are pinned */
+  function fadeTarget() {
+    const { control } = barDepth(), c = el.lib.classList;
+    return { floor: c.contains('has-hero') && !c.contains('is-titled') ? 0.5 : 0, extra: c.contains('tabs-pinned') ? 2 * control : 0 };
   }
+  /* what follows the scroll: the fade grows from the bar's depth to twice it over the first
+     bar's depth of scrolling */
   function applyFade(v) {
     fadeNow = v;
-    el.scroll.style.setProperty('--top-floor', v.floor.toFixed(3));
-    el.scroll.style.setProperty('--top-span', v.span.toFixed(1) + 'px');
+    const { control, edge } = barDepth(), depth = control + edge;
+    const grow = Math.min(Math.max(el.scroll.scrollTop / depth, 0), 1);
+    el.lib.style.setProperty('--top-floor', v.floor.toFixed(3));
+    el.lib.style.setProperty('--top-span', (depth * (1 + grow) + v.extra).toFixed(1) + 'px');
     sceneV++;
     kick();
   }
   function setFade(animate) {
     const to = fadeTarget();
-    if (fadeTo && to.floor === fadeTo.floor && to.span === fadeTo.span) return;
+    if (fadeTo && to.floor === fadeTo.floor && to.extra === fadeTo.extra) { if (!fadeAt && fadeNow) applyFade(fadeNow); return; }
     fadeTo = to;
     if (!animate || !fadeNow || STILL.matches) { fadeAt = 0; applyFade(to); return; }
     fadeFrom = fadeNow;
@@ -1428,7 +1437,7 @@
   function stepFade() {
     if (!fadeAt) return;
     const t = Math.min(1, (performance.now() - fadeAt) / FADE_MS), e = 1 - Math.pow(1 - t, 3);
-    applyFade({ floor: fadeFrom.floor + (fadeTo.floor - fadeFrom.floor) * e, span: fadeFrom.span + (fadeTo.span - fadeFrom.span) * e });
+    applyFade({ floor: fadeFrom.floor + (fadeTo.floor - fadeFrom.floor) * e, extra: fadeFrom.extra + (fadeTo.extra - fadeFrom.extra) * e });
     if (t < 1) requestAnimationFrame(stepFade); else fadeAt = 0;
   }
   el.scroll.addEventListener('scroll', () => { pinCheck(); sceneV++; kick(); }, { passive: true });

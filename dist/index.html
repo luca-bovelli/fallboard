@@ -553,41 +553,53 @@
   .lib-proxy { position: absolute; top: var(--lib-top); left: 50%; width: 1px; height: var(--control); padding: 0; border: 0; opacity: 0; font-size: 16px; caret-color: transparent; pointer-events: none; }
   @keyframes lib-in { from { opacity: 0; } }
   @keyframes lib-out { to { opacity: 0; } }
-  /* the content fades to black under the glass, reaching black exactly at the glass's outer
-     edge: the search bar's bottom, the back button's top. The fade follows a smooth S
-     (smoothstep, sampled at quarters: 16 %, 50 %, 84 %), so it has no visible start or end line;
-     the bottom one runs 64 px above the bar, so what passes behind the field is dim enough for
-     its text to read. The top one is twice the top bar's depth (button and edge, 120 px), so
-     what passes under the small title is dim enough for it to read; while Explore's tabs are
-     pinned, twice their depth (--top-span), so the list is dim behind them too. An album cover
-     is dimmed only by half (--top-floor: how much still shows at the black end), until the small
-     title shows and the fade goes back to black at the edge. library.js (setFade)
-     sets the two and eases between them: a mask is not repainted while a variable it uses is
-     animated by CSS. They are registered so they compute to plain numbers and lengths. */
+  /* The content fades to black under the glass, reaching black exactly at the glass's outer
+     edge: the search bar's bottom, the back button's top. The fades are black layers over the
+     content (.lib-fade) and under the glass: on a black page that is the same as fading the
+     content out, and it lets glass that sits in the page (Explore's pinned tabs) rise above them
+     with the rest of the glass. They follow a smooth S (smoothstep, sampled at quarters: 16 %,
+     50 %, 84 %), so they have no visible start or end line. The bottom one runs 64 px above the
+     bar, so what passes behind the field is dim enough for its text to read. The top one
+     (library.js setFade) is the top bar's depth (button and edge, 60 px) while the page is at its
+     top, so it never reaches the page's heading, and grows to twice that over the first 60 px of
+     scrolling, so what passes under the small title is dim enough for it to read; while
+     Explore's tabs are pinned, to twice their depth. An album cover is dimmed only by half
+     (--top-floor: how much still shows at the black end) until the small title shows. The
+     variables are registered so they compute to plain numbers and lengths. */
   @property --top-floor { syntax: '<number>'; inherits: true; initial-value: 0; }
   @property --top-black { syntax: '<length>'; inherits: true; initial-value: 0px; }
   @property --top-span { syntax: '<length>'; inherits: true; initial-value: 0px; }
+  .library {
+    --top-floor: 0;
+    --top-black: var(--lib-top);
+    --top-span: calc(var(--control) + var(--edge));
+    --bottom-black: var(--lib-bottom);
+    --bottom-span: calc(var(--control) + 64px);
+  }
   .lib-scroll {
     position: absolute; inset: 0 0 var(--kb) 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch; touch-action: pan-y; scrollbar-width: none;
-    --top-floor: 0;
-    --top-black: var(--lib-top);
-    --top-span: calc((var(--control) + var(--edge)) * 2);
-    --bottom-black: var(--lib-bottom);
-    --bottom-span: calc(var(--control) + 64px);
-    --fade: linear-gradient(to bottom,
-      rgb(0 0 0 / var(--top-floor)) var(--top-black),
-      rgb(0 0 0 / calc(var(--top-floor) + (1 - var(--top-floor)) * 0.156)) calc(var(--top-black) + var(--top-span) * 0.25),
-      rgb(0 0 0 / calc(var(--top-floor) + (1 - var(--top-floor)) * 0.5)) calc(var(--top-black) + var(--top-span) * 0.5),
-      rgb(0 0 0 / calc(var(--top-floor) + (1 - var(--top-floor)) * 0.844)) calc(var(--top-black) + var(--top-span) * 0.75),
-      #000 calc(var(--top-black) + var(--top-span)),
-      #000 calc(100% - var(--bottom-black) - var(--bottom-span)),
-      rgb(0 0 0 / 0.844) calc(100% - var(--bottom-black) - var(--bottom-span) * 0.75),
-      rgb(0 0 0 / 0.5) calc(100% - var(--bottom-black) - var(--bottom-span) * 0.5),
-      rgb(0 0 0 / 0.156) calc(100% - var(--bottom-black) - var(--bottom-span) * 0.25),
-      transparent calc(100% - var(--bottom-black)));
-    -webkit-mask-image: var(--fade);
-    mask-image: var(--fade);
+    transition: bottom var(--dur-keyboard) var(--ease);
+  }
+  .lib-fade { position: absolute; z-index: 3; left: 0; right: 0; pointer-events: none; }
+  .lib-fade.top {
+    top: 0; height: calc(var(--top-black) + var(--top-span));
+    --k: calc(1 - var(--top-floor));
+    background: linear-gradient(to bottom,
+      rgb(0 0 0 / var(--k)) var(--top-black),
+      rgb(0 0 0 / calc(var(--k) * 0.844)) calc(var(--top-black) + var(--top-span) * 0.25),
+      rgb(0 0 0 / calc(var(--k) * 0.5)) calc(var(--top-black) + var(--top-span) * 0.5),
+      rgb(0 0 0 / calc(var(--k) * 0.156)) calc(var(--top-black) + var(--top-span) * 0.75),
+      transparent 100%);
+  }
+  .lib-fade.bottom {
+    bottom: var(--kb); height: calc(var(--bottom-black) + var(--bottom-span));
+    background: linear-gradient(to top,
+      #000 var(--bottom-black),
+      rgb(0 0 0 / 0.844) calc(var(--bottom-black) + var(--bottom-span) * 0.25),
+      rgb(0 0 0 / 0.5) calc(var(--bottom-black) + var(--bottom-span) * 0.5),
+      rgb(0 0 0 / 0.156) calc(var(--bottom-black) + var(--bottom-span) * 0.75),
+      transparent 100%);
     transition: bottom var(--dur-keyboard) var(--ease);
   }
   .lib-scroll::-webkit-scrollbar { display: none; }
@@ -769,7 +781,9 @@
      out across the tabs so the list shows through them. */
   .explore { min-height: calc(100dvh - var(--stick) - var(--page-pb)); }
   .explore-mark { height: 0; margin-bottom: -12px; }   /* where the tabs sit in the page (library.js pinCheck) */
-  .explore-tabs { position: sticky; top: var(--stick); z-index: 2; }
+  /* above the fades (z-index 3), with the rest of the glass: the page has no stacking context of
+     its own, so this counts in the library's */
+  .explore-tabs { position: sticky; top: var(--stick); z-index: 4; }
   .library .seg { box-shadow: var(--shadow-float); }
 
   /* buttons on a piece's page: one white for the main action, the rest flat */
@@ -986,6 +1000,8 @@
 <!-- the library: flat content in .lib-scroll; the glass layer (.lib-top, .lib-bottom) over it -->
 <div class="library" id="library" role="dialog" aria-modal="true" aria-label="Library" hidden>
   <div class="lib-scroll" id="libScroll"><div class="lib-page" id="libPage"></div></div>
+  <div class="lib-fade top" aria-hidden="true"></div>
+  <div class="lib-fade bottom" aria-hidden="true"></div>
   <input type="search" class="lib-proxy" id="libProxy" tabindex="-1" aria-hidden="true" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
 
   <header class="lib-top">
