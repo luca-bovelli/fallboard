@@ -93,10 +93,15 @@ for (const [id, c] of best) {
 const KEEP = ['id', 'composer', 'kind', 'parent', 'number', 'title', 'en', 'alt', 'nick', 'cat', 'key', 'genre', 'tempo', 'pop', 'variant', 'year', 'pub'];
 /* short notes for the piece pages (catalog/about.json) */
 const ABOUT = JSON.parse(fs.readFileSync(path.join(ROOT, 'catalog', 'about.json'), 'utf8'));
+/* Henle's levels of difficulty (catalog/henle.json, from match-henle.js): h, the level, and hn,
+   the Henle edition it is graded in, whose page name goes to library/henle.json for the link */
+const HENLE_FILE = path.join(ROOT, 'catalog', 'henle.json');
+const HENLE = fs.existsSync(HENLE_FILE) ? JSON.parse(fs.readFileSync(HENLE_FILE, 'utf8')) : { levels: {}, editions: {} };
 const entries = catalog.entries.map((e) => {
   const o = {};
   for (const k of KEEP) if (e[k] !== undefined && e[k] !== null && !(Array.isArray(e[k]) && !e[k].length)) o[k] = e[k];
   if (ABOUT[e.id]) o.about = ABOUT[e.id];
+  if (HENLE.levels[e.id]) [o.h, o.hn] = HENLE.levels[e.id];
   /* must not open through its set's file: that copy is wrong too */
   if (REJECTS.entries[e.id]) o.own = 1;
   const sc = scoreOf.get(e.id);
@@ -107,6 +112,7 @@ const entries = catalog.entries.map((e) => {
 const composers = catalog.composers.map(({ id, name, full, born, died, names, catalogues }) => ({ id, name, full, born, died, names, catalogues }));
 fs.mkdirSync(OUT, { recursive: true });
 fs.writeFileSync(path.join(OUT, 'catalog.json'), JSON.stringify({ built: catalog.built, composers, entries }));
+fs.writeFileSync(path.join(OUT, 'henle.json'), JSON.stringify(HENLE.editions || {}));
 
 /* ---------- the search, for the browser: vocab.js as a global, then search.js ---------- */
 const vocab = fs.readFileSync(path.join(__dirname, 'vocab.js'), 'utf8').replace(/^'use strict';\s*$/m, '').replace(/module\.exports\s*=\s*/, 'self.CatalogVocab = ');

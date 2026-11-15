@@ -97,6 +97,7 @@ self.CatalogVocab = { GENRES, TEMPO, PLURAL };
      search.find('rach 23 2')                        // [{ entry, score, label }, ...]
 
    A query is read in this order, each part leaving the rest of the text to the next:
+     level      Henle's level of difficulty: "henle 6", "level 6", "6/9", "henle 4-6", "henle easy"
      key        "b-flat minor", "bb minor", "B♭ minor", "bbm", "Bbm", "fm", "in bb", "b moll" (German,
                 where b is B-flat and h is B), "si bémol mineur"; dashes count as spaces
      numbers    "Op. 23 No. 2", "op23/2", "23 2", "BWV 846", "K. 331", "D 899 3", "Hob XVI:52",
@@ -155,6 +156,21 @@ self.CatalogVocab = { GENRES, TEMPO, PLURAL };
     return { text, key };
   }
   const keyOf = (k) => { if (!k) return null; const [tonic, mode] = k.split(' '); return { tonic, mode }; };
+
+  /* ---------- levels of difficulty ---------- */
+
+  /* Henle's levels (1 to 9, an entry's h): "henle 6", "level 6", "6/9", "henle 4-6", "henle 4 to 6",
+     and "henle easy" (1 to 3), "medium" (4 to 6), "difficult" (7 to 9). Read from the query as
+     typed, before anything else, since "6/9" would otherwise be two numbers */
+  const BANDS = { easy: [1, 3], medium: [4, 6], difficult: [7, 9], hard: [7, 9] };
+  function takeLevel(q) {
+    let range = null;
+    const cut = (re, f) => { if (!range) q = q.replace(re, (...m) => { range = f(...m); return m[1] + ' '; }); };
+    cut(/(^|\s)(?:henle|level|lvl)\s*([1-9])(?:\s*(?:-|–|to)\s*([1-9]))?(?=\s|$)/i, (m, pre, a, b) => [+a, +(b || a)].sort((x, y) => x - y));
+    cut(/(^|\s)([1-9])\s*\/\s*9(?=\s|$)/, (m, pre, a) => [+a, +a]);
+    cut(/(^|\s)(?:henle|level)\s+(easy|medium|difficult|hard)(?=\s|$)/i, (m, pre, w) => BANDS[w.toLowerCase()]);
+    return { text: q, range };
+  }
   function keyMatches(q, k) {
     if (!q || !k) return null;
     if (q.mode && q.mode !== k.mode) return false;
@@ -332,6 +348,8 @@ self.CatalogVocab = { GENRES, TEMPO, PLURAL };
     }
 
     function find(query, limit = 10) {
+      const lv = takeLevel(query);
+      query = lv.text;
       const raw = query;
       /* "op10", "no4", "wtc1": letters and digits written together are two words; "3rd",
          "third" are 3; "movement" and "mvt" only say a movement is wanted */
@@ -356,6 +374,7 @@ self.CatalogVocab = { GENRES, TEMPO, PLURAL };
       for (const d of docs) {
         const e = d.e;
         if (c.ids.size && !c.ids.has(e.composer)) continue;
+        if (lv.range && !(e.h >= lv.range[0] && e.h <= lv.range[1])) continue;
         let score = 0;
         if (k.key) {
           const m = keyMatches(k.key, d.key);
@@ -403,7 +422,7 @@ self.CatalogVocab = { GENRES, TEMPO, PLURAL };
         /* how it matched, for callers that need to judge a match (the score-file matcher) */
         const why = { key: !!(k.key && d.key), groups: n.groups.length, words: qwords.length, matched, named, nicked };
         if (qwords.length && !matched) continue;
-        if (!k.key && !n.groups.length && !qwords.length && !c.ids.size) continue;
+        if (!lv.range && !k.key && !n.groups.length && !qwords.length && !c.ids.size) continue;
         /* popular and named works first; movements and early versions after whole pieces */
         score += 1.5 * Math.min(10, Math.log2(1 + (e.pop || 0))) + ((e.nick || []).length ? 3 : 0);
         if (e.kind === 'movement') score -= 6;
@@ -426,7 +445,7 @@ self.CatalogVocab = { GENRES, TEMPO, PLURAL };
       return comp.name + ' · ' + parts.join(' ');
     }
 
-    return { find, label, parse: (q) => { const k = takeKey(words(q).join(' '), q); const n = takeNumbers(k.text); const c = takeComposers(n.text); return { key: k.key, groups: n.groups, composers: [...c.ids], words: c.text }; } };
+    return { find, label, parse: (q) => { const lv = takeLevel(q); q = lv.text; const k = takeKey(words(q).join(' '), q); const n = takeNumbers(k.text); const c = takeComposers(n.text); return { level: lv.range, key: k.key, groups: n.groups, composers: [...c.ids], words: c.text }; } };
   }
 
   function edit1(a, b) {

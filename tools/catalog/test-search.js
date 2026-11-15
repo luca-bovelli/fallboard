@@ -10,10 +10,21 @@
 const path = require('path');
 const { create } = require('./search');
 const catalog = require(path.join(__dirname, '..', '..', 'catalog', 'catalog.json'));
+/* Henle's levels, joined as publish.js joins them, for the level queries */
+const fs = require('fs');
+const henleFile = path.join(__dirname, '..', '..', 'catalog', 'henle.json');
+if (fs.existsSync(henleFile)) {
+  const { levels } = JSON.parse(fs.readFileSync(henleFile, 'utf8'));
+  for (const e of catalog.entries) if (levels[e.id]) e.h = levels[e.id][0];
+}
 const search = create(catalog);
 const verbose = process.argv.includes('-v');
 
 const CASES = [
+  // Henle's levels of difficulty
+  ['chopin op 10 henle 9', 'chopin', /Op\. 10 No\. 1\b/],
+  ['chopin op 10 9/9', 'chopin', /Op\. 10 No\. 1\b/],
+  ['schubert impromptu level 8', 'schubert', /D\. 935 No\. 4\b/],
   // keys written short, in small letters ("am" stays a word)
   ['chopin ballade fm', 'chopin', /Op\. 52\b/],
   ['chopin fantaisie fm', 'chopin', /Op\. 49\b/],
