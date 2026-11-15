@@ -7,6 +7,7 @@
     "catalog": "node tools/catalog/build.js",
     "catalog:pull": "node tools/catalog/pull-imslp.js && node tools/catalog/pull-wikipedia.js && node tools/catalog/pull-wikidata.js",
     "catalog:test": "node tools/catalog/test-search.js",
+    "catalog:publish": "node tools/catalog/publish.js",
     "dev": "node dev-server.js"
   },
   "devDependencies": {

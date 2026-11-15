@@ -32,6 +32,14 @@ A bar too dense for the width (MuseScore logs "System justification error") keep
 
 ## Repertoire catalogue
 
-`catalog/` lists every solo keyboard work by 19 composers (3,773 pieces) with titles, nicknames, catalogue numbers and keys, for the score library and its search. `npm run catalog` builds it; `catalog/README.md` explains the files and sources.
+`catalog/` lists every solo keyboard work by 19 composers (3,941 pieces) with titles, nicknames, catalogue numbers and keys, for the score library and its search. `npm run catalog` builds it; `catalog/README.md` explains the files and sources. `catalog/requests/` lists the scores still wanted from IMSLP and how to deliver them.
+
+## Library
+
+The piece's name in the player opens a menu of recent pieces; its More opens the library (`dist/js/library.js`). Home has Continue (an upload card, then recent pieces with a miniature of their notes) and Explore (pieces, works or composers, under glass tabs that pin at the top). A composer has top pieces and works; a work lists its pieces numbered; a piece has its own page with details, a short note for some (`catalog/about.json`) and its sheet music as A4 pages, engraved in the browser with one standard title block and saved as a PDF (`dist/js/print.js`). A red dot marks a piece with no score of its own yet. Typing in the search bar moves the tabs up into the glass bar and shows results.
+
+Layout: the content column runs edge to edge (16 px margins) until 872 px, then stops at 720 px, centred, so the back and profile buttons never sit half over it; the search bar and the tabs take the column's width. The content fades to black under the glass. Its content is flat; the controls over it are the same glass as the player's, refracting a picture of the content that `library.js` paints. Search runs in a worker (`dist/js/search-worker.js`), since its index takes a second or two to build. `#library`, `#library/chopin`, `#library/chopin/op-28` and `#library/chopin/op-28/4` open it at that view.
+
+`npm run catalog:publish` (`tools/catalog/publish.js`) fills it: the trimmed catalogue (`dist/library/catalog.json`), the search for the browser (`dist/js/catalog.js`, from `tools/catalog/vocab.js` and `search.js`; do not edit), and one zipped score per piece in `dist/library/scores/`, picked from the files the checks passed (`tools/catalog/check-scores.js`). Those scores are engraved in the browser when the score view first needs them. The player keeps the last piece, its place and the recent list in `localStorage`; uploads are kept in IndexedDB so they can be reopened.
 
 `sources/` holds untouched downloads that the shipped scores were made from.

@@ -64,7 +64,7 @@
     viewSeg: $('viewSeg'), handSeg: $('handSeg'),
     handSlot: $('handSlot'), handToggle: $('handToggle'), speedSlot: $('speedSlot'), speedToggle: $('speedToggle'),
     steps: $('steps'), railShield: $('railShield'),
-    menuBtn: $('menuBtn'), menu: $('menu'), openBtn: $('openBtn'), builtinScores: $('builtinScores'), file: $('fileInput'),
+    menuBtn: $('menuBtn'), file: $('fileInput'),
     deck: $('deck'), rail: $('rail'), toastText: $('toastText'),
     scrub: $('scrub'), scrubThumb: $('scrubThumb'), scrubLabel: $('scrubLabel'), scrubText: $('scrubText'),
   };
@@ -143,9 +143,52 @@
   function persist() {
     const o = store.get();
     o.hand = S.hand; o.view = S.view; o.speed = S.speed; o.pps = S.pps;
-    if (S.meta) { o.pos = o.pos || {}; o.pos[S.meta.id] = Math.round(now() * 1e4) / 1e4; }
+    if (S.meta) {
+      o.pos = o.pos || {}; o.pos[S.meta.id] = Math.round(now() * 1e4) / 1e4;
+      // the bar shown under the music, for the library's "Bar 34 of 120"
+      o.bar = o.bar || {}; o.bar[S.meta.id] = +el.where.textContent || 1;
+    }
     store.set(o);
   }
+
+  /* ------------------------------------------------------------------ recents
+     Every piece opened goes to the top of the library's list with how to open it again and a
+     miniature of its notes (up to 360 of them, spread evenly over the piece, each as start,
+     length, pitch and hand), drawn on the library's cards. Uploaded files are kept whole in
+     IndexedDB, since a file the browser gave once cannot be asked for again. */
+  const RECENT_MAX = 12;
+  function thumbOf(score) {
+    const notes = score.notes, d = score.duration || 1, step = Math.max(1, notes.length / 360), out = [];
+    for (let i = 0; i < notes.length; i += step) {
+      const n = notes[Math.floor(i)];
+      out.push(Math.round(n.t0 / d * 1000), Math.max(1, Math.round((n.t1 - n.t0) / d * 1000)), n.midi, n.hand);
+    }
+    return out;
+  }
+  function remember(score, meta) {
+    if (!meta.open) return;
+    const o = store.get();
+    const list = (o.recent || []).filter((r) => r.id !== meta.id);
+    const nums = score.docNumbers || [];
+    list.unshift({ id: meta.id, title: meta.title, composer: meta.composer || '', open: meta.open, at: Date.now(), dur: Math.round(score.duration), bars: nums.length ? nums[nums.length - 1] : 0, thumb: thumbOf(score) });
+    o.recent = list.slice(0, RECENT_MAX);
+    o.last = meta.id;
+    store.set(o);
+  }
+  const files = {
+    db: null,
+    open() {
+      if (!this.db) this.db = new Promise((resolve, reject) => {
+        const r = indexedDB.open('fallboard', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('files');
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+      });
+      return this.db;
+    },
+    async put(key, text) { const db = await this.open(); return new Promise((ok, no) => { const t = db.transaction('files', 'readwrite'); t.objectStore('files').put(text, key); t.oncomplete = ok; t.onerror = () => no(t.error); }); },
+    async get(key) { const db = await this.open(); return new Promise((ok, no) => { const r = db.transaction('files').objectStore('files').get(key); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }); },
+  };
 
   /* ------------------------------------------------------------------ transport */
   let timer = null, wakeLock = null;
@@ -773,6 +816,7 @@
     // fetch the engraved pages while the roll is on screen, so the score view opens at once
     setTimeout(() => notation.preload(), 600);
     scrubPoke();
+    remember(score, meta);
   }
 
   let scoreRequest = 0;
@@ -805,15 +849,50 @@
       const r = await fetch(base + '.musicxml' + v);
       if (!r.ok) throw new Error('Score download failed');
       return r.text();
-    }, () => ({ ...piece, engraved: base + '.{layout}.json' + v }), 'This piece could not be loaded. Try selecting it again.');
+    }, () => ({ ...piece, engraved: base + '.{layout}.json' + v, open: { kind: 'builtin', file: piece.file } }), 'This piece could not be loaded. Try selecting it again.');
+  }
+
+  /* a score from the library's catalogue: a zipped MusicXML file, engraved here when the score
+     view first needs it */
+  function loadUrl(url, meta) {
+    return selectScore('Loading the score…', async () => {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error('Score download failed');
+      return FB.readScoreFile(new File([await r.blob()], url.split('/').pop().split('?')[0]));
+    }, () => ({ ...meta, open: { kind: 'url', url: url.split('?')[0], title: meta.title, composer: meta.composer } }), 'This piece could not be loaded. Try opening it again.');
   }
 
   function openFile(file) {
-    return selectScore('Reading ' + file.name + '…', () => FB.readScoreFile(file), (score) => ({
-      id: 'file:' + file.name,
+    const key = 'file:' + file.name;
+    return selectScore('Reading ' + file.name + '…', async () => {
+      const xml = await FB.readScoreFile(file);
+      files.put(key, xml).catch(() => {});
+      return xml;
+    }, (score) => ({
+      id: key,
       title: score.title || file.name.replace(/\.(musicxml|xml|mxl)$/i, ''),
       composer: score.composer || '',
+      open: { kind: 'file', key },
     }));
+  }
+
+  /* open what a recent entry or the library describes */
+  function openWhat(open, meta) {
+    if (!open) return;
+    if (open.kind === 'builtin') {
+      const piece = BUILTINS.find((p) => p.file === open.file);
+      if (piece) return S.meta?.id === piece.id ? null : loadBuiltin(piece);
+    } else if (open.kind === 'url') {
+      const v = window.FB_VERSION ? '?v=' + window.FB_VERSION : '';
+      return S.meta?.id === meta.id ? null : loadUrl(open.url + v, meta);
+    } else if (open.kind === 'file') {
+      if (S.meta?.id === open.key) return null;
+      return selectScore('Reading the score…', async () => {
+        const xml = await files.get(open.key);
+        if (!xml) throw new Error('This upload is no longer stored here. Upload the file again.');
+        return xml;
+      }, (score) => ({ id: open.key, title: meta.title || score.title || open.key.slice(5), composer: meta.composer || score.composer || '', open }));
+    }
   }
 
   /* ------------------------------------------------------------------ layout */
@@ -1021,14 +1100,28 @@
      redrawn while the shell changes size. */
   const PRESSABLE = 'button:not(:disabled)';
   function pressGlass(b) { if (el.rail.contains(b)) footTicks = 24; else glassKick(); }
+  /* every pressed control grows by the same --press-grow on its longer side, whatever its size */
+  const PRESS_GROW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--press-grow')) || 2;
+  const GROWS = '.piece, .round, .play, .chip, .tempo';
+  /* a tab bar's pill: equal parts move it by index; parts sized to their labels (.seg.fit) give it
+     the chosen part's place, 2 px inside the part as everywhere */
+  FB.placePill = (seg, i) => {
+    if (!seg.classList.contains('fit')) { seg.style.setProperty('--i', i); return; }
+    const b = seg.querySelectorAll('button')[i];
+    if (!b) return;
+    seg.style.setProperty('--pill-x', b.offsetLeft + 2 + 'px');
+    seg.style.setProperty('--pill-w', b.offsetWidth - 4 + 'px');
+  };
   document.addEventListener('pointerdown', (e) => {
     const b = e.target.closest && e.target.closest(PRESSABLE);
     if (!b) return;
     b.dataset.pressed = 'true';
     b._pressedAt = performance.now();
+    const shell = b.closest(GROWS);
+    if (shell) { const r = shell.getBoundingClientRect(); shell.style.setProperty('--press', String(1 + PRESS_GROW / Math.max(r.width, r.height, 1))); }
     // in a tab bar the pill itself follows the press; the click commits it, anything else puts it back
     const seg = b.parentElement && b.parentElement.classList.contains('seg') ? b.parentElement : null;
-    if (seg) seg.style.setProperty('--i', [...seg.querySelectorAll('button')].indexOf(b));
+    if (seg) FB.placePill(seg, [...seg.querySelectorAll('button')].indexOf(b));
     pressGlass(b);
     const end = () => {
       document.removeEventListener('pointerup', end, true);
@@ -1166,19 +1259,27 @@
     { slot: el.speedSlot, toggle: el.speedToggle, options: el.tempoBox },
   ];
   let openRailControl = null;
+  /* from 1100 px an open control stays well clear of the buttons in the middle, so the rest of
+     the rail stays sharp and usable (index.html drops the blur at the same width) */
+  const RAIL_ROOM = window.matchMedia('(min-width: 1100px)');
+  /* a mouse opens a control by hovering it, and leaving closes it again; a click keeps it open */
+  const HOVER = window.matchMedia('(hover: hover) and (pointer: fine)');
+  let hoverClose = 0;
 
   function setRailControl(control, moveFocus = false) {
     const previous = openRailControl;
     if (previous === control) return;
     openRailControl = control;
+    const covers = !!control && !RAIL_ROOM.matches;
     el.rail.toggleAttribute('data-open', !!control);
-    el.railShield.hidden = !control;
+    el.railShield.hidden = !covers;
     for (const item of railControls) {
       item.slot.classList.toggle('is-open', item === control);
-      item.slot.inert = !!control && item !== control;
+      item.slot.inert = covers && item !== control;
       item.toggle.setAttribute('aria-expanded', String(item === control));
+      if (item !== control) item.byHover = false;
     }
-    el.steps.inert = !!control;
+    el.steps.inert = covers;
     if (moveFocus) {
       if (control) {
         const button = control.options.querySelector('[aria-pressed="true"], [role="slider"]') || control.options.querySelector('button:enabled');
@@ -1190,7 +1291,17 @@
   }
 
   for (const control of railControls) {
-    control.toggle.addEventListener('click', (e) => setRailControl(control, e.detail === 0));
+    control.toggle.addEventListener('click', (e) => { setRailControl(control, e.detail === 0); control.byHover = false; });
+    control.toggle.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'mouse' || !HOVER.matches) return;
+      clearTimeout(hoverClose);
+      if (openRailControl !== control) { setRailControl(control); control.byHover = true; }
+    });
+    control.slot.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') clearTimeout(hoverClose); });
+    control.slot.addEventListener('pointerleave', (e) => {
+      if (e.pointerType !== 'mouse' || openRailControl !== control || !control.byHover) return;
+      hoverClose = setTimeout(() => { if (openRailControl === control && control.byHover) setRailControl(null); }, 350);
+    });
   }
   function dismissRailControl(e) {
     if (openRailControl && !openRailControl.slot.contains(e.target)) setRailControl(null);
@@ -1273,40 +1384,48 @@
 
   document.addEventListener('keydown', (e) => {
     if (e.target.closest && e.target.closest('input, textarea, select')) return;
+    if (FB.library && FB.library.isOpen()) return;   // the library handles its own keys
     if (e.key === ' ' || e.code === 'Space') { if (e.target.tagName !== 'BUTTON') { e.preventDefault(); S.playing ? pause() : play(); } }
     else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
     else if (e.key === 'Escape') {
       if (openRailControl) setRailControl(null, true);
-      else closeMenu();
+      else if (!$('menu').hidden) { $('menu').hidden = true; el.menuBtn.setAttribute('aria-expanded', 'false'); }
     }
   });
 
-  function closeMenu() { el.menu.hidden = true; el.menuBtn.setAttribute('aria-expanded', 'false'); }
-  el.menuBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    el.menu.hidden = !el.menu.hidden;
-    el.menuBtn.setAttribute('aria-expanded', String(!el.menu.hidden));
+  /* the piece's name opens the pieces opened lately, for a quick switch, and More, which opens
+     the library (js/library.js); the library comes back here through FB.app */
+  const MENU_RECENTS = 6;
+  const menu = $('menu');
+  function closeMenu() { menu.hidden = true; el.menuBtn.setAttribute('aria-expanded', 'false'); glassKick(); }
+  function openMenu() {
+    const list = $('menuRecents');
+    list.textContent = '';
+    for (const r of FB.app.recents().slice(0, MENU_RECENTS)) {
+      const b = $('menuRow').content.firstElementChild.cloneNode(true);
+      b.querySelector('b').textContent = r.title;
+      b.querySelector('small').textContent = r.composer || '';
+      if (S.meta && S.meta.id === r.id) b.setAttribute('aria-current', 'true');
+      b.addEventListener('click', () => { closeMenu(); FB.app.open(r.open, r); });
+      list.appendChild(b);
+    }
+    menu.hidden = false;
+    el.menuBtn.setAttribute('aria-expanded', 'true');
     glassKick();
-  });
-  document.addEventListener('pointerdown', (e) => { if (!el.menu.hidden && !el.menu.contains(e.target) && e.target !== el.menuBtn && !el.menuBtn.contains(e.target)) closeMenu(); });
-  el.openBtn.addEventListener('click', () => { closeMenu(); el.file.click(); });
-  for (const piece of BUILTINS) {
-    const button = $('builtinScoreRow').content.firstElementChild.cloneNode(true);
-    button.querySelector('b').textContent = piece.title;
-    button.querySelector('small').textContent = piece.composer;
-    button.addEventListener('click', () => {
-      closeMenu();
-      if (S.meta?.id !== piece.id) loadBuiltin(piece);
-      else if (scoreLoading) {
-        scoreRequest++;
-        scoreLoading = false;
-        status(null);
-      }
-    });
-    el.builtinScores.appendChild(button);
   }
+  el.menuBtn.addEventListener('click', (e) => { e.stopPropagation(); if (menu.hidden) openMenu(); else closeMenu(); });
+  document.addEventListener('pointerdown', (e) => { if (!menu.hidden && !menu.contains(e.target) && !el.menuBtn.contains(e.target)) closeMenu(); });
+  $('menuMore').addEventListener('click', () => { closeMenu(); if (FB.library) FB.library.open(); });
   el.file.addEventListener('change', () => { const f = el.file.files && el.file.files[0]; if (f) openFile(f); el.file.value = ''; });
+  FB.app = {
+    current: () => (S.meta ? { id: S.meta.id, title: S.meta.title, composer: S.meta.composer || '', playing: S.playing } : null),
+    recents: () => { const o = store.get(); return (o.recent || []).map((r) => ({ ...r, pos: (o.pos || {})[r.id] || 0, bar: (o.bar || {})[r.id] || 0 })); },
+    open: (open, meta) => openWhat(open, meta || {}),
+    upload: () => el.file.click(),
+    // the player goes quiet behind the library and wakes when it closes
+    covered(on) { if (on) persist(); else { sceneV++; footTicks = 20; resize(); glassKick(); } },
+  };
 
   /* ------------------------------------------------------------------ boot */
   readTheme();
@@ -1346,7 +1465,14 @@
   syncSegs();
   syncPlayBtn();
   resize();
-  loadBuiltin(BUILTINS[0]);
+  /* reopen the last piece; on a first visit open the library over the first built-in piece */
+  {
+    const o = store.get();
+    const last = o.last && (o.recent || []).find((r) => r.id === o.last);
+    const fallback = () => loadBuiltin(BUILTINS[0]);
+    if (last) Promise.resolve(openWhat(last.open, last)).then(() => { if (!S.score) fallback(); }, fallback);
+    else { fallback(); FB.app.firstVisit = !(o.recent || []).length; }
+  }
 
   FB.debug = { S, G, R, seek, play, pause, step, notation, piano, openFile, glass: () => [glassTop, glassFoot] };
 })();

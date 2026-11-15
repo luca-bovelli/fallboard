@@ -128,3 +128,10 @@ inner voice, a misread rhythm that happens to fit the bar. Those only show when 
 engraving with the scan, so a bar-perfect file can still fail.
 
 When a batch is ready, tell me which folders (or just "the inbox is ready").
+
+## Scores that pass the checks but are wrong
+
+Every bar can add up and a score can still be wrong (the left hand of Chopin's Op. 28 No. 15 in
+PDMX, for one). [`catalog/rejects.json`](../rejects.json) lists such files and the pieces that
+must not fall back to their set's copy. The checks mark them rejected, the library stops
+serving them, and this list asks for them again. Add an entry whenever you hear or see one.

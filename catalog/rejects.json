@@ -1,0 +1,9 @@
+{
+  "_": "Score files that pass the automatic checks but are musically wrong, found by listening or reading. `files` are keyed source:path as in .data/checks.json; check-scores.js marks them rejected. `entries` are catalogue ids that must not open through the file of the set or work they belong to, because that file's copy of them is wrong too. Say what is wrong and who found it.",
+  "files": {
+    "pdmx:mxl/17/50/QmZwC9qKex93RitcGJWA3fZt8dEJze5GEFfukbqpqQcayu.mxl": "Chopin Op. 28 No. 15: the left-hand pattern is wrong from bar 1 (found by the user, 2026-11-15)"
+  },
+  "entries": {
+    "chopin/op-28/15": "the whole-set file's No. 15 (pdmx:mxl/5/32/QmfM3J…) mixes the hands between the staves from its third bar"
+  }
+}

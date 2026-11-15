@@ -46,7 +46,10 @@ fs.mkdirSync(XML, { recursive: true });
 const done = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : {};
 const older = path.join(DATA, 'engrave.json');
 if (fs.existsSync(older)) for (const [k, v] of Object.entries(JSON.parse(fs.readFileSync(older, 'utf8')))) if (!done['pdmx:' + k]) done['pdmx:' + k] = v;
-const todo = checks.filter((c) => !done[c.key] && c.verdict !== 'reject' && fs.existsSync(fixedPath(c.mxl, c.source)));
+/* each result carries a hash of the file it engraved, so a file that changed (new repairs) or a
+   result without one is engraved again */
+const stampOf = (file) => require('crypto').createHash('sha1').update(fs.readFileSync(file)).digest('hex').slice(0, 12);
+const todo = checks.filter((c) => c.verdict !== 'reject' && fs.existsSync(fixedPath(c.mxl, c.source)) && (!done[c.key] || done[c.key].stamp !== stampOf(fixedPath(c.mxl, c.source))));
 console.log(`${todo.length} files to engrave, ${jobs} at a time`);
 
 function one(c) {
@@ -73,7 +76,8 @@ function one(c) {
   await Promise.all(Array.from({ length: jobs }, async () => {
     while (i < todo.length) {
       const c = todo[i++];
-      done[c.key] = await one(c);
+      const stamp = stampOf(fixedPath(c.mxl, c.source));
+      done[c.key] = { ...(await one(c)), stamp };
       if (++n % 25 === 0) { save(); console.log(`${n}/${todo.length} after ${((Date.now() - t0) / 60000).toFixed(1)} min`); }
     }
   }));

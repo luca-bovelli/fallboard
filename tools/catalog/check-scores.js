@@ -164,11 +164,13 @@ for (const f of fs.readdirSync(path.join(ROOT, 'catalog', 'raw', 'imslp'))) {
 }
 const expected = (e) => { const s = (e.src || []).find((x) => x.imslp && durations.has(x.imslp)); return s ? durations.get(s.imslp) : null; };
 
+const REJECTS = JSON.parse(fs.readFileSync(path.join(ROOT, 'catalog', 'rejects.json'), 'utf8'));
+
 /* the file as the app will get it: repaired by normalize.js, saved to .data/scores/ */
 const { normalize } = require('./normalize');
 const SCORES = path.join(ROOT, '.data', 'scores');
 /* one repaired file per source file: the source's name and its path, made safe for a file name */
-const fixedPath = (mxl, source = 'pdmx') => path.join(SCORES, source + '-' + mxl.replace(/.(mxl|musicxml|xml)$/i, '').replace(/[^w.-]+/g, '_').slice(-120) + '.musicxml');
+const fixedPath = (mxl, source = 'pdmx') => path.join(SCORES, source + '-' + mxl.replace(/\.(mxl|musicxml|xml)$/i, '').replace(/[^\w.-]+/g, '_').slice(-120) + '.musicxml');
 
 function check(entry, file) {
   const flags = [];
@@ -243,6 +245,8 @@ function main() {
     const here = files.filter((f) => fs.existsSync(path.join(sourceDir(f.source), f.mxl)));
     const checked = here.map((f) => ({ id, source: f.source, mxl: f.mxl, key: f.source + ':' + f.mxl, title: f.title, how: f.how, quality: f.quality, license: f.license, ...check(entry, f) }));
     for (const c of checked) c.verdict = verdict(c.flags, c.info, c);
+    /* files found wrong by ear or eye (catalog/rejects.json) */
+    for (const c of checked) if (REJECTS.files[c.key]) { c.flags.push('reported'); c.info.reported = REJECTS.files[c.key]; c.verdict = 'reject'; }
     /* two files of one piece should agree */
     if (checked.length > 1) {
       const [a, b] = checked;

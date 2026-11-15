@@ -32,6 +32,7 @@
     });
     return enginePromise;
   }
+  FB.loadEngine = loadEngine;   // the library's page previews and PDFs share the engine
 
   class Notation {
     constructor({ box, pages, onSeek, onStatus, onDetach, onChange }) {

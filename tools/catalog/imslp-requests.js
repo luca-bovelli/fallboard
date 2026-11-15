@@ -23,8 +23,14 @@ const checks = JSON.parse(fs.readFileSync(path.join(ROOT, '.data', 'checks.json'
 const label = require('./search').create(catalog).label;
 
 /* ---------- what is covered ---------- */
-const usable = new Set(checks.filter((c) => c.verdict !== 'reject').map((c) => c.id));
-const covered = (e) => { for (let x = e; x; x = x.parent && byId.get(x.parent)) if (usable.has(x.id)) return true; return false; };
+/* files and pieces found wrong by ear or eye count as missing (catalog/rejects.json) */
+const REJECTS = JSON.parse(fs.readFileSync(path.join(ROOT, 'catalog', 'rejects.json'), 'utf8'));
+const usable = new Set(checks.filter((c) => c.verdict !== 'reject' && !REJECTS.files[c.key]).map((c) => c.id));
+const covered = (e) => {
+  if (REJECTS.entries[e.id]) return usable.has(e.id);
+  for (let x = e; x; x = x.parent && byId.get(x.parent)) if (usable.has(x.id)) return true;
+  return false;
+};
 /* a movement is covered when its work is; a work with movements needs every movement, and when
    some have files only the rest are asked for */
 const kidsOf = new Map();

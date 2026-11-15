@@ -90,7 +90,20 @@
     --under-top: calc(var(--edge) + var(--control) + var(--edge));   /* clear of the controls over the music */
     --readout: 16px;                                                  /* one line of the bar and time readout */
     --above-readout: calc(var(--edge) + var(--readout) + var(--edge));
-    --sheet-w: 360px;  /* the scores menu and the speed control */
+    --sheet-w: 360px;  /* the speed control */
+    --press-grow: 2px; /* how much a pressed control grows on its longer side */
+    --seg-margin: 12px; /* the least room either side of a tab bar's label */
+
+    /* the library: large titles and section headings, text fields (16 px: iOS zooms into
+       anything smaller), the radius of its flat surfaces (cards, composer tiles), the width of its
+       content, and a card on a shelf */
+    --fs-title: 32px;
+    --fs-h: 20px;
+    --fs-field: 16px;
+    --r-card: 18px;
+    --content-max: 720px;    /* the library's column stops growing here (see .library) */
+    --card-w: 208px;
+    --thumb-h: 92px;
 
     --dur-press: 120ms;  /* press feedback, a step of a slider */
     --dur-state: 180ms;  /* colour and opacity changes */
@@ -239,31 +252,8 @@
   .piece > svg { width: 16px; height: 16px; flex: none; transition: transform var(--dur-move) var(--ease), opacity var(--dur-state) ease-out; }
   .piece[aria-expanded="true"] > svg { transform: rotate(180deg); }
 
-  .menu {
-    position: absolute; left: 0; top: calc(100% + var(--gap)); z-index: 20; width: var(--sheet-w);
-    padding: 6px; border-radius: 22px; color: var(--c1);
-    box-shadow: var(--shadow-pop);
-    transform-origin: 24px 0; animation: pop var(--dur-state) var(--ease);
-  }
-  /* the menu stops an edge short of the bottom of the screen and scrolls inside */
-  .menu-content {
-    position: relative; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
-    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - var(--edge) - var(--control) - var(--gap) - 12px - var(--edge));
-  }
-  .deck .glass-refraction { filter: var(--glass-calm); }
-  .deck :is(.menu, .toast) > .glass-refraction { filter: var(--glass-read); }
-  @keyframes pop { from { opacity: 0; transform: scale(0.94); } }
-  .menu button {
-    position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: center; gap: 1px 12px;
-    width: 100%; min-height: 54px; padding: 8px 12px; border: 0; border-radius: 16px;
-    background: none; color: inherit; text-align: left; cursor: pointer;
-  }
-  .menu button[data-pressed="true"] { background: var(--cf); }
-  @media (hover: hover) { .menu button:hover { background: var(--cf); } }
-  .menu button svg { grid-row: span 2; width: 20px; height: 20px; }
-  .menu button b { font-weight: 600; font-size: var(--fs-l); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .menu button small { font-size: var(--fs-s); color: var(--c2); }
-  .menu hr { margin: 4px 12px; border: 0; border-top: 1px solid var(--cf); }
+  .deck .glass-refraction, .library .glass-refraction { filter: var(--glass-calm); }
+  .deck .toast > .glass-refraction { filter: var(--glass-read); }
 
   /* segmented control: one glass shell, the chosen segment marked by a pill that slides. Like
      every highlight here it sits 4 px inside the glass edge: each 40 px segment keeps its full
@@ -284,10 +274,17 @@
     color: inherit; font-weight: 600; font-size: var(--fs-m); cursor: pointer; transition: color var(--dur-state) ease-out;
   }
   .seg button[aria-pressed="true"] { color: var(--c1); }
+  /* a tab bar split in equal parts while they fit, and by its labels when one would crowd: each
+     part keeps at least its label and a margin either side, and shares the rest equally. The pill
+     then takes its place from the chosen part (app.js FB.placePill sets --pill-x and --pill-w) */
+  .seg.fit { grid-auto-columns: unset; grid-template-columns: repeat(var(--n, 2), minmax(max-content, 1fr)); }
+  .seg.fit button { padding: 0 var(--seg-margin); }
+  .seg.fit::after { left: var(--pill-x, 4px); width: var(--pill-w, 0px); transform: none; transition: left var(--dur-move) var(--ease), width var(--dur-move) var(--ease); }
+  .seg.fit.is-placing::after { transition: none; }   /* a bar just built or shown: the pill starts in place */
   .seg button svg { width: 20px; height: 20px; flex: none; }
   /* icons: always drawn in a solid colour; a dimmed icon fades as one layer (opacity on the
      svg), so where its strokes and shapes overlap they never stack into brighter spots */
-  .piece > svg, .menu button svg, .seg button svg { color: var(--c1); opacity: var(--o-inactive); transition: opacity var(--dur-state) ease-out; }
+  .piece > svg, .seg button svg { color: var(--c1); opacity: var(--o-inactive); transition: opacity var(--dur-state) ease-out; }
   .seg button:is([aria-pressed="true"], [data-pressed="true"]) svg { opacity: 1; }
   @media (hover: hover) { .seg button:hover svg { opacity: 1; } }
 
@@ -403,9 +400,11 @@
   .speed.is-dragging .speed-thumb { transform: scale(1.035); }
 
   /* ---------- press and hover ----------
-     Pressing any control shows a highlight pill 4 px inside its glass edge and scales the whole
-     shell up a little (Graph Notes' Pressable: 1.035 over 120 ms). The state comes from JS
-     (data-pressed) so a quick tap is still visible. A mouse gets the same pill, fainter, on hover. */
+     Pressing a control shows a highlight pill 4 px inside its glass edge and grows the whole shell
+     by the same --press-grow on its longer side, whatever its size (app.js sets --press, the
+     scale that gives); a round button grows about as much as Graph Notes' Pressable (1.035). Tab
+     bars never grow: their pill moves instead. The state comes from JS (data-pressed) so a quick
+     tap is still visible. A mouse gets the same pill, fainter, on hover. */
   :is(.piece, .chip, .round, .play, .speed-readout)::after {
     content: ""; position: absolute; z-index: -1; inset: var(--pin, 4px); border-radius: 999px;
     background: var(--cf); opacity: 0; transition: opacity var(--dur-press) ease-out; pointer-events: none;
@@ -419,14 +418,17 @@
     :is(.piece, .chip, .round:not(:disabled), .play, .speed-readout):hover::after { opacity: var(--o-inactive); }
     .seg button:hover { color: var(--c1); }
   }
-  .piece, .round, .play, .seg, .tempo { transition: transform var(--dur-press) ease-out; }
-  :is(.piece, .round, .play)[data-pressed="true"], :is(.seg, .tempo):has(button[data-pressed="true"]) { transform: scale(1.035); }
+  .piece, .round, .play, .tempo { transition: transform var(--dur-press) ease-out; }
+  :is(.piece, .round, .play)[data-pressed="true"], .tempo:has(button[data-pressed="true"]) { transform: scale(var(--press, 1.035)); }
   .chip { transition: transform var(--dur-press) ease-out; }
-  .chip[data-pressed="true"] { transform: translateX(-50%) scale(1.035); }
+  .chip[data-pressed="true"] { transform: translateX(-50%) scale(var(--press, 1.035)); }
 
   .rail-shield { position: absolute; z-index: 3; inset: 0; }
   .rail > :is(.rail-slot, .steps) { transition: filter var(--dur-state) ease-out, opacity var(--dur-state) ease-out; }
   .rail[data-open] > :is(.rail-slot, .steps):not(.is-open) { filter: blur(5px); opacity: var(--o-dim); }
+  /* from 1100 px an open control is nowhere near the buttons in the middle: nothing blurs (app.js
+     RAIL_ROOM keeps them usable at the same width) */
+  @media (min-width: 1100px) { .rail[data-open] > :is(.rail-slot, .steps):not(.is-open) { filter: none; opacity: 1; } }
   .rail .rail-slot.is-open { z-index: 4; }
 
   .rail-slot:not(.is-open) .rail-options { display: none; }
@@ -443,7 +445,7 @@
   /* A sheet that would leave less than twice the edge beside it fills the width instead, so it
      never sits a few pixels off-centre: 360 + 3 x 16 = 408. */
   @media (max-width: 407.98px) {
-    .menu, .speed-slot .tempo.rail-options { width: calc(100vw - var(--gutter-l) - var(--gutter-r)); }
+    .speed-slot .tempo.rail-options { width: calc(100vw - var(--gutter-l) - var(--gutter-r)); }
   }
   @media (max-width: 680px) {
     .hands button { min-width: 0; padding: 0 12px; }
@@ -470,6 +472,285 @@
   @media (max-width: 640px) and (orientation: portrait) {
     .kbd-wrap { height: min(15vw, 78px); }
   }
+  /* ---------- the piece menu ----------
+     The piece's name opens the pieces opened lately, for a quick switch, and More, which opens
+     the library. */
+  .menu {
+    position: absolute; left: 0; top: calc(100% + var(--gap)); z-index: 20; width: var(--sheet-w);
+    padding: 6px; border-radius: 22px; color: var(--c1);
+    box-shadow: var(--shadow-pop);
+    transform-origin: 24px 0; animation: pop var(--dur-state) var(--ease);
+  }
+  /* the menu stops an edge short of the bottom of the screen and scrolls inside */
+  .menu-content {
+    position: relative; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: none;
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - var(--edge) - var(--control) - var(--gap) - 12px - var(--edge));
+  }
+  .menu-content::-webkit-scrollbar { display: none; }
+  :is(.deck, .library) .menu > .glass-refraction { filter: var(--glass-read); }
+  @keyframes pop { from { opacity: 0; transform: scale(0.94); } }
+  .menu button {
+    position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: center; gap: 1px 12px;
+    width: 100%; min-height: 54px; padding: 8px 12px; border: 0; border-radius: 16px;
+    background: none; color: inherit; text-align: left; cursor: pointer;
+  }
+  .menu button:is([data-pressed="true"], [aria-current="true"]) { background: var(--cf); }
+  @media (hover: hover) { .menu button:hover { background: var(--cf); } }
+  .menu button svg { grid-row: span 2; width: 20px; height: 20px; color: var(--c1); opacity: var(--o-inactive); }
+  .menu button b { font-weight: 600; font-size: var(--fs-l); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .menu button small { font-size: var(--fs-s); color: var(--c2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .menu hr { margin: 4px 12px; border: 0; border-top: 1px solid var(--cf); }
+  @media (max-width: 407.98px) { .menu { width: calc(100vw - var(--gutter-l) - var(--gutter-r)); } }
+
+  /* ---------- library ----------
+     Everything the player can open. The content is flat and matte on the black page; the
+     controls float over it as one layer of glass, as on the player: back, a profile, and search
+     at the bottom where a thumb reaches it. While searching, Explore's tabs move up into the glass
+     layer and the results fill the page. The content fades to black under the search bar so the
+     field reads clearly. Colour keeps its meaning: gold and blue are the hands, red is a mark
+     (where you left off; a piece still without its own score); surfaces are the roll's greys. */
+  .library {
+    position: fixed; inset: 0; z-index: 30; overflow: hidden;
+    background: var(--bg); color: var(--t1);
+    --c1: var(--t1); --c2: var(--t2); --cf: var(--fill);
+    --lib-top: calc(env(safe-area-inset-top, 0px) + var(--edge));
+    --lib-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--edge) + var(--kb, 0px));
+    /* the content column: its margins, how far shelves run past it (out to the screen's edges),
+       and where Explore's heading pins (an edge below the back button) */
+    --col-l: var(--gutter-l); --col-r: var(--gutter-r);
+    --bleed-l: var(--gutter-l); --bleed-r: var(--gutter-r);
+    --stick: calc(var(--lib-top) + var(--control) + var(--edge));
+    --page-pb: calc(var(--lib-bottom) + var(--control) + 56px);
+    animation: lib-in var(--dur-move) var(--ease);
+  }
+  /* The column grows with the screen up to --content-max. Its margin is either one edge, or wide
+     enough to keep the back and profile buttons outside it (an edge, the button, an edge): never
+     in between, where a button would sit half over the content. So it runs edge to edge until
+     872 px (720 + 2 × (16 + 44 + 16)), then stops at 720 px, centred. From there the heading
+     pins an edge from the top, beside the back button, and the top needs no fade. */
+  @media (min-width: 872px) {
+    .library {
+      --col-l: calc((100vw - var(--content-max)) / 2); --col-r: var(--col-l);
+      --bleed-l: 0px; --bleed-r: 0px;
+      --stick: var(--lib-top);
+    }
+  }
+  .library.is-closing { animation: lib-out var(--dur-state) ease-in forwards; pointer-events: none; }
+  @keyframes lib-in { from { opacity: 0; } }
+  @keyframes lib-out { to { opacity: 0; } }
+  /* the content fades to black under the glass, reaching black exactly at the glass's outer
+     edge: the search bar's bottom, the back button's top (on wide screens the button sits beside
+     the column and the top does not fade). The fade follows a smooth S (smoothstep, sampled at
+     quarters: 16 %, 50 %, 84 %), so it has no visible start or end line; the bottom one runs
+     64 px above the bar, so what passes behind the field is dim enough for its text to read */
+  .lib-scroll {
+    position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch; touch-action: pan-y; scrollbar-width: none;
+    --top-black: var(--lib-top);
+    --top-span: calc(var(--control) + var(--edge));
+    --bottom-black: var(--lib-bottom);
+    --bottom-span: calc(var(--control) + 64px);
+    --fade: linear-gradient(to bottom,
+      transparent var(--top-black),
+      rgb(0 0 0 / 0.156) calc(var(--top-black) + var(--top-span) * 0.25),
+      rgb(0 0 0 / 0.5) calc(var(--top-black) + var(--top-span) * 0.5),
+      rgb(0 0 0 / 0.844) calc(var(--top-black) + var(--top-span) * 0.75),
+      #000 calc(var(--top-black) + var(--top-span)),
+      #000 calc(100% - var(--bottom-black) - var(--bottom-span)),
+      rgb(0 0 0 / 0.844) calc(100% - var(--bottom-black) - var(--bottom-span) * 0.75),
+      rgb(0 0 0 / 0.5) calc(100% - var(--bottom-black) - var(--bottom-span) * 0.5),
+      rgb(0 0 0 / 0.156) calc(100% - var(--bottom-black) - var(--bottom-span) * 0.25),
+      transparent calc(100% - var(--bottom-black)));
+    -webkit-mask-image: var(--fade);
+    mask-image: var(--fade);
+  }
+  .lib-scroll::-webkit-scrollbar { display: none; }
+  @media (min-width: 872px) { .lib-scroll { --top-black: 0px; --top-span: 0px; } }
+  .lib-page {
+    display: flex; flex-direction: column; gap: 32px;
+    padding: calc(var(--lib-top) + var(--control) + var(--edge)) var(--col-r) var(--page-pb) var(--col-l);
+  }
+  .lib-page.is-entering { animation: lib-rise var(--dur-move) var(--ease); }
+  @keyframes lib-rise { from { opacity: 0; transform: translateY(12px); } }
+  .lib-head { display: flex; flex-direction: column; gap: 4px; }
+  .lib-head h1 { margin: 0; font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; text-wrap: balance; }
+  .lib-head p { margin: 0; font-size: var(--fs-m); color: var(--t2); }
+  .lib-head .link { padding: 0; border: 0; background: none; color: var(--t2); font: inherit; font-size: var(--fs-m); text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--grid-2); text-underline-offset: 3px; }
+  @media (hover: hover) { .lib-head .link:hover { color: var(--t1); } }
+  .lib-sec { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .lib-sec h2 { margin: 0; font-size: var(--fs-h); font-weight: 650; letter-spacing: -0.01em; }
+  .see-all { padding: 4px 0; border: 0; background: none; color: var(--t2); font: inherit; font-size: var(--fs-m); font-weight: 600; cursor: pointer; }
+  @media (hover: hover) { .see-all:hover { color: var(--t1); } }
+  .lib-note { margin: 0; font-size: var(--fs-m); line-height: 1.5; color: var(--t2); max-width: 60ch; }
+  .lib-about { margin: 0; font-size: var(--fs-l); line-height: 1.55; color: var(--t1); max-width: 62ch; text-wrap: pretty; }
+
+  /* a red dot after a name: no score of its own yet */
+  .dot { display: inline-block; width: 6px; height: 6px; margin: 0 0 0 7px; border-radius: 50%; background: var(--now); vertical-align: 0.2em; }
+
+  /* a shelf of cards, scrolled sideways: out to the screen's edges, or within the column once it
+     has stopped growing */
+  .shelf {
+    display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory;
+    margin-inline: calc(-1 * var(--bleed-l)) calc(-1 * var(--bleed-r)); padding-inline: var(--bleed-l) var(--bleed-r);
+    scroll-padding-inline: var(--bleed-l) var(--bleed-r); scrollbar-width: none; touch-action: pan-x pan-y;
+  }
+  .shelf::-webkit-scrollbar { display: none; }
+  /* with a mouse: one row of cards filling the column, as many as fit (library.js fitShelves) */
+  .shelf.fitted { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); overflow: visible; margin-inline: 0; padding-inline: 0; }
+  .shelf.fitted .card { width: auto; }
+  /* arrows that turn the sheet music preview, beside its heading */
+  .page-arrows { display: flex; gap: var(--gap); }
+  .btn.small { height: 36px; min-width: 36px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-w), 1fr)); gap: 12px; }
+  .card {
+    position: relative; isolation: isolate; flex: none; width: var(--card-w); scroll-snap-align: start;
+    display: flex; flex-direction: column; padding: 0; border: 0; border-radius: var(--r-card); overflow: hidden;
+    background: var(--lane); color: inherit; text-align: left; cursor: pointer;
+  }
+  .cards .card { width: auto; }
+  /* the piece in miniature: its notes across the whole piece, each hand in its colour, and a red
+     line where you left off */
+  .card canvas, .card .art { display: block; width: 100%; height: var(--thumb-h); background: var(--stage); }
+  .card .art { display: grid; place-items: center; }
+  .card .art svg { width: 28px; height: 28px; fill: none; stroke: var(--t1); stroke-width: 1.8; stroke-linecap: round; opacity: var(--o-inactive); }
+  .card .txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 10px 12px 12px; }
+  .card b, .card small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card b { font-size: var(--fs-m); font-weight: 600; }
+  .card small { font-size: var(--fs-s); color: var(--t2); }
+  .card .where { margin-top: 4px; font-size: var(--fs-xs); color: var(--t2); font-variant-numeric: tabular-nums; }
+
+  /* composers: a tile each, with their lifetime on one shared line from 1680 to 1980 */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 12px; }
+  .tile {
+    position: relative; isolation: isolate; display: flex; flex-direction: column; gap: 2px; min-width: 0; min-height: 100px;
+    padding: 14px 14px 16px; border: 0; border-radius: var(--r-card); background: var(--lane);
+    color: inherit; text-align: left; cursor: pointer;
+  }
+  .tile b { font-size: var(--fs-l); font-weight: 600; }
+  .tile small { font-size: var(--fs-s); color: var(--t2); font-variant-numeric: tabular-nums; }
+  .era { position: relative; margin-top: auto; height: 4px; border-radius: 2px; background: var(--fill); }
+  .era i { position: absolute; top: 0; bottom: 0; left: calc(var(--a) * 100%); width: calc((var(--b) - var(--a)) * 100%); border-radius: 2px; background: var(--t2); }
+
+  /* lists: plain rows on the page with hairlines between them. Wide screens set them in columns
+     that read down, then across */
+  .rows { margin-inline: -12px; }
+  .rows.cols { columns: 300px 3; column-gap: 24px; }
+  .row {
+    position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px;
+    width: 100%; min-height: 58px; padding: 8px 12px; border: 0; border-radius: 14px; background: none;
+    color: inherit; text-align: left; cursor: pointer; break-inside: avoid;
+  }
+  .row.one { min-height: 48px; }
+  .row.num { grid-template-columns: 2.4ch minmax(0, 1fr) auto; }
+  .row + .row::before { content: ""; position: absolute; top: 0; left: 12px; right: 12px; border-top: 1px solid var(--grid-2); }
+  .row.num + .row.num::before { left: calc(12px + 2.4ch + 12px); }
+  .row .main { min-width: 0; }
+  .row b, .row small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row b { font-size: var(--fs-l); font-weight: 600; }
+  .row.one b { font-weight: 500; }
+  .row small { margin-top: 2px; font-size: var(--fs-s); color: var(--t2); }
+  /* a track number, or a work's catalogue number, in grey before the name */
+  .row .n { font-size: var(--fs-l); color: var(--t2); font-variant-numeric: tabular-nums; text-align: right; }
+  .row b .cat { margin-right: 8px; font-weight: 500; color: var(--t2); }
+  .row .aside { display: flex; align-items: center; color: var(--t2); }
+  .row .aside svg { width: 16px; height: 16px; color: var(--t1); opacity: var(--o-inactive); }
+  @media (min-width: 632px) { .rows.cols .row::before { display: none; } }   /* two columns of 300 px fit from here */
+
+  /* flat pressed and hover states for content: a wash over the surface, nothing scales */
+  :is(.card, .tile, .row, .btn)::after {
+    content: ""; position: absolute; z-index: -1; inset: 0; border-radius: inherit;
+    background: var(--cf); opacity: 0; transition: opacity var(--dur-press) ease-out; pointer-events: none;
+  }
+  :is(.card, .tile, .row, .btn)[data-pressed="true"]::after { opacity: 1; }
+  @media (hover: hover) { :is(.card, .tile, .row, .btn):hover::after { opacity: var(--o-inactive); } }
+  .row:is(:hover, [data-pressed="true"])::before, .row:is(:hover, [data-pressed="true"]) + .row::before { opacity: 0; }
+
+  /* Explore: the heading and its tabs pin under the back button (or an edge from the top on wide
+     screens) and the list runs on beneath them. The section is at least as tall as the screen
+     below that point, so the page can always scroll until the heading pins. The tabs are glass,
+     the same control the search shows at the top; behind the heading the page is black, fading
+     out across the tabs so the list shows through them. */
+  .explore { min-height: calc(100dvh - var(--stick) - var(--page-pb)); }
+  .explore-head {
+    position: sticky; top: var(--stick); z-index: 2; isolation: isolate;
+    display: flex; flex-direction: column; gap: 12px; padding-bottom: 12px;
+  }
+  .explore-head::before {
+    content: ""; position: absolute; z-index: -1; top: 0; bottom: 0;
+    left: calc(-1 * var(--col-l)); right: calc(-1 * var(--col-r)); pointer-events: none;
+    background: linear-gradient(to bottom, var(--bg) calc(100% - var(--control) - 12px), transparent);
+  }
+  /* once pinned (library.js pinCheck), the black reaches up to the top of the screen */
+  .explore-head.is-pinned::before { top: calc(-1 * var(--stick)); }
+  .library .seg { box-shadow: var(--shadow-float); }
+
+  /* buttons on a piece's page: one white for the main action, the rest flat */
+  .actions { display: flex; flex-wrap: wrap; gap: var(--gap); margin-top: 16px; }
+  .btn {
+    position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: var(--gap);
+    height: var(--control); min-width: var(--control); padding: 0 18px; border: 0; border-radius: 22px;
+    background: var(--lane); color: var(--t1); font: inherit; font-weight: 600; font-size: var(--fs-m); cursor: pointer;
+  }
+  .btn.main { background: var(--t1); color: var(--bg); --cf: var(--fill-ink); padding: 0 22px 0 18px; }
+  .btn.icon { padding: 0; }
+  .btn svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .btn.main svg { fill: currentColor; stroke: currentColor; stroke-width: 2; }
+  .btn:disabled { opacity: var(--o-dim); cursor: default; }
+
+  /* a piece's details: label above value, in as many columns as fit */
+  .facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px 24px; margin: 0; }
+  .facts div { min-width: 0; }
+  .facts dt { font-size: var(--fs-xs); font-weight: 600; color: var(--t2); }
+  .facts dd { margin: 2px 0 0; font-size: var(--fs-l); }
+  .facts dd button { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--grid-2); text-underline-offset: 3px; }
+
+  /* the sheet music as it will print: A4 pages in a shelf */
+  .pages { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    margin-inline: calc(-1 * var(--bleed-l)) calc(-1 * var(--bleed-r)); padding-inline: var(--bleed-l) var(--bleed-r); scroll-padding-inline: var(--bleed-l) var(--bleed-r); }
+  .pages::-webkit-scrollbar { display: none; }
+  .sheet-page { flex: none; width: var(--page-w, 220px); aspect-ratio: 210 / 297; border-radius: 6px; overflow: hidden; scroll-snap-align: start; background: var(--lane); }
+  .sheet-page img { display: block; width: 100%; height: 100%; background: #fff; }
+  .sheet-page.is-waiting { display: grid; place-items: center; padding: 16px; text-align: center; font-size: var(--fs-s); color: var(--t2); }
+
+  /* the glass layer */
+  .lib-top {
+    position: absolute; z-index: 4; top: var(--lib-top); left: var(--gutter-l); right: var(--gutter-r);
+    display: flex; align-items: center; gap: var(--gap); pointer-events: none;
+  }
+  .lib-top > * { pointer-events: auto; }
+  .lib-top .grow { flex: 1; }
+  .lib-top .round { width: var(--control); height: var(--control); box-shadow: var(--shadow-float); }
+  .lib-top .round svg.filled { fill: currentColor; stroke: none; }
+  /* the search's tabs: from an edge beside the back button to the screen's edge, or the column's
+     width once it has stopped growing */
+  .lib-scopes { position: absolute; top: 0; left: calc(var(--control) + var(--edge)); right: 0; animation: scopes-in var(--dur-move) var(--ease); }
+  @media (min-width: 872px) { .lib-scopes { left: calc(var(--col-l) - var(--gutter-l)); right: calc(var(--col-r) - var(--gutter-r)); } }
+  @keyframes scopes-in { from { opacity: 0; transform: translateY(28px); } }
+  .library.is-searching :is(#libProfile, #libMore) { display: none; }
+  /* the menu under the ellipsis, against the right edge */
+  .lib-menu { left: auto; right: var(--gutter-r); top: calc(var(--lib-top) + var(--control) + var(--gap)); z-index: 5; transform-origin: calc(100% - 22px) 0; }
+  .lib-bottom { position: absolute; z-index: 4; left: var(--col-l); right: var(--col-r); bottom: var(--lib-bottom); transition: bottom var(--dur-move) var(--ease); }
+  .lib-search {
+    display: flex; align-items: center; gap: var(--gap); height: var(--control); padding: 0 4px 0 14px;
+    border-radius: 22px; color: var(--c1); box-shadow: var(--shadow-float); cursor: text;
+  }
+  .lib-search > svg { position: relative; flex: none; width: 20px; height: 20px; opacity: var(--o-inactive); }
+  .lib-search input {
+    position: relative; flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; background: none; outline: none;
+    color: inherit; font: inherit; font-size: var(--fs-field); -webkit-user-select: text; user-select: text;
+  }
+  .lib-search input::placeholder { color: var(--c2); }
+  .lib-search input::-webkit-search-cancel-button { display: none; }
+  .lib-search .clear { position: relative; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: none; color: inherit; cursor: pointer; display: grid; place-items: center; }
+  .lib-search .clear svg { width: 18px; height: 18px; fill: var(--t2); }
+
+  @media (max-width: 640px) {
+    .library { --card-w: 176px; --thumb-h: 84px; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sheet-page { --page-w: 168px; }
+  }
+
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 </style>
 </head>
@@ -495,27 +776,27 @@
 
     <header class="top">
       <div class="menu-wrap">
-        <button type="button" class="piece glass-material" id="menuBtn" aria-haspopup="true" aria-expanded="false" title="Choose a score">
+        <button type="button" class="piece glass-material" id="menuBtn" aria-haspopup="true" aria-expanded="false" aria-controls="menu" title="Recent pieces and the library">
           <span class="names"><span id="title">Fallboard</span><span id="composer"></span></span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
+        <!-- recent pieces, then More for the library -->
         <div class="menu glass-material" id="menu" hidden>
           <div class="menu-content">
-            <button type="button" id="openBtn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>
-              <b>Upload your own score</b><small>MusicXML (.musicxml, .xml, .mxl)</small>
-            </button>
+            <div id="menuRecents"></div>
             <hr>
-            <div id="builtinScores"></div>
+            <button type="button" id="menuMore">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/></svg>
+              <b>More</b><small>The whole library and search</small>
+            </button>
           </div>
         </div>
-        <template id="builtinScoreRow">
+        <template id="menuRow">
           <button type="button">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g transform="translate(12 12) scale(0.94) translate(-11.5 -12)"><path fill-rule="evenodd" d="M8.1 14.71V5q0-.75.74-.88l11-2Q20.9 1.93 20.9 3v13a3.9 3.9 0 1 1-1.8-3.29V4.08l-9.2 1.67V18a3.9 3.9 0 1 1-1.8-3.29ZM8.1 18a2.1 2.1 0 1 0-4.2 0 2.1 2.1 0 1 0 4.2 0ZM19.1 16a2.1 2.1 0 1 0-4.2 0 2.1 2.1 0 1 0 4.2 0Z"/></g></svg>
             <b></b><small></small>
           </button>
         </template>
-        <input type="file" id="fileInput" accept=".musicxml,.xml,.mxl,application/vnd.recordare.musicxml+xml,application/vnd.recordare.musicxml" hidden>
       </div>
 
       <div class="seg views glass-material" id="viewSeg" role="group" aria-label="View" style="--n:2;--i:0">
@@ -580,11 +861,58 @@
   </footer>
 </div>
 
+<!-- the library: flat content in .lib-scroll; the glass layer (.lib-top, .lib-bottom) over it -->
+<div class="library" id="library" role="dialog" aria-modal="true" aria-label="Library" hidden>
+  <div class="lib-scroll" id="libScroll"><div class="lib-page" id="libPage"></div></div>
+
+  <header class="lib-top">
+    <button type="button" class="round glass-material" id="libBack" aria-label="Back" title="Back">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5.5-6.5 6.5 6.5 6.5"/></svg>
+    </button>
+    <!-- while searching: what to search, moved up from Explore's tabs -->
+    <div class="seg fit lib-scopes glass-material" id="libScopes" role="group" aria-label="Search in" style="--n:3;--i:0" hidden>
+      <button type="button" data-tab="pieces" aria-pressed="true">Pieces</button>
+      <button type="button" data-tab="works" aria-pressed="false">Works</button>
+      <button type="button" data-tab="composers" aria-pressed="false">Composers</button>
+    </div>
+    <span class="grow"></span>
+    <!-- a place for accounts on the library's home; it does nothing yet -->
+    <button type="button" class="round glass-material" id="libProfile" aria-label="Profile (coming soon)" title="Profile (coming soon)">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="filled"><circle cx="12" cy="8.2" r="4.2"/><path d="M4.2 20.2c0-4.1 3.5-6.9 7.8-6.9s7.8 2.8 7.8 6.9c0 .55-.45 1-1 1H5.2c-.55 0-1-.45-1-1Z"/></svg>
+    </button>
+    <!-- on a composer's, a work's or a piece's page: what can be done with it -->
+    <button type="button" class="round glass-material" id="libMore" aria-label="More" title="More" aria-haspopup="true" aria-expanded="false" aria-controls="libMenu" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="filled"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/></svg>
+    </button>
+  </header>
+  <div class="menu lib-menu glass-material" id="libMenu" hidden>
+    <div class="menu-content">
+      <button type="button" id="libShare">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
+        <b>Share</b><small id="libShareNote">Send a link to this page</small>
+      </button>
+    </div>
+  </div>
+
+  <div class="lib-bottom" id="libBottom">
+    <label class="lib-search glass-material" id="libSearch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.6"/><path d="m15.4 15.4 5.1 5.1"/></svg>
+      <input type="search" id="libQuery" placeholder="Search pieces" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Search the catalogue">
+      <button type="button" class="clear" id="libClear" aria-label="Clear the search" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-3.3 5.4L12 10.7l3.3-3.3 1.3 1.3-3.3 3.3 3.3 3.3-1.3 1.3-3.3-3.3-3.3 3.3-1.3-1.3 3.3-3.3-3.3-3.3 1.3-1.3Z"/></svg>
+      </button>
+    </label>
+  </div>
+</div>
+<input type="file" id="fileInput" accept=".musicxml,.xml,.mxl,application/vnd.recordare.musicxml+xml,application/vnd.recordare.musicxml" hidden>
+
 <script src="js/score.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/glass.js"></script>
 <script src="js/engrave-core.js"></script>
+<script src="js/print.js"></script>
 <script src="js/notation.js"></script>
 <script src="js/app.js"></script>
+<script src="js/library.js"></script>
 
 </body></html>
