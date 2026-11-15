@@ -199,6 +199,28 @@
   const CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
   const dot = () => { const d = make('i', 'dot'); d.title = 'No score of its own yet'; return d; };
   const go = (e) => push(L.data.kids.has(e.id) ? { view: 'work', id: e.id } : { view: 'piece', id: e.id });
+  /* Henle's level of difficulty (1 to 9, graded per piece: a sonata's movements each have one).
+     A work shows the range of its pieces' levels */
+  const LEVEL_BAND = ['', 'easy', 'easy', 'easy', 'medium', 'medium', 'medium', 'difficult', 'difficult', 'difficult'];
+  const levelRange = (e) => {
+    const d = L.data;
+    if (!d.levels) d.levels = new Map();
+    if (d.levels.has(e.id)) return d.levels.get(e.id);
+    let lo = e.h || 10, hi = e.h || 0;
+    for (const k of d.kids.get(e.id) || []) { const r = levelRange(k); if (r) { lo = Math.min(lo, r[0]); hi = Math.max(hi, r[1]); } }
+    const r = hi ? [lo, hi] : null;
+    d.levels.set(e.id, r);
+    return r;
+  };
+  function levelPill(e) {
+    const r = levelRange(e);
+    if (!r) return null;
+    const p = make('span', 'lvl');
+    p.appendChild(make('b', '', r[0] === r[1] ? String(r[0]) : r[0] + '–' + r[1], 'text'));
+    p.appendChild(make('small', '', '/9', 'text'));
+    p.title = r[0] === r[1] ? 'Henle level ' + r[0] + ' of 9 (' + LEVEL_BAND[r[0]] + ')' : 'Henle levels ' + r[0] + ' to ' + r[1] + ' of 9';
+    return p;
+  }
 
   /* a row. style: 'two' (name, then composer and number in grey), 'one' (the name only),
      'num' (a grey number, then the name), 'work' (the grey catalogue number, then the name) */
@@ -216,6 +238,8 @@
     if (style === 'two') main.appendChild(make('small', '', [composerName(e), catOf(e)].filter(Boolean).join(' · '), 'text'));
     b.appendChild(main);
     const aside = make('span', 'aside');
+    const pill = levelPill(e);
+    if (pill) aside.appendChild(pill);
     if (group) aside.insertAdjacentHTML('beforeend', CHEVRON);
     b.appendChild(aside);
     return b;
@@ -529,7 +553,7 @@
       const s = fitSize(t.main, face, 86, 28, 30);
       const y = 78 - 0.25 * s - 2;
       art(layer(marks(pick) +
-        word(t.main, 7, y - 2 * s, s, ofam, ostyle, oweight, 0.3) + word(t.main, 7, y - s, s, ofam, ostyle, oweight, 0.3) +
+        word(t.main, 7, y - 2 * s, s, ofam, ostyle, oweight, 0.3, 'start', 0.5) + word(t.main, 7, y - s, s, ofam, ostyle, oweight, 0.3, 'start', 0.5) +
         word(t.main, 7, y, s, fam, fstyle, fweight, 0)));
       if (t.sub) part('sub', t.sub);
       part('who', t.who);
@@ -767,6 +791,13 @@
     b.appendChild(make('span', '', 'Play', 'text'));
     return b;
   }
+  /* the Henle edition a level comes from, for the link beside it: their pages are named, so the
+     names come from a small file (library/henle.json), fetched the first time one is needed */
+  let henleNames = null;
+  function henleEdition(hn) {
+    if (!henleNames) henleNames = fetch('library/henle.json').then((r) => r.json()).catch(() => ({}));
+    return henleNames.then((m) => (m[hn] ? 'https://www.henle.de/en/' + m[hn] + '/HN-' + hn : null));
+  }
   function pieceView(page, e) {
     const d = L.data, c = d.comp.get(e.composer), p = d.parentOf(e);
     const year = e.year || (p && p.year), pub = e.pub || (p && p.pub);
@@ -799,7 +830,18 @@
       f.appendChild(dd);
       facts.appendChild(f);
     };
-    fact('Composer', c.full + (lifeOf(c) ? ' (' + lifeOf(c) + ')' : ''));
+    if (e.h) {
+      const lv = make('span', 'level');
+      lv.appendChild(document.createTextNode(e.h + ' of 9, ' + LEVEL_BAND[e.h] + ' '));
+      const by = make('a', 'by', 'Henle', 'text');
+      by.href = 'https://www.henle.de/en/Levels-of-Difficulty/';
+      by.target = '_blank';
+      by.rel = 'noopener';
+      by.title = 'Graded by the G. Henle Verlag (Rolf Koenen)';
+      lv.appendChild(by);
+      if (e.hn) henleEdition(e.hn).then((url) => { if (url) { by.href = url; by.title = 'Graded by the G. Henle Verlag in its edition HN ' + e.hn; } });
+      fact('Difficulty', lv);
+    }
     fact('Key', e.key && keyText(e.key));
     fact('Catalogue', (e.cat || []).join(' · '));
     fact('Composed', year && String(year));

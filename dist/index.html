@@ -578,7 +578,9 @@
   }
   .lib-scroll {
     position: absolute; inset: 0 0 var(--kb) 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch; touch-action: pan-y; scrollbar-width: none;
+    touch-action: pan-y; scrollbar-width: none;
+    /* no -webkit-overflow-scrolling: touch: iOS scrolls smoothly without it, and on the iPhone it
+       still makes the scroller a stacking context, which would keep the pinned tabs under the fades */
     transition: bottom var(--dur-keyboard) var(--ease);
   }
   .lib-fade { position: absolute; z-index: 3; left: 0; right: 0; pointer-events: none; }
@@ -761,7 +763,11 @@
   /* a track number, or a work's catalogue number, in grey before the name */
   .row .n { font-size: var(--fs-l); color: var(--t2); font-variant-numeric: tabular-nums; text-align: right; }
   .row b .cat { margin-right: 8px; font-weight: 500; color: var(--t2); }
-  .row .aside { display: flex; align-items: center; color: var(--t2); }
+  .row .aside { display: flex; align-items: center; gap: var(--gap); color: var(--t2); }
+  /* Henle's level of difficulty, at the end of a row: "6/9", or a work's range, "4–6/9" */
+  .lvl { display: inline-flex; align-items: baseline; padding: 3px 8px; border-radius: 999px; background: var(--fill); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lvl b { font-size: var(--fs-s); font-weight: 600; color: var(--t1); }
+  .lvl small { font-size: var(--fs-xs); font-weight: 500; color: var(--t2); }
   .row .aside svg { width: 16px; height: 16px; color: var(--t1); opacity: var(--o-inactive); }
   @media (min-width: 632px) { .rows.cols .row::before { display: none; } }   /* two columns of 300 px fit from here */
 
@@ -804,6 +810,7 @@
   .facts div { min-width: 0; }
   .facts dt { font-size: var(--fs-xs); font-weight: 600; color: var(--t2); }
   .facts dd { margin: 2px 0 0; font-size: var(--fs-l); }
+  .facts dd .by { margin-left: 4px; font-size: var(--fs-s); color: var(--t2); text-decoration: underline; text-decoration-color: var(--grid-2); text-underline-offset: 3px; }
   .facts dd button { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--grid-2); text-underline-offset: 3px; }
 
   /* the sheet music as it will print: A4 pages in a shelf */
