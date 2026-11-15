@@ -97,7 +97,7 @@ self.CatalogVocab = { GENRES, TEMPO, PLURAL };
      search.find('rach 23 2')                        // [{ entry, score, label }, ...]
 
    A query is read in this order, each part leaving the rest of the text to the next:
-     key        "b-flat minor", "bb minor", "B♭ minor", "bbm", "Bbm", "in bb", "b moll" (German,
+     key        "b-flat minor", "bb minor", "B♭ minor", "bbm", "Bbm", "fm", "in bb", "b moll" (German,
                 where b is B-flat and h is B), "si bémol mineur"; dashes count as spaces
      numbers    "Op. 23 No. 2", "op23/2", "23 2", "BWV 846", "K. 331", "D 899 3", "Hob XVI:52",
                 "no 2"; without a catalogue name, any of the entry's numbers can match
@@ -139,7 +139,10 @@ self.CatalogVocab = { GENRES, TEMPO, PLURAL };
     /* English: "b flat minor", "bb minor", "c# min", "bbm", "c#m" */
     text = text.replace(/(^|\s)([a-g])\s*(#|sharp|flat|b)?\s*(major|minor|maj|min)(?=\s|$)/, (m, pre, l, acc, mode) => (key ? m : pre + found(LETTER[l] + ACC[acc || ''], MODE[mode])));
     text = text.replace(/(^|\s)([a-g])(#|b)m(?=\s|$)/, (m, pre, l, acc) => (key ? m : pre + found(LETTER[l] + ACC[acc], 'minor')));
-    /* "Am", "Em", "F#m" written with a capital: minor keys; "am" in small letters is a word */
+    /* "fm", "gm", "em": a letter and m is a minor key, in small letters too, except "am", which
+       is a word in titles ("Am Kamin"): A minor is "Am", "a minor" or "amin" */
+    text = text.replace(/(^|\s)([b-g])m(?=\s|$)/, (m, pre, l) => (key ? m : pre + found(LETTER[l], 'minor')));
+    /* "Am", "Em", "F#m" written with a capital: minor keys */
     if (!key) {
       const cap = raw.match(/(?:^|\s)([A-G])([#b♭♯]?)m(?=\s|$)/);
       if (cap) { text = text.replace(new RegExp('(^|\\s)' + cap[1].toLowerCase() + fold(cap[2]).replace('#', '\\#') + 'm(?=\\s|$)'), '$1 '); key = { tonic: cap[1] + ACC[fold(cap[2])], mode: 'minor' }; }

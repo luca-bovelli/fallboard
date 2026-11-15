@@ -14,6 +14,12 @@ const search = create(catalog);
 const verbose = process.argv.includes('-v');
 
 const CASES = [
+  // keys written short, in small letters ("am" stays a word)
+  ['chopin ballade fm', 'chopin', /Op\. 52\b/],
+  ['chopin fantaisie fm', 'chopin', /Op\. 49\b/],
+  ['rach prelude gm', 'rachmaninoff', /Op\. 23 No\. 5\b/],
+  ['liszt sonata bm', 'liszt', /S\. 178\b/],
+  ['schumann am kamin', 'schumann', /Op\. 15 No\. 8\b/],
   // numbers, every way of writing them
   ['rach 23 2', 'rachmaninoff', /Op\. 23 No\. 2\b/],
   ['Rachmaninoff Bb Prelude', 'rachmaninoff', /Op\. 23 No\. 2\b/],
