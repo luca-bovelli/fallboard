@@ -79,6 +79,8 @@
     for (const p of parts) {
       if (/^\d+[a-z]?$/.test(p)) nums.push(p);
       else if (ROMAN[p] && name === 'hob') nums.push(String(ROMAN[p]));
+      /* "BWV Anh. 114", "K. Anh. 32": the appendix is its own catalogue */
+      else if (!nums.length && name && name !== 'anh' && /^(anh|anhang|app|appendix)$/.test(p)) name += 'anh';
       else if (!nums.length && !name && CATS[p.replace(/\d.*$/, '')] !== undefined) { name = CATS[p.replace(/\d.*$/, '')]; const n = p.match(/\d+[a-z]?$/); if (n) nums.push(n[0]); }
       else if (!nums.length && !name) name = p;
       else break;
@@ -90,14 +92,23 @@
     const groups = [];
     const toks = text.split(/\s+/).filter(Boolean);
     const rest = [];
+    /* Roman numerals count as numbers: "ii" to "xxxi" anywhere, and "i", "v", "x" after a word
+       that numbers things ("Partita I", "Book V", "Consolations I") */
+    for (let i = 0; i < toks.length; i++) {
+      const r = ROMAN[toks[i]];
+      if (r && (toks[i].length > 1 || (i && (NUMBERED.test(toks[i - 1]) || genreWord(toks[i - 1]))))) toks[i] = String(r);
+    }
     for (let i = 0; i < toks.length; i++) {
       let t = toks[i];
       let name = null;
       const glued = t.match(/^([a-z]+)\.?(\d+[a-z]?)$/);
       if (glued && CATS[glued[1]] !== undefined) { name = CATS[glued[1]]; toks[i] = glued[2]; t = glued[2]; i--; }
+      else if (CATS[t] !== undefined && i + 2 < toks.length && /^(anh|anhang|app|appendix)$/.test(toks[i + 1]) && /^\d/.test(toks[i + 2])) { name = (CATS[t] === 'anh' ? '' : CATS[t]) + 'anh'; i++; }
       else if (CATS[t] !== undefined && i + 1 < toks.length && (/^\d/.test(toks[i + 1]) || (t === 'hob' && ROMAN[toks[i + 1]]))) { name = CATS[t]; }
       else if (/^(no|nr|n|number)$/.test(t) && i + 1 < toks.length && /^\d+$/.test(toks[i + 1])) { name = ''; }
       else if (!/^\d+[a-z]?$/.test(t) && !/^#\d+$/.test(t)) { rest.push(t); continue; }
+      /* a year ("1838") is not a catalogue number */
+      else if (/^1[5-9]\d\d$/.test(t)) continue;
       else { name = ''; i--; }
       /* gather the numbers that follow, with "no", "#", "/" between them */
       const nums = [];
@@ -110,8 +121,17 @@
       }
       if (nums.length) groups.push({ name, nums });
     }
-    return { text: rest.join(' '), groups };
+    /* one number said several ways ("No 2 (D.420) D. 420.2") is one: drop groups that another
+       group of the same catalogue extends, and bare numbers that end a named group */
+    const same = (a, b) => a.name === b.name && a.nums.join() === b.nums.join();
+    const kept = groups.filter((g, i) => groups.findIndex((h) => same(g, h)) === i)
+      .filter((g, _, all) => !all.some((h) => h !== g && h.name === g.name && h.nums.length > g.nums.length && g.nums.every((n, j) => h.nums[j] === n)))
+      .filter((g, _, all) => !(g.name === '' && g.nums.length === 1 && all.some((h) => h.name && h.nums[h.nums.length - 1] === g.nums[0])));
+    return { text: rest.join(' '), groups: kept };
   }
+  const NUMBERED = /^(book|livre|heft|vol|volume|cahier|teil|part|no|nr|suite|partita|sonata|sonate|prelude|fugue|invention|sinfonia|consolation|consolations|liebestraum|ballade|scherzo|impromptu|etude|study|nocturne|waltz|valse|mazurka|polonaise|rhapsody|bagatelle|intermezzo|menuet|minuet|movement|satz)$/;
+  let genreWord = () => false;
+  const MOVEMENT = /^(movement|movements|mvt|mvmt|mov|satz|mouvement|mvmnt)$/;
   const ORDINAL = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, erste: 1, zweite: 2, dritte: 3, vierte: 4, premier: 1, deuxieme: 2, troisieme: 3 };
   const BOOK = /\b(?:Book|Livre|Heft|Vol\.?|Volume|Cahier|Série|Year|Année|Teil)\s+([IVX]+|\d+)\b/i;
   /* does an entry's number sequence answer a query group: exactly (2), as its start (1) */
@@ -130,6 +150,8 @@
     const byId = new Map(catalog.entries.map((e) => [e.id, e]));
     const genreForms = vocab.GENRES.map(([name, ...forms]) => ({ name, forms: forms.map((f) => words(f).join(' ')) }));
     const genreByName = new Map(genreForms.map((g) => [g.name, g]));
+    const genreSet = new Set(genreForms.flatMap((g) => g.forms));
+    genreWord = (w) => genreSet.has(w);
 
     /* composer names: every word of every spelling, for whole-word and prefix matches */
     const nameWords = [];
@@ -168,7 +190,12 @@
         if (e.kind === 'movement' && depth === 1) for (const c of p.cat || []) { const s = catSeq(c); if (s) seqs.push({ name: s.name, nums: [...s.nums, String(e.number)], weak: true }); }
       }
       /* numbers in the title ("Ballade No. 1", "Hungarian Rhapsody No. 2") and a child's place */
-      for (const m of (e.title || '').matchAll(/\bNo\.?\s*(\d+)/g)) seqs.push({ name: '', nums: [m[1]], title: true });
+      /* numbers in its titles: "Bagatelle No. 25" (Für Elise), "Menuet II" */
+      for (const t of [e.title, e.en, ...(e.alt || [])]) {
+        for (const m of (t || '').matchAll(/\bNo\.?\s*(\d+)/g)) seqs.push({ name: '', nums: [m[1]], title: true });
+        const roman = (t || '').match(/\s([IVX]{1,5})$/);
+        if (roman && ROMAN[roman[1].toLowerCase()]) seqs.push({ name: '', nums: [String(ROMAN[roman[1].toLowerCase()])], title: true });
+      }
       for (const t of [e.title, e.en, ...(e.alt || [])]) { const b = (t || '').match(BOOK); if (b) { seqs.push({ name: '', nums: [String(ROMAN[b[1].toLowerCase()] || b[1])], title: true }); break; } }
       if (e.parent && e.number) seqs.push({ name: '', nums: [String(e.number)], weak: true });
       return { e, terms, seqs, key: keyOf(e.key), depth, termList: [...terms.keys()] };
@@ -213,11 +240,15 @@
         const ord = w.match(/^(\d+)(st|nd|rd|th|e|er|eme|te|ter)$/);
         if (ord) return [ord[1]];
         if (ORDINAL[w]) return [String(ORDINAL[w])];
-        return /^(movement|movements|mvt|mvmt|mov|satz|mouvement)$/.test(w) ? [] : [w];
-      }).join(' ');
+        return [w];
+      });
+      /* "movement I", "mvt 3": the number stays, the word goes */
+      text = text.map((w, i) => (i && MOVEMENT.test(text[i - 1]) && ROMAN[w] ? String(ROMAN[w]) : w)).filter((w) => !MOVEMENT.test(w)).join(' ');
       /* a dash joins a key into one chunk ("b-flat") and is otherwise a space */
       const k = takeKey(text, raw);
       const n = takeNumbers(k.text);
+      /* the same number twice ("Op. 28 No. 13" in a title and its subtitle) is one number */
+      n.groups = n.groups.filter((g, i) => n.groups.findIndex((h) => h.name === g.name && h.nums.join() === g.nums.join()) === i);
       const c = takeComposers(n.text);
       const qwords = c.text.split(/\s+/).filter(Boolean);
       const results = [];
@@ -235,7 +266,7 @@
            both a book 1 and a piece 1 */
         let ok = true;
         const used = new Set();
-        for (const g of n.groups) {
+        const take = (g) => {
           let best = 0, bestAt = -1;
           d.seqs.forEach((s, at) => {
             if (used.has(at)) return;
@@ -243,17 +274,33 @@
             const v = m ? (m === 2 ? 40 : 18) - (s.weak ? 12 : 0) - (s.title && g.name ? 40 : 0) : 0;
             if (v > best) { best = v; bestAt = at; }
           });
-          if (best <= 0) { ok = false; break; }
-          used.add(bestAt);
-          score += best;
+          if (best > 0) used.add(bestAt);
+          return best;
+        };
+        let exact = false;
+        const missed = [];
+        for (const g of n.groups) {
+          let got = take(g);
+          /* bare numbers that are not one sequence may be separate ones: "book 2 no 2" */
+          if (!got && !g.name && g.nums.length > 1) {
+            const parts = g.nums.map((x) => take({ name: '', nums: [x] }));
+            got = parts.every((p) => p > 0) ? parts.reduce((a, b) => a + b, 0) - 10 : 0;
+          }
+          if (got) { score += got; if (g.name && got >= 40) exact = true; } else missed.push(g);
         }
+        /* a second catalogue's number may be unknown here ("K. 15m (Anh. 109b Nr. 4)"): once one
+           catalogue number matched exactly, other catalogues only cost points */
+        for (const g of missed) { if (exact && g.name) score -= 20; else { ok = false; break; } }
         if (!ok) continue;
-        let matched = 0;
+        let matched = 0, named = 0;
         for (const w of qwords) {
           let best = 0;
           for (const [t, f] of expand(w)) { const weight = d.terms.get(t); if (weight) best = Math.max(best, weight * f); }
-          if (best) { matched++; score += best * 3; } else score -= 12;
+          /* "named": a title or nickname word that is not just a genre ("Raindrop", not "waltz") */
+          if (best) { matched++; score += best * 3; if (best >= 9 && !genreWord(w)) named++; } else score -= 12;
         }
+        /* how it matched, for callers that need to judge a match (the score-file matcher) */
+        const why = { key: !!(k.key && d.key), groups: n.groups.length, words: qwords.length, matched, named };
         if (qwords.length && !matched) continue;
         if (!k.key && !n.groups.length && !qwords.length && !c.ids.size) continue;
         /* popular and named works first; movements and early versions after whole pieces */
@@ -261,7 +308,7 @@
         if (e.kind === 'movement') score -= 6;
         if (e.variant) score -= 10;
         score -= d.depth;
-        results.push({ entry: e, score });
+        results.push({ entry: e, score, why });
       }
       results.sort((a, b) => b.score - a.score);
       return results.slice(0, limit).map((r) => ({ ...r, label: label(r.entry) }));
