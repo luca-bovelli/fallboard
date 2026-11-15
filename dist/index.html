@@ -8,10 +8,15 @@
 <title>Fallboard Piano</title>
 <link rel="license" href="credits.html">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap">
-<!-- the library's covers: Boska and Melodrama (display serifs) and Switzer Thin from Fontshare, Bodoni Moda for numerals -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@1,6..96,800&display=swap">
+<!-- the library's covers: Boska, Melodrama and Switzer from Fontshare (ITF Free Font License); Nyght Serif (SIL OFL, dist/fonts/nyght) is declared below -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=boska@500,501,900,901&f[]=melodrama@500,700&f[]=switzer@100,200,400&display=swap">
 <style>
+  /* Nyght Serif by Maksym Kobuzan, SIL Open Font License 1.1 (fonts/nyght/OFL.txt): the covers' outlined
+     words and numerals, and their echoed titles */
+  @font-face { font-family: "Nyght Serif"; src: url("fonts/nyght/NyghtSerif-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Nyght Serif"; src: url("fonts/nyght/NyghtSerif-RegularItalic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+  @font-face { font-family: "Nyght Serif"; src: url("fonts/nyght/NyghtSerif-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: swap; }
+  @font-face { font-family: "Nyght Serif"; src: url("fonts/nyght/NyghtSerif-DarkItalic.woff2") format("woff2"); font-weight: 900; font-style: italic; font-display: swap; }
   /* Layout: the music fills the page down to the keys. What you are looking at (the piece, roll
      or score) floats over the top of it as glass; how it plays back (which hands, step and play,
      how fast) sits under the keys on the black page. Colour is kept for meaning: one hue per hand,
@@ -518,7 +523,7 @@
     background: var(--bg); color: var(--t1);
     --c1: var(--t1); --c2: var(--t2); --cf: var(--fill);
     --lib-top: calc(env(safe-area-inset-top, 0px) + var(--edge));
-    --lib-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--edge) + var(--kb, 0px));
+    --lib-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--edge));
     /* the content column: its margins, how far shelves run past it (out to the screen's edges),
        and where Explore's heading pins (an edge below the back button) */
     --col-l: var(--gutter-l); --col-r: var(--gutter-r);
@@ -540,6 +545,9 @@
     }
   }
   .library.is-closing { animation: lib-out var(--dur-state) ease-in forwards; pointer-events: none; }
+  /* the on-screen keyboard is up (library.js fits the library above it): it covers the home indicator, so
+     the search bar keeps only its edge */
+  .library.kb-up { --lib-bottom: var(--edge); }
   @keyframes lib-in { from { opacity: 0; } }
   @keyframes lib-out { to { opacity: 0; } }
   /* the content fades to black under the glass, reaching black exactly at the glass's outer
@@ -687,9 +695,9 @@
 
   /* a giant numeral (or letter) in outline, bleeding off the corner, the name set beside it */
   .cv-num .who { left: 8cqw; top: 8cqw; }
-  .cv-num .main { left: 8cqw; right: 22cqw; bottom: 17cqw; }
+  .cv-num .main { left: 8cqw; right: 8cqw; bottom: 17cqw; }
   .cv-num .sub { left: 8cqw; right: 8cqw; bottom: 8.5cqw; }
-  .cv-num .cat { right: 8cqw; top: 8cqw; }
+  .cv-num .cat { left: 8cqw; top: 13.5cqw; }
 
   /* the name riding across a staff of five fine lines */
   .cv-staff .staff { left: 0; right: 0; top: 58cqw; height: 22.5cqw; background: repeating-linear-gradient(to bottom, var(--line) 0 0.5cqw, transparent 0.5cqw 5.5cqw); }

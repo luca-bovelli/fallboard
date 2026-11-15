@@ -310,17 +310,21 @@
     ['#0c3527', ['#1d7656', '#97df86', '#eef7bf', '#0f4a35'], '#f3ffe8', 'rgb(243 255 232 / 0.5)'],    // moss
   ];
   const CLASSIC = [8, 9, 10, 11];
-  /* the faces for the name set large: family, roughly how wide a letter is (in ems), style,
-     weight. Boska bold italic, Melodrama's upright drama, Switzer Thin set huge */
+  /* the faces: family, roughly how wide a letter is (in ems), style, weight. Boska bold italic,
+     Melodrama's upright drama and Switzer Thin set the names; Nyght Serif sets the echoed titles
+     (its heaviest italic) and draws every outline (its regular italic): outlines need even
+     strokes, which the high-contrast faces with hairline serifs do not have */
   const FACE = {
     boska: ['Boska, Georgia, serif', 0.5, 'italic', 900],
     melodrama: ['Melodrama, Didot, Georgia, serif', 0.5, 'normal', 700],
     switzer: ['Switzer, Inter, sans-serif', 0.55, 'normal', 200],
+    nyght: ['"Nyght Serif", Georgia, serif', 0.52, 'italic', 900],
+    outline: ['"Nyght Serif", Georgia, serif', 0.5, 'italic', 400],
   };
   /* a name is measured in its own face to size it; until the faces have arrived the estimate
      above stands in, and the covers are drawn again once they are here */
   const measure = document.createElement('canvas').getContext('2d');
-  const FONTS = Object.values(FACE).map(([fam, , style, weight]) => `${style} ${weight} 40px ${fam}`).concat('italic 800 40px "Bodoni Moda"');
+  const FONTS = Object.values(FACE).map(([fam, , style, weight]) => `${style} ${weight} 40px ${fam}`);
   let fontsIn = false;
   function widthOf(text, face) {
     const [fam, f, style, weight] = FACE[face];
@@ -439,13 +443,50 @@
   }
   let maskSeq = 0;   // each outline's mask needs an id of its own on the page
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  /* A set or a work and everything in it are one album: they share a look (layout, palette,
+     colour fields, faces, ornaments), chosen from the album's id, and differ only in what they
+     say. The layout must suit every member: the echo needs one short word, so an album where any
+     name is longer takes the numeral (when all are numbered) or the staff instead */
+  /* A numbered series with no parent work in the catalogue (Liszt's S. 244/1 to 19) is one album too. */
+  const SERIES = /^(.+)\/\d+[a-z]?$/;
+  let seriesMap = null;
+  function seriesOf(e) {
+    if (!seriesMap) {
+      seriesMap = new Map();
+      for (const x of L.data.byId.values()) {
+        const m = !x.parent && x.cat && SERIES.exec(x.cat[0]);
+        if (!m) continue;
+        const id = '~' + x.composer + '|' + m[1];
+        if (!seriesMap.has(id)) seriesMap.set(id, { id, series: [] });
+        seriesMap.get(id).series.push(x);
+      }
+    }
+    const m = !e.parent && e.cat && SERIES.exec(e.cat[0]);
+    const s = m && seriesMap.get('~' + e.composer + '|' + m[1]);
+    return s && s.series.length > 1 ? s : e;
+  }
+  const albumOf = (e) => { let x = e; while (x.parent && L.data.byId.get(x.parent)) x = L.data.byId.get(x.parent); return seriesOf(x); };
+  const albumLayout = new Map();
+  function layoutOf(album, wanted) {
+    const key = album.id + ':' + wanted;
+    if (albumLayout.has(key)) return albumLayout.get(key);
+    let layout = wanted;
+    if (wanted === 'echo' || wanted === 'num') {
+      const members = album.series ? [...album.series] : [album], d = L.data;
+      for (let i = 0; i < members.length; i++) for (const k of d.kids.get(members[i].id) || []) members.push(k);
+      const texts = members.map(coverText);
+      if (wanted === 'echo' && texts.some((t) => /\s/.test(t.main) || t.main.length > 11)) layout = texts.every((t) => t.num) ? 'num' : 'staff';
+    }
+    albumLayout.set(key, layout);
+    return layout;
+  }
   function cover(e) {
-    const pick = chooser(e.id);
+    const album = albumOf(e);
+    const pick = chooser(album.id);
     const t = coverText(e);
-    let layout = ['echo', 'frame', 'num', 'staff'][pick(4)];
-    if (layout === 'echo' && (/\s/.test(t.main) || t.main.length > 11)) layout = t.num ? 'num' : 'staff';
+    const layout = layoutOf(album, ['echo', 'frame', 'num', 'staff'][pick(4)]);
     const p = layout === 'frame' ? PALETTES[CLASSIC[pick(CLASSIC.length)]] : PALETTES[pick(8)];
-    const face = layout === 'echo' ? (pick(3) ? 'boska' : 'melodrama') : layout === 'frame' ? (pick(2) ? 'melodrama' : 'boska')
+    const face = layout === 'echo' ? 'nyght' : layout === 'frame' ? (pick(2) ? 'melodrama' : 'boska')
       : layout === 'num' ? 'boska' : pick(2) ? 'switzer' : 'melodrama';
     const c = make('span', 'cover cv-' + layout, undefined, 'cover');
     c.setAttribute('aria-hidden', 'true');
@@ -471,11 +512,14 @@
         glyphs.replace('<text ', `<text fill="none" stroke="currentColor" stroke-width="${outline * 2}" stroke-linejoin="round" mask="url(#${id})" `);
     };
     const [fam, fstyle, fweight] = [FACE[face][0], FACE[face][2], FACE[face][3]];
+    const [ofam, ostyle, oweight] = [FACE.outline[0], FACE.outline[2], FACE.outline[3]];
     if (layout === 'echo') {
-      const s = fitSize(t.main, face, 86, 30, 34);
-      const y = 50 + 0.3 * s;
-      art(layer(marks(pick) + (pick(2) ? rule(pick, 62, 93, 20, 1.1) : '') +
-        word(t.main, 7, y - 1.02 * s, s, fam, fstyle, fweight, 0.32) + word(t.main, 7, y + 1.02 * s, s, fam, fstyle, fweight, 0.32) +
+      /* the name low on the cover, its outline twice above it, the upper one cut by the top
+         edge; the small lines underneath have the bottom to themselves */
+      const s = fitSize(t.main, face, 86, 28, 30);
+      const y = 78 - 0.25 * s - 2;
+      art(layer(marks(pick) +
+        word(t.main, 7, y - 2 * s, s, ofam, ostyle, oweight, 0.3) + word(t.main, 7, y - s, s, ofam, ostyle, oweight, 0.3) +
         word(t.main, 7, y, s, fam, fstyle, fweight, 0)));
       if (t.sub) part('sub', t.sub);
       part('who', t.who);
@@ -490,18 +534,20 @@
       if (t.sub) stack.appendChild(make('span', 'sub', t.sub));
       if (t.cat) stack.appendChild(make('span', 'cat', t.cat));
     } else if (layout === 'num') {
-      c.style.setProperty('--ts', fitSize(t.main, face, 68, 34, 18) + 'cqw');
-      /* the numeral in outline, bleeding off the bottom right corner */
+      c.style.setProperty('--ts', fitSize(t.main, face, 84, 26, 18) + 'cqw');
+      /* the numeral in outline in the top right, bleeding off the edge, at most 56 units wide so
+         it keeps clear of the composer and number at the top left */
       const big = t.num || (t.main.match(/\p{L}/u) || ['·'])[0];
-      art(layer(word(big, 104, 92, 96, '"Bodoni Moda", Didot, serif', 'italic', 800, 0.4, 'end') + rule(pick, 8, 40, 15, 1.1)));
+      const size = Math.min(82, 56 / Math.max(widthOf(big, 'outline'), 0.01));
+      art(layer(word(big, 104, 70, size.toFixed(2), ofam, ostyle, oweight, 0.4, 'end')));
       part('who', t.who);
       if (t.cat) part('cat', t.cat);
       part('main', t.main);
       if (t.sub) part('sub', t.sub);
     } else {
       c.style.setProperty('--ts', fitSize(t.main, face, 86, 26, face === 'switzer' ? 17 : 20) + 'cqw');
-      /* the staff ends in a final double barline */
-      art(layer(`<path d="M90.6 58V80.5" ${stroke(0.3)}/><path d="M93.2 58V80.5" ${stroke(1.2)}/>`));
+      /* the staff ends in a final double barline, square-ended like printed ones */
+      art(layer(`<path d="M90.6 58V80.5M93.2 58V80.5" stroke="currentColor" stroke-width="0.3" stroke-linecap="butt"/><path d="M93.2 58V80.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="butt"/>`));
       part('staff'); part('who', t.who);
       if (t.cat) part('cat', t.cat);
       part('main', t.main);
@@ -1089,12 +1135,23 @@
   }
   TOUCH.addEventListener('change', () => { if (L.open && L.data) render(false); });
   for (const b of el.scopes.querySelectorAll('button')) b.addEventListener('click', () => setTab(b.dataset.tab));
-  /* the on-screen keyboard: lift the search above it */
+  /* The on-screen keyboard. iOS slides the whole page up to bring the field into view, which
+     pushed the top of the library (what you want to see while typing) off the screen. Instead the
+     library fits itself to what the keyboard leaves of the screen: its top stays at the top of
+     what you see, its search bar sits on the keyboard, and the list in between gets shorter */
   if (window.visualViewport) {
     const vv = window.visualViewport;
-    const lift = () => { const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop); el.lib.style.setProperty('--kb', (kb > 60 ? kb : 0) + 'px'); sceneV++; kick(400); };
-    vv.addEventListener('resize', lift);
-    vv.addEventListener('scroll', lift);
+    const fit = () => {
+      const up = window.innerHeight - vv.height > 80;
+      el.lib.classList.toggle('kb-up', up);
+      el.lib.style.top = up ? vv.offsetTop + 'px' : '';
+      el.lib.style.bottom = up ? 'auto' : '';
+      el.lib.style.height = up ? vv.height + 'px' : '';
+      sceneV++;
+      kick(400);
+    };
+    vv.addEventListener('resize', fit);
+    vv.addEventListener('scroll', fit);
   }
 
   /* ------------------------------------------------------------------ glass */
