@@ -525,7 +525,7 @@
     --lib-top: calc(env(safe-area-inset-top, 0px) + var(--edge));
     --lib-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--edge));
     /* the content column: its margins, how far shelves run past it (out to the screen's edges),
-       and where Explore's heading pins (an edge below the back button) */
+       and where Explore's tabs pin (an edge below the top bar's buttons) */
     --col-l: var(--gutter-l); --col-r: var(--gutter-r);
     --bleed-l: var(--gutter-l); --bleed-r: var(--gutter-r);
     --stick: calc(var(--lib-top) + var(--control) + var(--edge));
@@ -535,38 +535,49 @@
   /* The column grows with the screen up to --content-max. Its margin is either one edge, or wide
      enough to keep the back and profile buttons outside it (an edge, the button, an edge): never
      in between, where a button would sit half over the content. So it runs edge to edge until
-     872 px (720 + 2 × (16 + 44 + 16)), then stops at 720 px, centred. From there the heading
-     pins an edge from the top, beside the back button, and the top needs no fade. */
+     872 px (720 + 2 × (16 + 44 + 16)), then stops at 720 px, centred. */
   @media (min-width: 872px) {
     .library {
       --col-l: calc((100vw - var(--content-max)) / 2); --col-r: var(--col-l);
       --bleed-l: 0px; --bleed-r: 0px;
-      --stick: var(--lib-top);
     }
   }
   .library.is-closing { animation: lib-out var(--dur-state) ease-in forwards; pointer-events: none; }
-  /* the on-screen keyboard is up (library.js fits the library above it): it covers the home indicator, so
-     the search bar keeps only its edge */
+  /* the on-screen keyboard is up: it crops the library from below (library.js sets --kb, its
+     height, and the list's bottom edge and the search bar ride up on it, in step with it). It
+     covers the home indicator, so the search bar keeps only its edge */
+  .library { --kb: 0px; --dur-keyboard: 420ms; }
   .library.kb-up { --lib-bottom: var(--edge); }
+  /* the hidden field iOS opens the keyboard for (library.js): at the top, where it needs no scrolling to;
+     16 px text, or iOS would zoom in on it */
+  .lib-proxy { position: absolute; top: var(--lib-top); left: 50%; width: 1px; height: var(--control); padding: 0; border: 0; opacity: 0; font-size: 16px; caret-color: transparent; pointer-events: none; }
   @keyframes lib-in { from { opacity: 0; } }
   @keyframes lib-out { to { opacity: 0; } }
   /* the content fades to black under the glass, reaching black exactly at the glass's outer
-     edge: the search bar's bottom, the back button's top (on wide screens the button sits beside
-     the column and the top does not fade). The fade follows a smooth S (smoothstep, sampled at
-     quarters: 16 %, 50 %, 84 %), so it has no visible start or end line; the bottom one runs
-     64 px above the bar, so what passes behind the field is dim enough for its text to read */
+     edge: the search bar's bottom, the back button's top. The fade follows a smooth S
+     (smoothstep, sampled at quarters: 16 %, 50 %, 84 %), so it has no visible start or end line;
+     the bottom one runs 64 px above the bar, so what passes behind the field is dim enough for
+     its text to read. At the top, an album cover is dimmed only by half (--top-floor: how much
+     still shows at the black end). Once the small title shows in the top bar (library.js
+     titleCheck), the fade becomes the bar behind it: black down to just under the text, then a
+     short fade to the edge where Explore's tabs pin. The three move between the two smoothly
+     (they are registered, so they can be animated). */
+  @property --top-floor { syntax: '<number>'; inherits: true; initial-value: 0; }
+  @property --top-black { syntax: '<length>'; inherits: true; initial-value: 0px; }
+  @property --top-span { syntax: '<length>'; inherits: true; initial-value: 0px; }
   .lib-scroll {
-    position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+    position: absolute; inset: 0 0 var(--kb) 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch; touch-action: pan-y; scrollbar-width: none;
+    --top-floor: 0;
     --top-black: var(--lib-top);
     --top-span: calc(var(--control) + var(--edge));
     --bottom-black: var(--lib-bottom);
     --bottom-span: calc(var(--control) + 64px);
     --fade: linear-gradient(to bottom,
-      transparent var(--top-black),
-      rgb(0 0 0 / 0.156) calc(var(--top-black) + var(--top-span) * 0.25),
-      rgb(0 0 0 / 0.5) calc(var(--top-black) + var(--top-span) * 0.5),
-      rgb(0 0 0 / 0.844) calc(var(--top-black) + var(--top-span) * 0.75),
+      rgb(0 0 0 / var(--top-floor)) var(--top-black),
+      rgb(0 0 0 / calc(var(--top-floor) + (1 - var(--top-floor)) * 0.156)) calc(var(--top-black) + var(--top-span) * 0.25),
+      rgb(0 0 0 / calc(var(--top-floor) + (1 - var(--top-floor)) * 0.5)) calc(var(--top-black) + var(--top-span) * 0.5),
+      rgb(0 0 0 / calc(var(--top-floor) + (1 - var(--top-floor)) * 0.844)) calc(var(--top-black) + var(--top-span) * 0.75),
       #000 calc(var(--top-black) + var(--top-span)),
       #000 calc(100% - var(--bottom-black) - var(--bottom-span)),
       rgb(0 0 0 / 0.844) calc(100% - var(--bottom-black) - var(--bottom-span) * 0.75),
@@ -575,9 +586,16 @@
       transparent calc(100% - var(--bottom-black)));
     -webkit-mask-image: var(--fade);
     mask-image: var(--fade);
+    transition: --top-floor var(--dur-move) var(--ease), --top-black var(--dur-move) var(--ease), --top-span var(--dur-move) var(--ease),
+      bottom var(--dur-keyboard) var(--ease);
+  }
+  .library.has-hero .lib-scroll { --top-floor: 0.5; }
+  .library.is-titled .lib-scroll {
+    --top-floor: 0;
+    --top-black: calc(var(--lib-top) + var(--control) * 0.75);
+    --top-span: calc(var(--control) * 0.25 + var(--edge));
   }
   .lib-scroll::-webkit-scrollbar { display: none; }
-  @media (min-width: 872px) { .lib-scroll { --top-black: 0px; --top-span: 0px; } }
   .lib-page {
     display: flex; flex-direction: column; gap: 32px;
     padding: calc(var(--lib-top) + var(--control) + var(--edge)) var(--col-r) var(--page-pb) var(--col-l);
@@ -755,17 +773,8 @@
      the same control the search shows at the top; behind the heading the page is black, fading
      out across the tabs so the list shows through them. */
   .explore { min-height: calc(100dvh - var(--stick) - var(--page-pb)); }
-  .explore-head {
-    position: sticky; top: var(--stick); z-index: 2; isolation: isolate;
-    display: flex; flex-direction: column; gap: 12px; padding-bottom: 12px;
-  }
-  .explore-head::before {
-    content: ""; position: absolute; z-index: -1; top: 0; bottom: 0;
-    left: calc(-1 * var(--col-l)); right: calc(-1 * var(--col-r)); pointer-events: none;
-    background: linear-gradient(to bottom, var(--bg) calc(100% - var(--control) - 12px), transparent);
-  }
-  /* once pinned (library.js pinCheck), the black reaches up to the top of the screen */
-  .explore-head.is-pinned::before { top: calc(-1 * var(--stick)); }
+  .explore-mark { height: 0; margin-bottom: -12px; }   /* where the tabs sit in the page (library.js pinCheck) */
+  .explore-tabs { position: sticky; top: var(--stick); z-index: 2; }
   .library .seg { box-shadow: var(--shadow-float); }
 
   /* buttons on a piece's page: one white for the main action, the rest flat */
@@ -825,6 +834,21 @@
   .lib-top .grow { flex: 1; }
   .lib-top .round { width: var(--control); height: var(--control); box-shadow: var(--shadow-float); }
   .lib-top .round svg.filled { fill: currentColor; stroke: none; }
+  /* the page's name, small and centred between the buttons, once its heading has scrolled up
+     under the bar (library.js titleCheck): a piece's or a work's composer under it */
+  .lib-top .lib-title {
+    position: absolute; top: 0; left: calc(var(--control) + var(--gap)); right: calc(var(--control) + var(--gap)); height: var(--control);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 0;
+    text-align: center; pointer-events: none;
+    opacity: 0; transform: translateY(6px);
+    transition: opacity var(--dur-move) var(--ease), transform var(--dur-move) var(--ease);
+  }
+  .lib-top .lib-title.is-on { opacity: 1; transform: none; }
+  .lib-title b, .lib-title small { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 1.25; }
+  .lib-title b { font-size: var(--fs-l); font-weight: 600; }
+  .lib-title small { font-size: var(--fs-xs); color: var(--t2); }
+  .lib-title small:empty { display: none; }
+  .library.is-searching .lib-title { visibility: hidden; }
   /* the search's tabs: from an edge beside the back button to the screen's edge, or the column's
      width once it has stopped growing */
   .lib-scopes { position: absolute; top: 0; left: calc(var(--control) + var(--edge)); right: 0; animation: scopes-in var(--dur-move) var(--ease); }
@@ -833,7 +857,7 @@
   .library.is-searching :is(#libProfile, #libMore) { display: none; }
   /* the menu under the ellipsis, against the right edge */
   .lib-menu { left: auto; right: var(--gutter-r); top: calc(var(--lib-top) + var(--control) + var(--gap)); z-index: 5; transform-origin: calc(100% - 22px) 0; }
-  .lib-bottom { position: absolute; z-index: 4; left: var(--col-l); right: var(--col-r); bottom: var(--lib-bottom); transition: bottom var(--dur-move) var(--ease); }
+  .lib-bottom { position: absolute; z-index: 4; left: var(--col-l); right: var(--col-r); bottom: calc(var(--lib-bottom) + var(--kb)); transition: bottom var(--dur-keyboard) var(--ease); }
   .lib-search {
     display: flex; align-items: center; gap: var(--gap); height: var(--control); padding: 0 4px 0 14px;
     border-radius: 22px; color: var(--c1); box-shadow: var(--shadow-float); cursor: text;
@@ -967,11 +991,14 @@
 <!-- the library: flat content in .lib-scroll; the glass layer (.lib-top, .lib-bottom) over it -->
 <div class="library" id="library" role="dialog" aria-modal="true" aria-label="Library" hidden>
   <div class="lib-scroll" id="libScroll"><div class="lib-page" id="libPage"></div></div>
+  <input type="search" class="lib-proxy" id="libProxy" tabindex="-1" aria-hidden="true" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
 
   <header class="lib-top">
     <button type="button" class="round glass-material" id="libBack" aria-label="Back" title="Back">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5.5-6.5 6.5 6.5 6.5"/></svg>
     </button>
+    <!-- the page's name, once its heading has scrolled away -->
+    <div class="lib-title" id="libTitle" aria-hidden="true"><b></b><small></small></div>
     <!-- while searching: what to search, moved up from Explore's tabs -->
     <div class="seg fit lib-scopes glass-material" id="libScopes" role="group" aria-label="Search in" style="--n:3;--i:0" hidden>
       <button type="button" data-tab="pieces" aria-pressed="true">Pieces</button>

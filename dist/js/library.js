@@ -31,7 +31,7 @@
     back: $('libBack'), scopes: $('libScopes'), profile: $('libProfile'),
     more: $('libMore'), menu: $('libMenu'), share: $('libShare'), shareNote: $('libShareNote'),
     bottom: $('libBottom'), search: $('libSearch'), query: $('libQuery'), clear: $('libClear'),
-    menuBtn: $('menuBtn'), file: $('fileInput'),
+    menuBtn: $('menuBtn'), file: $('fileInput'), title: $('libTitle'),
   };
 
   const L = { open: false, data: null, stack: [{ view: 'home' }], query: '', tab: 'pieces', thumbs: [], prints: new Map() };
@@ -178,7 +178,9 @@
   function head(page, title, lines, extra, art) {
     const h = make('header', 'lib-head' + (art ? ' with-cover' : ''));
     const text = art ? make('div', 'head-text') : h;
-    text.appendChild(make('h1', '', title, 'text'));
+    const h1 = make('h1', '', title, 'text');
+    h1.dataset.title = title;
+    text.appendChild(h1);
     for (const line of lines) if (line) text.appendChild(typeof line === 'string' ? make('p', '', line, 'text') : line);
     if (extra) text.appendChild(extra);
     if (art) h.append(art, text);
@@ -405,13 +407,13 @@
     return `<path d="${oval(r, 1.18 * r)}${oval(0.6 * r, 1.03 * r)}" fill="currentColor" fill-rule="evenodd"/>` +
       `<path d="M${x - 1.85 * r} ${y}H${x + 1.85 * r}M${x} ${y - 1.95 * r}V${y + 1.95 * r}" stroke="currentColor" stroke-width="0.3" stroke-linecap="butt"/>`;
   };
-  /* the same piece at each corner of a frame, turned to face inward: a bracket, two arcs, a coda
+  /* the same piece at each corner of a frame, turned to face inward: a bracket, a lozenge, a coda
      sign or a star */
   function corners(pick, at) {
     const style = pick(4), out = [];
     for (const [x, y, dx, dy] of [[at, at, 1, 1], [100 - at, at, -1, 1], [at, 100 - at, 1, -1], [100 - at, 100 - at, -1, -1]]) {
       if (style === 0) out.push(`<path d="M${x + dx * 7} ${y}H${x}V${y + dy * 7}" ${stroke(0.5)}/><circle cx="${x + dx * 2.2}" cy="${y + dy * 2.2}" r="0.7" fill="currentColor"/>`);
-      else if (style === 1) out.push(`<path d="M${x + dx * 8} ${y}A8 8 0 0 ${dx * dy > 0 ? 0 : 1} ${x} ${y + dy * 8}M${x + dx * 5} ${y}A5 5 0 0 ${dx * dy > 0 ? 0 : 1} ${x} ${y + dy * 5}" ${stroke(0.35)}/>`);
+      else if (style === 1) out.push(`<path d="M${x + dx * 2.8} ${y + dy * 0.6}L${x + dx * 5} ${y + dy * 2.8}L${x + dx * 2.8} ${y + dy * 5}L${x + dx * 0.6} ${y + dy * 2.8}Z" ${stroke(0.35)}/>` + CENTRE[0](x + dx * 2.8, y + dy * 2.8, 0.85));
       else if (style === 2) out.push(coda(x + dx * 2.8, y + dy * 2.8, 1.5));
       else out.push(CENTRE[4](x + dx * 2.6, y + dy * 2.6, 1.6));
     }
@@ -571,7 +573,10 @@
     glow.style.setProperty('--mesh', art.style.getPropertyValue('--mesh'));
     h.append(glow, art);
     const text = make('div', 'hero-text');
-    text.appendChild(make('h1', '', title, 'text'));
+    const h1 = make('h1', '', title, 'text');
+    h1.dataset.title = title;
+    h1.dataset.sub = L.data.comp.get(e.composer).name;
+    text.appendChild(h1);
     for (const line of lines) if (line) text.appendChild(typeof line === 'string' ? make('p', '', line, 'text') : line);
     if (extra) text.appendChild(extra);
     h.appendChild(text);
@@ -650,12 +655,15 @@
       shelf.appendChild(uploadCard());
       for (const r of recent.slice(0, HOME_RECENTS)) shelf.appendChild(card(r));
       s.appendChild(shelf);
-      /* Explore's heading and tabs pin at the top; the list runs on beneath them */
+      /* Explore's heading scrolls up under the top bar, where it becomes the small title; its
+         tabs pin beneath the bar, and the list runs on under them. The mark holds the tabs'
+         place in the page, which a pinned bar no longer tells */
       const x = make('section', 'lib-sec explore');
-      const top = make('div', 'explore-head');
-      top.appendChild(make('h2', '', 'Explore', 'text'));
-      top.appendChild(tabsControl());
-      x.appendChild(top);
+      const h2 = make('h2', '', 'Explore', 'text');
+      h2.dataset.title = 'Explore';
+      const tabs = make('div', 'explore-tabs');
+      tabs.appendChild(tabsControl());
+      x.append(h2, make('div', 'explore-mark'), tabs);
       L.exploreList = make('div', 'explore-list');
       L.exploreList.appendChild(exploreContent());
       x.appendChild(L.exploreList);
@@ -681,12 +689,12 @@
     },
     pieces(page, item) {
       const c = L.data.comp.get(item.id);
-      head(page, 'Pieces', [c.full]);
+      head(page, 'Pieces', [c.full]).querySelector('h1').dataset.sub = c.name;
       page.appendChild(rows(L.data.leaves.filter((e) => e.composer === c.id).sort(byFame), 'one'));
     },
     works(page, item) {
       const c = L.data.comp.get(item.id);
-      head(page, 'Works', [c.full]);
+      head(page, 'Works', [c.full]).querySelector('h1').dataset.sub = c.name;
       page.appendChild(rows(L.data.tops.filter((e) => e.composer === c.id).sort(byCatalogue), 'work'));
     },
 
@@ -803,7 +811,6 @@
 
     const s = section(page, 'Sheet music');
     if (!own) { s.appendChild(make('p', 'lib-note', 'This piece has no score of its own yet' + (file ? ': Play opens it within ' + workName(file) + '.' : '.'), 'text')); return; }
-    s.appendChild(make('p', 'lib-note', 'A4, the same layout for every piece in the library. Download it as a PDF to print or keep.', 'text'));
     const pages = make('div', 'pages');
     const box = make('div', 'carousel');
     box.appendChild(pages);
@@ -998,6 +1005,8 @@
     } else if (searching) VIEWS.search(page);
     else { const top = L.stack[L.stack.length - 1]; VIEWS[top.view](page, top); }
     if (enter) { page.classList.remove('is-entering'); void page.offsetWidth; page.classList.add('is-entering'); }
+    el.lib.classList.toggle('has-hero', !!page.querySelector('.hero'));
+    L.titled = undefined;
     syncScopes();
     fitShelves();
     flushThumbs();
@@ -1096,7 +1105,8 @@
   }
   el.query.addEventListener('input', onQuery);
   el.query.addEventListener('keydown', (e) => { if (e.key === 'Enter') el.query.blur(); });
-  el.clear.addEventListener('click', (e) => { e.preventDefault(); el.query.value = ''; onQuery(); el.query.focus(); });
+  /* clearing keeps the keyboard as it was: up if it was up, and not opened (iOS would slide the page to the field) */
+  el.clear.addEventListener('click', (e) => { e.preventDefault(); const typing = document.activeElement === el.query; el.query.value = ''; onQuery(); if (typing) el.query.focus(); });
   /* the scopes in the glass layer: the same choice as Explore's tabs */
   function syncScopes() {
     for (const b of el.scopes.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.tab === L.tab));
@@ -1143,49 +1153,81 @@
   }
   TOUCH.addEventListener('change', () => { if (L.open && L.data) render(false); });
   for (const b of el.scopes.querySelectorAll('button')) b.addEventListener('click', () => setTab(b.dataset.tab));
-  /* The on-screen keyboard. iOS slides the whole page up to bring the field into view, which
-     pushed the top of the library (what you want to see while typing) off the screen. Instead the
-     library fits itself to what the keyboard leaves of the screen: its top stays at the top of
-     what you see, its search bar sits on the keyboard, and the list in between gets shorter: the
-     keyboard crops the bottom off rather than pushing the top away.
-     While a field in the library has focus, the library is sized to the visible area (the visual
-     viewport) and placed wherever iOS has panned it to. Whether a keyboard is up is judged against
-     the layout viewport (clientHeight), which the keyboard leaves alone; window.innerHeight can
-     shrink with it on iOS, so it cannot tell. */
+  /* The on-screen keyboard crops the library from below, and nothing else moves: the library
+     keeps covering the whole screen (so nothing of the player shows around the keyboard), the
+     list's bottom edge and the search bar ride up on the keyboard (--kb, its height), and the
+     top stays where it is, from the moment the keyboard starts to rise to when it is gone.
+     iOS would otherwise slide the whole page up to bring the search field into view, since the
+     field sits where the keyboard is about to be. So on iOS a touch on the search bar does not
+     focus the field itself: it focuses a hidden field at the top of the screen (#libProxy),
+     which iOS has no need to scroll to, and its text is copied into the search as it is typed.
+     Once the keyboard is up and the search bar sits on it, the real field takes over (the
+     keyboard stays up when focus moves between fields), with its caret.
+     The keyboard's height is known only once it is up, so the crop starts with the height it had
+     last time (kept per orientation), or a guess, and settles on the real one as iOS reports it.
+     Heights are judged against the layout viewport (clientHeight), which the keyboard leaves
+     alone; window.innerHeight can shrink with it on iOS. */
   if (window.visualViewport) {
     const vv = window.visualViewport;
-    const typing = () => {
-      const a = document.activeElement;
-      return !!a && el.lib.contains(a) && (a.isContentEditable || a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
+    const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const proxy = $('libProxy');
+    const field = (a) => !!a && el.lib.contains(a) && (a.isContentEditable || a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
+    const typing = () => L.open && field(document.activeElement);
+    const portrait = () => (innerWidth < innerHeight ? 'p' : 'l');
+    const remembered = () => { try { return JSON.parse(localStorage.getItem('fb.keyboard') || '{}'); } catch (err) { return {}; } };
+    const guess = () => remembered()[portrait()] || Math.round(document.documentElement.clientHeight * (portrait() === 'p' ? 0.45 : 0.55));
+    let kb = 0;
+    const setKb = (px) => {
+      px = Math.max(0, Math.round(px));
+      if (px === kb) return;
+      kb = px;
+      el.lib.style.setProperty('--kb', px + 'px');
+      el.lib.classList.toggle('kb-up', px > 80);
+      sceneUntil = performance.now() + 500;   // the search bar's glass follows it up
+      kick(500);
     };
-    let fitted = false;
+    /* what the keyboard hides, once iOS says; while it is rising, the height expected */
+    let rising = 0;
     const fit = () => {
-      const on = L.open && typing();
-      if (!on && !fitted) return;
-      fitted = on;
-      el.lib.classList.toggle('kb-up', on && document.documentElement.clientHeight - vv.height > 80);
-      el.lib.style.top = on ? vv.offsetTop + 'px' : '';
-      el.lib.style.bottom = on ? 'auto' : '';
-      el.lib.style.height = on ? vv.height + 'px' : '';
-      sceneV++;
-      kick(400);
+      const hidden = document.documentElement.clientHeight - vv.height;
+      if (!typing()) { if (!rising) setKb(0); return; }
+      if (hidden > 80) {
+        rising = 0;
+        try { localStorage.setItem('fb.keyboard', JSON.stringify({ ...remembered(), [portrait()]: hidden })); } catch (err) { /* private mode */ }
+        setKb(hidden);
+        handOver();
+      } else if (!rising) setKb(0);   // a hardware keyboard: nothing to crop
+      /* if iOS slid the page anyway, the library goes with it, so its top stays in view */
+      el.lib.style.transform = vv.offsetTop > 0 ? 'translateY(' + vv.offsetTop + 'px)' : '';
     };
-    /* iOS reports the keyboard in steps as it slides in, so fit again once it has settled. Once
-       the library is short enough for the field to show above the keyboard, the pan iOS made to
-       reach it is undone (once per focus, so it never fights iOS), and the keyboard simply covers
-       what was the bottom of the screen. */
-    let unpanned = false;
-    const unpan = () => {
-      if (!fitted || unpanned || vv.offsetTop <= 0) return;
-      unpanned = true;
-      window.scrollTo(0, 0);
-      fit();
-    };
-    const settle = () => { if (!typing()) unpanned = false; fit(); setTimeout(fit, 120); setTimeout(() => { fit(); unpan(); }, 400); };
     vv.addEventListener('resize', fit);
     vv.addEventListener('scroll', fit);
-    el.lib.addEventListener('focusin', settle);
-    el.lib.addEventListener('focusout', () => setTimeout(settle, 0));
+    el.lib.addEventListener('focusin', () => { fit(); setTimeout(fit, 150); setTimeout(fit, 500); });
+    el.lib.addEventListener('focusout', () => setTimeout(() => { if (!typing() && !handing) { rising = 0; setKb(0); fit(); } }, 0));
+
+    /* iOS: start the keyboard from the hidden field */
+    let handing = false;
+    function handOver() {
+      if (document.activeElement !== proxy) return;
+      handing = true;
+      el.query.focus({ preventScroll: true });
+      const n = el.query.value.length;
+      try { el.query.setSelectionRange(n, n); } catch (err) { /* type=search may refuse */ }
+      handing = false;
+    }
+    if (IOS && proxy) {
+      el.search.addEventListener('touchend', (e) => {
+        if (!L.open || typing() || e.target.closest('button')) return;
+        e.preventDefault();   // no focus (and no scroll) on the field under the finger
+        proxy.value = el.query.value;
+        proxy.focus({ preventScroll: true });
+        rising = performance.now();
+        setKb(guess());
+        setTimeout(() => { if (rising && performance.now() - rising >= 1400) { rising = 0; fit(); } }, 1500);
+      }, { passive: false });
+      proxy.addEventListener('input', () => { el.query.value = proxy.value; el.query.dispatchEvent(new Event('input', { bubbles: true })); });
+      proxy.addEventListener('keydown', (e) => { if (e.key === 'Enter') proxy.blur(); });
+    }
   }
 
   /* ------------------------------------------------------------------ glass */
@@ -1215,6 +1257,7 @@
   function frame(ms) {
     frameQueued = false;
     if (!L.open || !glass) return;
+    if (performance.now() < sceneUntil) sceneV++;
     glass.update(el.lib.clientWidth, el.lib.clientHeight, ms, paint, String(sceneV));
     if (ms < busyUntil) kick();
   }
@@ -1267,42 +1310,88 @@
     }
     /* black from `black` to `clear`, through the given stops ([position 0-1, how much shows]), as
        the CSS masks and covers do */
-    const fade = (black, clear, fromTop, stops = []) => {
+    const fade = (black, clear, fromTop, stops = [], floor = 0) => {
+      const k = 1 - floor;   // how black the black end is: a floor of 0.5 leaves half showing
       const g = ctx.createLinearGradient(0, black, 0, clear);
-      g.addColorStop(0, css.bg);
-      for (const [at, shows] of stops) g.addColorStop(at, 'rgba(0,0,0,' + (1 - shows) + ')');
+      g.addColorStop(0, 'rgba(0,0,0,' + k + ')');
+      for (const [at, shows] of stops) g.addColorStop(at, 'rgba(0,0,0,' + k * (1 - shows) + ')');
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
       ctx.fillRect(0, Math.min(black, clear), root.width, Math.abs(clear - black));
-      ctx.fillStyle = css.bg;
+      ctx.fillStyle = 'rgba(0,0,0,' + k + ')';
       if (fromTop) ctx.fillRect(0, 0, root.width, black); else ctx.fillRect(0, black, root.width, root.height - black);
     };
     if (L.viewer) return;
-    /* Explore's pinned heading hides the list above its tabs */
-    const head = el.page.querySelector('.explore-head.is-pinned');
-    if (head) { const r = head.getBoundingClientRect(); fade(r.bottom - root.top - 12 - parseFloat(getComputedStyle(head.lastChild).height), r.bottom - root.top, true); }
-    /* the same smooth S as the CSS mask (index.html .lib-scroll) */
+    /* the same smooth S as the CSS mask (index.html .lib-scroll), read from it as it changes */
     const S_CURVE = [[0.25, 0.156], [0.5, 0.5], [0.75, 0.844]];
-    const back = el.back.getBoundingClientRect();
-    if (!WIDE.matches && back.height) fade(back.top - root.top, back.bottom - root.top + 16, true, S_CURVE);
+    const sc = getComputedStyle(el.scroll);
+    const tb = parseFloat(sc.getPropertyValue('--top-black')), ts = parseFloat(sc.getPropertyValue('--top-span'));
+    if (ts > 0) fade(tb, tb + ts, true, S_CURVE, parseFloat(sc.getPropertyValue('--top-floor')) || 0);
     const bar = el.bottom.getBoundingClientRect();
     if (bar.height) fade(bar.bottom - root.top, bar.top - 64 - root.top, false, S_CURVE);
   }
   /* from 872 px the back button sits beside the column (index.html .library) */
   const WIDE = window.matchMedia('(min-width: 872px)');
-  /* the Explore heading is pinned once it reaches its place under the back button */
-  /* measured on the layout (the scroll position against where the section starts), not on screen:
-     a fresh page starts its entrance 12 px low, which would read as "not pinned yet" */
-  function pinCheck() {
-    const head = el.page.querySelector('.explore-head');
-    if (!head) return;
-    const b = el.back.getBoundingClientRect(), top = el.scroll.getBoundingClientRect().top;
-    const stick = (WIDE.matches ? b.top : b.bottom + 16) - top;
-    head.classList.toggle('is-pinned', el.scroll.scrollTop >= head.parentElement.offsetTop - stick - 0.5);
+  /* Positions are measured on the layout (offsets within the scrolling page), not on screen: a
+     fresh page starts its entrance 12 px low, which would read as "not there yet" */
+  const layoutTop = (node) => { let y = 0; for (let n = node; n && n !== el.scroll; n = n.offsetParent) y += n.offsetTop; return y; };
+  const STILL = window.matchMedia('(prefers-reduced-motion: reduce)');
+  /* how fast the page is being scrolled, in px per ms; a jump (a page put back where it was left)
+     is not a scroll */
+  let lastTop = 0, lastAt = 0, speed = 0;
+  function trackSpeed() {
+    const t = performance.now(), y = el.scroll.scrollTop, dy = y - lastTop, dt = t - lastAt;
+    speed = dt > 0 && dt < 120 && Math.abs(dy) < 400 ? dy / dt : 0;
+    lastTop = y; lastAt = t;
+  }
+  /* Explore's tabs pin once they reach their place under the top bar. Arriving there they carry
+     on a little and settle back, more the faster they came, rather than stopping dead */
+  function pinCheck(scrolled) {
+    const tabs = el.page.querySelector('.explore-tabs'), mark = el.page.querySelector('.explore-mark');
+    if (tabs && mark) {
+      const was = tabs.classList.contains('is-pinned');
+      const pinned = el.scroll.scrollTop >= layoutTop(mark) - parseFloat(getComputedStyle(tabs).top) - 0.5;
+      tabs.classList.toggle('is-pinned', pinned);
+      if (pinned && !was && scrolled === true && speed > 0.05 && !STILL.matches) {
+        const k = Math.min(8, 2 + speed * 5);
+        tabs.animate([
+          { transform: 'translateY(0)', easing: 'cubic-bezier(0.2, 0.7, 0.35, 1)' },
+          { transform: 'translateY(' + (-k).toFixed(1) + 'px)', offset: 0.3, easing: 'cubic-bezier(0.45, 0, 0.25, 1)' },
+          { transform: 'translateY(0)' },
+        ], { duration: 520 });
+        kick(560);
+      }
+    }
+    titleCheck();
     sceneV++;
     kick();
   }
-  el.scroll.addEventListener('scroll', () => { pinCheck(); sceneV++; kick(); }, { passive: true });
+  /* The page's name, small, in the middle of the top bar once its heading has gone up under the
+     bar (as iOS does): the last heading marked with data-title that has passed the bar's bottom,
+     so on the home it reads Library, then Explore. While it shows, the top fade turns into a
+     bar: black down to just under the text, so nothing behind it gets in its way. */
+  let sceneUntil = 0;
+  function titleCheck() {
+    let on = null;
+    if (!L.viewer && !L.query.trim()) {
+      const line = el.back.getBoundingClientRect().bottom - el.scroll.getBoundingClientRect().top + el.scroll.scrollTop;
+      for (const h of el.page.querySelectorAll('[data-title]')) if (layoutTop(h) + h.offsetHeight < line) on = h;
+    }
+    const key = on ? on.dataset.title + '|' + (on.dataset.sub || '') : '';
+    if (key === L.titled) return;
+    const was = L.titled;
+    L.titled = key;
+    if (on) {
+      el.title.firstElementChild.textContent = on.dataset.title;
+      el.title.lastElementChild.textContent = on.dataset.sub || '';
+      if (was) el.title.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
+    }
+    el.title.classList.toggle('is-on', !!on);
+    el.lib.classList.toggle('is-titled', !!on);
+    sceneUntil = performance.now() + 400;   // the fade changes over --dur-move: repaint the glass's scene meanwhile
+    kick(400);
+  }
+  el.scroll.addEventListener('scroll', () => { trackSpeed(); pinCheck(true); sceneV++; kick(); }, { passive: true });
   el.page.addEventListener('scroll', () => { sceneV++; kick(); }, { passive: true, capture: true });
   el.lib.addEventListener('pointerdown', () => kick(500), true);
   el.lib.addEventListener('pointerup', () => kick(500), true);
