@@ -107,6 +107,8 @@
       else if (CATS[t] !== undefined && i + 1 < toks.length && (/^\d/.test(toks[i + 1]) || (t === 'hob' && ROMAN[toks[i + 1]]))) { name = CATS[t]; }
       else if (/^(no|nr|n|number)$/.test(t) && i + 1 < toks.length && /^\d+$/.test(toks[i + 1])) { name = ''; }
       else if (!/^\d+[a-z]?$/.test(t) && !/^#\d+$/.test(t)) { rest.push(t); continue; }
+      /* a count before a plural genre is not a number to find: "24 preludes", "6 partitas" */
+      else if (/^\d+$/.test(t) && i + 1 < toks.length && PLURAL_WORD.test(toks[i + 1])) continue;
       /* a year ("1838") is not a catalogue number */
       else if (/^1[5-9]\d\d$/.test(t)) continue;
       else { name = ''; i--; }
@@ -129,6 +131,7 @@
       .filter((g, _, all) => !(g.name === '' && g.nums.length === 1 && all.some((h) => h.name && h.nums[h.nums.length - 1] === g.nums[0])));
     return { text: rest.join(' '), groups: kept };
   }
+  const PLURAL_WORD = /^(preludes|preludios|etudes|studies|mazurkas|nocturnes|waltzes|valses|polonaises|impromptus|ballades|scherzos|scherzi|inventions|sinfonias|bagatelles|intermezzi|rhapsodies|pieces|stucke|klavierstucke|morceaux|dances|tanze|landler|ecossaises|minuets|menuets|marches|consolations|partitas|suites|sonatas|sonatinas|fugues|variations|songs|lieder|moments|fantasies|caprices|romances|novelletten|canons)$/;
   const NUMBERED = /^(book|livre|heft|vol|volume|cahier|teil|part|no|nr|suite|partita|sonata|sonate|prelude|fugue|invention|sinfonia|consolation|consolations|liebestraum|ballade|scherzo|impromptu|etude|study|nocturne|waltz|valse|mazurka|polonaise|rhapsody|bagatelle|intermezzo|menuet|minuet|movement|satz)$/;
   let genreWord = () => false;
   const MOVEMENT = /^(movement|movements|mvt|mvmt|mov|satz|mouvement|mvmnt)$/;
@@ -185,6 +188,8 @@
         for (const a of p.alt || []) put(a, 5);
         /* the book it is in: "wtc 1 prelude 1", "debussy preludes 2 voiles" */
         if (depth === 1) for (const t of [p.title, ...(p.alt || [])]) { const b = t.match(BOOK); if (b) seqs.push({ name: '', nums: [String(ROMAN[b[1].toLowerCase()] || b[1])], weak: true }); }
+        /* and the work's own number: "Piano Sonata No. 14 ... II" is a movement of No. 14 */
+        if (depth === 1 && e.kind === 'movement') { const no = (p.title || '').match(/\bNo\.?\s*(\d+)/); if (no) seqs.push({ name: '', nums: [no[1]], weak: true }); }
         if (p.genre) for (const f of (genreByName.get(p.genre) || { forms: [] }).forms) put(f, 3);
         /* a movement is found by its work's numbers and its own place: "moonlight 3", "op 27 2 3" */
         if (e.kind === 'movement' && depth === 1) for (const c of p.cat || []) { const s = catSeq(c); if (s) seqs.push({ name: s.name, nums: [...s.nums, String(e.number)], weak: true }); }
@@ -292,15 +297,15 @@
            catalogue number matched exactly, other catalogues only cost points */
         for (const g of missed) { if (exact && g.name) score -= 20; else { ok = false; break; } }
         if (!ok) continue;
-        let matched = 0, named = 0;
+        let matched = 0, named = 0, nicked = 0;
         for (const w of qwords) {
           let best = 0;
           for (const [t, f] of expand(w)) { const weight = d.terms.get(t); if (weight) best = Math.max(best, weight * f); }
           /* "named": a title or nickname word that is not just a genre ("Raindrop", not "waltz") */
-          if (best) { matched++; score += best * 3; if (best >= 9 && !genreWord(w)) named++; } else score -= 12;
+          if (best) { matched++; score += best * 3; if (best >= 9 && !genreWord(w)) named++; if (best >= 12) nicked++; } else score -= 12;
         }
         /* how it matched, for callers that need to judge a match (the score-file matcher) */
-        const why = { key: !!(k.key && d.key), groups: n.groups.length, words: qwords.length, matched, named };
+        const why = { key: !!(k.key && d.key), groups: n.groups.length, words: qwords.length, matched, named, nicked };
         if (qwords.length && !matched) continue;
         if (!k.key && !n.groups.length && !qwords.length && !c.ids.size) continue;
         /* popular and named works first; movements and early versions after whole pieces */

@@ -121,7 +121,9 @@ function matchOf(r, composer) {
   let found = null;
   /* a catalogue number found it; bare numbers ("Waltz No.2") are not enough without a name */
   if (w.groups > 0 && (w.named > 0 || w.key || /\b(op|opus|bwv|kv?|d|s|hob|woo|l|m|b|kk|mwv|th|cd)\.?\s*\d/.test(text))) found = 'number';
-  else if (w.words && w.matched === w.words && w.named > 0 && !rival) found = 'title';
+  /* by title alone: every word matched, and two distinctive words or a nickname ("Round",
+     "Arietta" or "Air by Haydn" alone match too much) */
+  else if (w.words && w.matched === w.words && (w.named >= 2 || w.nicked > 0) && !rival) found = 'title';
   if (!found) return null;
   return { entry: movementOf(top.entry, text) || top.entry, how: found, query: text };
 }
