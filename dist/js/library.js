@@ -1191,24 +1191,35 @@
     /* what the keyboard hides, once iOS says; while it is rising, the height expected */
     let rising = 0;
     const fit = () => {
+      /* if iOS slid the page after all, the library goes with it, so its top stays in view; once
+         nothing is being typed it is back where it belongs, whatever iOS reports */
+      el.lib.style.transform = typing() && vv.offsetTop > 0 ? 'translateY(' + vv.offsetTop + 'px)' : '';
       const hidden = document.documentElement.clientHeight - vv.height;
       if (!typing()) { if (!rising) setKb(0); return; }
       if (hidden > 80) {
         rising = 0;
         try { localStorage.setItem('fb.keyboard', JSON.stringify({ ...remembered(), [portrait()]: hidden })); } catch (err) { /* private mode */ }
         setKb(hidden);
-        handOver();
+        handOverSoon();
       } else if (!rising) setKb(0);   // a hardware keyboard: nothing to crop
-      /* if iOS slid the page anyway, the library goes with it, so its top stays in view */
-      el.lib.style.transform = vv.offsetTop > 0 ? 'translateY(' + vv.offsetTop + 'px)' : '';
     };
     vv.addEventListener('resize', fit);
     vv.addEventListener('scroll', fit);
     el.lib.addEventListener('focusin', () => { fit(); setTimeout(fit, 150); setTimeout(fit, 500); });
     el.lib.addEventListener('focusout', () => setTimeout(() => { if (!typing() && !handing) { rising = 0; setKb(0); fit(); } }, 0));
 
-    /* iOS: start the keyboard from the hidden field */
-    let handing = false;
+    /* iOS: start the keyboard from the hidden field. The real field takes over only once the
+       search bar has finished riding up and sits wholly above the keyboard: while it is still
+       under it, iOS would slide the page up to reach it */
+    let handing = false, handTimer = 0;
+    function handOverSoon(tries = 0) {
+      clearTimeout(handTimer);
+      if (document.activeElement !== proxy) return;
+      const moving = el.bottom.getAnimations().length > 0;
+      const covered = el.search.getBoundingClientRect().bottom > vv.offsetTop + vv.height - 1;
+      if ((moving || covered) && tries < 30) { handTimer = setTimeout(() => handOverSoon(tries + 1), 50); return; }
+      if (!covered) handOver();   // still covered after 1.5 s: stay on the hidden field, which types just the same
+    }
     function handOver() {
       if (document.activeElement !== proxy) return;
       handing = true;
