@@ -70,8 +70,154 @@
         return b.replace(/<direction\b[^>]*>/, '<direction placement="below">');
       });
     }
+    x = tidyRests(x);
     if (/<part-list>/.test(x)) x = x.replace(/<part-list>/, defaults + '<part-list>');
     return x;
+  }
+
+  /* Rests. Files often pin rests to odd heights (below the bass staff, above the treble), and a
+     staff with two voices repeats rests the reader does not need. In each measure, staff by staff:
+       - no rest keeps a pinned height: a rest alone in a silence sits on the middle line, and a
+         rest beside another voice's notes is placed by MuseScore, above or below them;
+       - rests stay unless dropping one cannot blur the rhythm. A rest is hidden only when its
+         voice plays nothing in the bar, when it follows the voice's last note in the bar, when
+         the voice's next note starts together with the other voice's (the alignment shows the
+         entry), or when two voices rest at once (one centred rest shows the silence);
+       - where both voices are single-note lines (counterpoint: fugues, inventions, inner
+         voices), every rest stays, since each voice's silences matter there.
+     Hidden rests still hold their time, so nothing moves; playback reads the original file. */
+  /* staff positions in diatonic steps (C4 = 28), and back to display-step and display-octave */
+  const STEPS = 'CDEFGAB';
+  const middleOf = (clef) => { const ref = { G: [4, 4], F: [3, 3], C: [0, 4] }[clef.sign]; return ref ? ref[0] + ref[1] * 7 + (3 - clef.line) * 2 + clef.octave * 7 : null; };
+  const display = (pos) => ({ step: STEPS[((pos % 7) + 7) % 7], octave: Math.floor(pos / 7) });
+  const stepOf = (note) => { const m = /<pitch>[\s\S]*?<step>\s*([A-G])[\s\S]*?<octave>\s*(-?\d+)/.exec(note); return m ? STEPS.indexOf(m[1]) + +m[2] * 7 : null; };
+  /* how far a rest reaches up and down from its position, in steps, by type */
+  const REACH = { whole: 1, half: 1, quarter: 3, eighth: 2, '16th': 3, '32nd': 4, '64th': 5 };
+  function middleLine(clef, raise = 0) {
+    const mid = middleOf(clef);
+    return mid === null ? null : display(mid + raise);
+  }
+  /* where a shown rest goes: on the middle line when the staff is otherwise silent; beside other
+     voices' notes, on its own voice's side of them (above them for a higher voice, below for a
+     lower one), on the middle line when they leave room, else just clear of the nearest note.
+     `lift` undoes the offset MuseScore will add itself. */
+  function placeRest(r, notes, order, lift, beside) {
+    const mid = middleOf(r.clef);
+    if (mid === null) return null;
+    const others = beside ? notes.filter((n) => n.voice !== r.voice && n.start < r.end && n.end > r.start && n.step !== null).map((n) => n.step) : [];
+    if (!others.length) return display(mid + lift);
+    const gap = (REACH[(/<type>\s*(\w+)/.exec(r.text) || [])[1]] || 3) + 2;
+    const mineAvg = avg(notes.filter((n) => n.voice === r.voice).map((n) => n.step));
+    const theirAvg = avg(others);
+    const below = mineAvg !== null && theirAvg !== null ? mineAvg < theirAvg : order.indexOf(r.voice) > 0;
+    const pos = below ? Math.min(mid, Math.min(...others) - gap) : Math.max(mid, Math.max(...others) + gap);
+    return display(pos + lift);
+  }
+  const avg = (list) => { const l = list.filter((v) => v !== null); return l.length ? l.reduce((a, b) => a + b, 0) / l.length : null; };
+  function tidyRests(xml) {
+    return xml.replace(/<part\b[^>]*>[\s\S]*?<\/part>/g, (part) => tidyPart(part));
+  }
+  function tidyPart(part) {
+    /* clefs in force, by staff, carried from measure to measure */
+    const clefs = {};
+    const readClefs = (s) => {
+      for (const c of s.matchAll(/<clef\b([^>]*)>([\s\S]*?)<\/clef>/g)) {
+        const n = (/number="(\d+)"/.exec(c[1]) || [])[1] || '1';
+        clefs[n] = { sign: (/<sign>\s*(\w+)/.exec(c[2]) || [])[1], line: +((/<line>\s*(\d+)/.exec(c[2]) || [])[1] || (/<sign>\s*F/.test(c[2]) ? 4 : 2)), octave: +((/<clef-octave-change>\s*(-?\d+)/.exec(c[2]) || [])[1] || 0) };
+      }
+    };
+    return part.replace(/<measure\b[^>]*>[\s\S]*?<\/measure>/g, (measure) => {
+      const items = [];
+      let t = 0, last = 0;
+      for (const m of measure.matchAll(/<note\b[^>]*>[\s\S]*?<\/note>|<backup>[\s\S]*?<\/backup>|<forward>[\s\S]*?<\/forward>|<attributes>[\s\S]*?<\/attributes>/g)) {
+        const s = m[0];
+        if (s.startsWith('<attributes')) { readClefs(s); continue; }
+        const dur = +((/<duration>\s*(\d+)/.exec(s) || [])[1] || 0);
+        if (s.startsWith('<backup')) { t -= dur; continue; }
+        if (s.startsWith('<forward')) { t += dur; continue; }
+        if (/<grace\b/.test(s) || /<cue\s*\/>/.test(s)) continue;
+        const start = /<chord\s*\/>/.test(s) ? last : t;
+        if (!/<chord\s*\/>/.test(s)) { last = t; t += dur; }
+        const staff = (/<staff>\s*(\d+)/.exec(s) || [])[1] || '1';
+        items.push({
+          step: stepOf(s),
+          at: m.index, text: s, start, end: start + dur,
+          rest: /<rest\b/.test(s),
+          chord: /<chord\s*\/>/.test(s),
+          voice: (/<voice>\s*([^<\s]+)/.exec(s) || [])[1] || '1',
+          staff,
+          clef: clefs[staff] || (staff === '2' ? { sign: 'F', line: 4, octave: 0 } : { sign: 'G', line: 2, octave: 0 }),
+        });
+      }
+      /* rests the file already hides are left as they are, and do not count */
+      const rests = items.filter((i) => i.rest && !/^<note\b[^>]*print-object="no"/.test(i.text));
+      if (!rests.length) return measure;
+      const change = new Map();
+      for (const staff of new Set(items.map((i) => i.staff))) {
+        /* MuseScore numbers a staff's voices by all of them, hidden rests included (allVoices sets
+           which rests it lowers); the decisions only look at what is shown */
+        const allVoices = [...new Set(items.filter((i) => i.staff === staff).map((i) => i.voice))].sort((a, b) => +a - +b || a.localeCompare(b));
+        const mine = items.filter((i) => i.staff === staff && !(i.rest && !rests.includes(i)));
+        const voices = [...new Set(mine.map((i) => i.voice))].sort((a, b) => +a - +b || a.localeCompare(b));
+        const notes = mine.filter((i) => !i.rest && i.end > i.start);
+        /* counterpoint: two or more voices with notes, and almost no chords among their notes */
+        const sounding = new Set(notes.map((n) => n.voice));
+        const onsets = notes.filter((n) => !n.chord).length;
+        const chords = new Set(notes.filter((n) => n.chord).map((n) => n.voice + '@' + n.start)).size;
+        const counterpoint = sounding.size > 1 && onsets > 0 && chords / onsets <= 0.15;
+        const staffRests = rests.filter((i) => i.staff === staff);
+        const sounding_ = (a, b) => notes.some((n) => n.start < b && n.end > a);
+        /* the voices from top to bottom, by their average pitch here (a voice with no notes keeps
+           its place in the file's order) */
+        const order = voices.map((v, i) => ({ v, at: avg(notes.filter((n) => n.voice === v).map((n) => n.step)), i }))
+          .sort((a, b) => (b.at === null || a.at === null ? a.i - b.i : b.at - a.at)).map((x) => x.v);
+        if (voices.length < 2) {
+          /* one voice: its rests stay */
+          for (const r of staffRests) change.set(r, false);
+        } else if (counterpoint) {
+          /* counterpoint keeps its rests, except a voice's that plays nothing in the bar */
+          for (const r of staffRests) change.set(r, !notes.some((n) => n.voice === r.voice));
+        } else {
+          /* rests where the staff is silent: one of each overlapping group is shown (the first
+             voice's, else the longest); the others say the same thing again */
+          const rank = (a, b) => (a.voice === voices[0] ? 0 : 1) - (b.voice === voices[0] ? 0 : 1) || (b.end - b.start) - (a.end - a.start);
+          const silentRests = staffRests.filter((r) => !sounding_(r.start, r.end)).sort(rank);
+          const markers = [];
+          for (const r of silentRests) if (!markers.some((s) => s.start < r.end && s.end > r.start)) markers.push(r);
+          for (const r of staffRests) {
+            let hide;
+            if (silentRests.includes(r)) hide = !markers.includes(r);
+            else {
+              /* a rest while another voice plays: hidden only when that cannot blur the rhythm */
+              const own = notes.filter((n) => n.voice === r.voice);
+              const next = own.filter((n) => n.start >= r.end).sort((a, b) => a.start - b.start)[0];
+              if (!own.length) hide = true; /* the voice plays nothing in this bar */
+              else if (!next) hide = true; /* after the voice's last note: nothing left to place */
+              else hide = notes.some((n) => n.voice !== r.voice && n.start === next.start); /* its next note lines up with the other voice */
+            }
+            change.set(r, hide);
+          }
+        }
+        /* then every shown rest gets its place; MuseScore moves a first-voice rest 4 steps up when
+           another voice shows anything at that moment, and any other voice's rest 4 steps down */
+        const shown = staffRests.filter((r) => !change.get(r));
+        for (const r of shown) {
+          if (/measure="yes"/.test(r.text) || allVoices.length < 2) continue;
+          const crowded = sounding_(r.start, r.end) || shown.some((o) => o !== r && o.voice !== r.voice && o.start < r.end && o.end > r.start);
+          const lift = r.voice === allVoices[0] ? (crowded ? -4 : 0) : 4;
+          r.centre = placeRest(r, notes, order, lift, sounding_(r.start, r.end));
+        }
+      }
+      let out = '', from = 0;
+      for (const r of rests) {
+        let s = r.text.replace(/<display-step>[\s\S]*?<\/display-step>\s*|<display-octave>[\s\S]*?<\/display-octave>\s*/g, '');
+        if (r.centre) s = s.replace(/<rest\b([^>]*?)\s*(\/>|>\s*<\/rest>)/, (all, a) => `<rest${a}><display-step>${r.centre.step}</display-step><display-octave>${r.centre.octave}</display-octave></rest>`);
+        if (change.get(r)) s = s.replace(/^<note\b([^>]*)>/, (all, a) => '<note' + a.replace(/\sprint-object="[^"]*"/, '') + ' print-object="no">');
+        out += measure.slice(from, r.at) + s;
+        from = r.at + r.text.length;
+      }
+      return out + measure.slice(from);
+    });
   }
 
   function attrs(s) {
