@@ -1338,34 +1338,24 @@
      fresh page starts its entrance 12 px low, which would read as "not there yet" */
   const layoutTop = (node) => { let y = 0; for (let n = node; n && n !== el.scroll; n = n.offsetParent) y += n.offsetTop; return y; };
   const STILL = window.matchMedia('(prefers-reduced-motion: reduce)');
-  /* how fast the page is being scrolled, in px per ms; a jump (a page put back where it was left)
-     is not a scroll */
-  let lastTop = 0, lastAt = 0, speed = 0;
-  function trackSpeed() {
-    const t = performance.now(), y = el.scroll.scrollTop, dy = y - lastTop, dt = t - lastAt;
-    speed = dt > 0 && dt < 120 && Math.abs(dy) < 400 ? dy / dt : 0;
-    lastTop = y; lastAt = t;
-  }
-  /* Explore's tabs pin once they reach their place under the top bar. Arriving there they carry
-     on a little and settle back, more the faster they came, rather than stopping dead */
-  function pinCheck(scrolled) {
+  /* Explore's tabs pin under the top bar, and ease into their place rather than stopping dead
+     (as a sticky element alone does). d is how far their place in the page is below where they
+     pin; within EASE of it either way they fall behind the page a little, slowing evenly until
+     they rest, never faster than the page: at distance d from where they pin they sit at
+     (d + EASE)² / 4 EASE, which is 0 and still at -EASE, and back in step with the page at +EASE */
+  const EASE = 28;
+  function pinCheck() {
     const tabs = el.page.querySelector('.explore-tabs'), mark = el.page.querySelector('.explore-mark');
     if (tabs && mark) {
-      const was = tabs.classList.contains('is-pinned');
-      const pinned = el.scroll.scrollTop >= layoutTop(mark) - parseFloat(getComputedStyle(tabs).top) - 0.5;
+      const d = layoutTop(mark) - parseFloat(getComputedStyle(tabs).top) - el.scroll.scrollTop;
+      const pinned = d <= 0.5;
+      const at = d > -EASE && d < EASE && !STILL.matches ? (d + EASE) ** 2 / (4 * EASE) : Math.max(d, 0);
+      const lag = at - Math.max(d, 0);   // the sticky position does the rest
+      tabs.style.transform = lag > 0.05 ? 'translateY(' + lag.toFixed(2) + 'px)' : '';
       tabs.classList.toggle('is-pinned', pinned);
       if (el.lib.classList.contains('tabs-pinned') !== pinned) {
         el.lib.classList.toggle('tabs-pinned', pinned);   // the top fade reaches down behind them
         setFade(true);
-      }
-      if (pinned && !was && scrolled === true && speed > 0.05 && !STILL.matches) {
-        const k = Math.min(8, 2 + speed * 5);
-        tabs.animate([
-          { transform: 'translateY(0)', easing: 'cubic-bezier(0.2, 0.7, 0.35, 1)' },
-          { transform: 'translateY(' + (-k).toFixed(1) + 'px)', offset: 0.3, easing: 'cubic-bezier(0.45, 0, 0.25, 1)' },
-          { transform: 'translateY(0)' },
-        ], { duration: 520 });
-        kick(560);
       }
     }
     titleCheck();
@@ -1405,7 +1395,7 @@
     const cs = getComputedStyle(document.documentElement);
     const control = parseFloat(cs.getPropertyValue('--control')) || 44, edge = parseFloat(cs.getPropertyValue('--edge')) || 16;
     const c = el.lib.classList;
-    return { floor: c.contains('has-hero') && !c.contains('is-titled') ? 0.5 : 0, span: (c.contains('tabs-pinned') ? 2 * control : control) + edge };
+    return { floor: c.contains('has-hero') && !c.contains('is-titled') ? 0.5 : 0, span: 2 * ((c.contains('tabs-pinned') ? 2 * control : control) + edge) };
   }
   function applyFade(v) {
     fadeNow = v;
@@ -1430,7 +1420,7 @@
     applyFade({ floor: fadeFrom.floor + (fadeTo.floor - fadeFrom.floor) * e, span: fadeFrom.span + (fadeTo.span - fadeFrom.span) * e });
     if (t < 1) requestAnimationFrame(stepFade); else fadeAt = 0;
   }
-  el.scroll.addEventListener('scroll', () => { trackSpeed(); pinCheck(true); sceneV++; kick(); }, { passive: true });
+  el.scroll.addEventListener('scroll', () => { pinCheck(); sceneV++; kick(); }, { passive: true });
   el.page.addEventListener('scroll', () => { sceneV++; kick(); }, { passive: true, capture: true });
   el.lib.addEventListener('pointerdown', () => kick(500), true);
   el.lib.addEventListener('pointerup', () => kick(500), true);

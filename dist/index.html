@@ -557,10 +557,11 @@
      edge: the search bar's bottom, the back button's top. The fade follows a smooth S
      (smoothstep, sampled at quarters: 16 %, 50 %, 84 %), so it has no visible start or end line;
      the bottom one runs 64 px above the bar, so what passes behind the field is dim enough for
-     its text to read. At the top, an album cover is dimmed only by half (--top-floor: how much
-     still shows at the black end), until the small title shows in the top bar and the fade goes
-     back to black at the edge, for the title to read; while Explore's tabs are pinned the fade
-     runs down to their bottom (--top-span), so the list is dim behind them. library.js (setFade)
+     its text to read. The top one is twice the top bar's depth (button and edge, 120 px), so
+     what passes under the small title is dim enough for it to read; while Explore's tabs are
+     pinned, twice their depth (--top-span), so the list is dim behind them too. An album cover
+     is dimmed only by half (--top-floor: how much still shows at the black end), until the small
+     title shows and the fade goes back to black at the edge. library.js (setFade)
      sets the two and eases between them: a mask is not repainted while a variable it uses is
      animated by CSS. They are registered so they compute to plain numbers and lengths. */
   @property --top-floor { syntax: '<number>'; inherits: true; initial-value: 0; }
@@ -571,7 +572,7 @@
     -webkit-overflow-scrolling: touch; touch-action: pan-y; scrollbar-width: none;
     --top-floor: 0;
     --top-black: var(--lib-top);
-    --top-span: calc(var(--control) + var(--edge));
+    --top-span: calc((var(--control) + var(--edge)) * 2);
     --bottom-black: var(--lib-bottom);
     --bottom-span: calc(var(--control) + 64px);
     --fade: linear-gradient(to bottom,
@@ -607,7 +608,7 @@
   .see-all { padding: 4px 0; border: 0; background: none; color: var(--t2); font: inherit; font-size: var(--fs-m); font-weight: 600; cursor: pointer; }
   @media (hover: hover) { .see-all:hover { color: var(--t1); } }
   .lib-note { margin: 0; font-size: var(--fs-m); line-height: 1.5; color: var(--t2); max-width: 60ch; }
-  .lib-about { margin: 0; font-size: var(--fs-l); line-height: 1.55; color: var(--t1); max-width: 62ch; text-wrap: pretty; }
+  .lib-about { margin: 0; font-size: var(--fs-l); line-height: 1.55; color: var(--t1); max-width: 62ch; text-align: justify; hyphens: auto; -webkit-hyphens: auto; text-wrap: pretty; }
 
   /* a red dot after a name: no score of its own yet */
   .dot { display: inline-block; width: 6px; height: 6px; margin: 0 0 0 7px; border-radius: 50%; background: var(--now); vertical-align: 0.2em; }
