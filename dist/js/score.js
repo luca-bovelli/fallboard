@@ -32,6 +32,16 @@
   }
   const r6 = (x) => Math.round(x * 1e6) / 1e6;
 
+  /* D.C., D.S., To Coda, Fine, and the segno and coda they lead to, from a <sound> */
+  function readJumps(s, M) {
+    if (s.getAttribute('dacapo') === 'yes') M.jump = 'dc';
+    if (s.hasAttribute('dalsegno')) M.jump = 'ds';
+    if (s.hasAttribute('tocoda')) M.toCoda = true;
+    if (s.hasAttribute('fine')) M.fine = true;
+    if (s.hasAttribute('segno')) M.segno = true;
+    if (s.hasAttribute('coda')) M.coda = true;
+  }
+
   /* ---------- pass 1: read every measure of every part ---------- */
   function readPart(partEl, partIdx, measures) {
     let divisions = 1;
@@ -48,6 +58,7 @@
           events: [], heads: [], tempos: [], dyns: [], pedals: [],
           lenQ: 0, time: null,
           repeatStart: false, repeatEnd: 0, endingStart: null, endingStop: false,
+          segno: false, coda: false, toCoda: false, fine: false, jump: null, final: false, double: false, trio: false,
         });
       let pos = 0;        // quarters from the start of the measure
       let maxPos = 0;
@@ -159,22 +170,40 @@
               if (w && w.textContent.trim()) words = (words ? words + ' ' : '') + w.textContent.trim();
               const ped = kid(dt, 'pedal');
               if (ped) M.pedals.push({ q: r6(at), type: ped.getAttribute('type') || 'start' });
+              if (kid(dt, 'segno')) M.segno = true;
+              if (kid(dt, 'coda')) M.coda = true;
             }
             if (s) {
               const tempo = parseFloat(s.getAttribute('tempo'));
               if (tempo > 0) M.tempos.push({ q: r6(at), bpm: tempo, words });
               const dyn = parseFloat(s.getAttribute('dynamics'));
               if (dyn > 0) M.dyns.push({ q: r6(at), v: dyn });
+              readJumps(s, M);
+            }
+            if (words && /\btrio\b/i.test(words)) M.trio = true;
+            /* written-out jumps, when the file gives no <sound> for them */
+            if (words &&!(s && (s.hasAttribute('dacapo') || s.hasAttribute('dalsegno') || s.hasAttribute('fine') || s.hasAttribute('tocoda')))) {
+              if (/^\s*(d\.?\s?c\.?|da capo)\b/i.test(words)) M.jump = M.jump || 'dc';
+              else if (/^\s*(d\.?\s?s\.?|dal segno)\b/i.test(words)) M.jump = M.jump || 'ds';
+              else if (/^\s*fine\s*$/i.test(words)) M.fine = true;
+              else if (/^\s*(to coda|al coda|vi-?de)\b/i.test(words)) M.toCoda = true;
             }
             break;
           }
           case 'sound': {
             const tempo = parseFloat(el.getAttribute('tempo'));
             if (tempo > 0) M.tempos.push({ q: r6(pos), bpm: tempo, words: null });
+            readJumps(el, M);
             break;
           }
           case 'barline': {
             const rep = kid(el, 'repeat');
+            /* a final barline ends a movement or piece; a double bar ends a section */
+            if ((el.getAttribute('location') || 'right') === 'right') {
+              const style = text(el, 'bar-style');
+              if (style === 'light-heavy' && !rep) M.final = true;
+              if (style === 'light-light') M.double = true;
+            }
             if (rep) {
               if (rep.getAttribute('direction') === 'forward') M.repeatStart = true;
               else M.repeatEnd = Math.max(2, parseInt(rep.getAttribute('times') || '2', 10) || 2);
@@ -197,15 +226,31 @@
     });
   }
 
-  /* ---------- pass 2: playback order (simple repeats and voltas) ---------- */
+  /* ---------- pass 2: playback order ----------
+     Repeats and voltas, then D.C. and D.S. A D.C. goes back to the start of its own section (after
+     the last final barline or earlier jump, so a sonata's "Menuetto da capo" or a set of minuets
+     each return to their own start), a D.S. to the nearest segno before it. From there repeats
+     are played once and the last ending taken, as players do; the return stops at Fine, goes to
+     the coda at To Coda, or with neither stops before the Trio or at the next double bar. Then
+     the music carries on after the jump. */
   function playOrder(measures) {
     const order = [];
     const done = new Map();
     let i = 0, segStart = 0, pass = 1, jumped = false;
+    let back = null;
+    const lastEnding = Math.max(1, ...measures.flatMap((m) => m.endingStart || []));
     const limit = measures.length * 12 + 64;
+    const sectionStart = (j) => { for (let k = j - 1; k >= 0; k--) if (measures[k].final || measures[k].jump) return k + 1; return 0; };
+    const segnoBefore = (j) => { for (let k = j; k >= 0; k--) if (measures[k].segno) return k; return sectionStart(j); };
+    const naturalEnd = (start, j) => {
+      for (let k = start; k < j; k++) if (measures[k + 1] && measures[k + 1].trio) return k;
+      for (let k = start; k < j; k++) if (measures[k].final || measures[k].double) return k;
+      return j;
+    };
+    const resume = (k) => { back = null; pass = 1; i = k; segStart = k; };
     while (i < measures.length && order.length < limit) {
       const M = measures[i];
-      if (M.repeatStart) { if (!jumped) pass = 1; segStart = i; }
+      if (M.repeatStart) { if (!jumped) pass = back ? lastEnding : 1; segStart = i; }
       jumped = false;
       if (M.endingStart && M.endingStart.length && !M.endingStart.includes(pass)) {
         while (i < measures.length && !measures[i].endingStop) i++;
@@ -213,6 +258,15 @@
         continue;
       }
       order.push(i);
+      if (back) {
+        if (M.toCoda && back.coda) {
+          const coda = measures.findIndex((m, k) => k > back.from && m.coda);
+          if (coda > 0) { resume(coda); continue; }
+        }
+        if ((back.fine && M.fine) || i === back.stop || i >= back.from) { resume(back.from + 1); continue; }
+        i++;
+        continue;
+      }
       if (M.repeatEnd) {
         const n = done.get(i) || 0;
         if (n < M.repeatEnd - 1) {
@@ -224,6 +278,17 @@
         }
         segStart = i + 1;
         pass = 1;
+      }
+      if (M.jump && !done.has('jump' + i)) {
+        done.set('jump' + i, 1);
+        const start = M.jump === 'ds' ? segnoBefore(i) : sectionStart(i);
+        const span = measures.slice(start, i + 1);
+        const fine = span.some((m) => m.fine), coda = span.some((m) => m.toCoda);
+        back = { from: i, fine, coda, stop: fine || coda ? -1 : naturalEnd(start, i) };
+        pass = lastEnding;
+        i = start;
+        segStart = start;
+        continue;
       }
       i++;
     }
@@ -254,12 +319,29 @@
       if (!(M.lenQ > 0)) M.lenQ = (M.time.beats * 4) / M.time.beatType;
     }
 
-    /* hands: exactly two (part, staff) tracks -> right = first, left = second */
+    /* hands: two (part, staff) tracks -> right = first, left = second. A piano part on three or
+       more staves (Debussy, Ravel, Liszt) gives its top staff to the right hand, its bottom staff
+       to the left, and each staff between to the hand of its register (above or below middle C) */
     const trackKeys = new Set();
-    for (const M of measures) for (const e of M.events) trackKeys.add(e.part * 100 + e.staff);
+    const pitch = new Map();
+    for (const M of measures) for (const e of M.events) {
+      const k = e.part * 100 + e.staff;
+      trackKeys.add(k);
+      const p = pitch.get(k) || [0, 0];
+      p[0] += e.midi; p[1]++;
+      pitch.set(k, p);
+    }
     const tracks = [...trackKeys].sort((a, b) => a - b);
-    const hasHands = tracks.length === 2;
-    const handOf = (e) => (hasHands ? tracks.indexOf(e.part * 100 + e.staff) : 0);
+    const onePart = tracks.every((k) => Math.floor(k / 100) === Math.floor(tracks[0] / 100));
+    const hasHands = tracks.length === 2 || (tracks.length > 2 && onePart);
+    const handByTrack = new Map(tracks.map((k, i) => {
+      if (tracks.length === 2) return [k, i];
+      if (i === 0) return [k, 0];
+      if (i === tracks.length - 1) return [k, 1];
+      const p = pitch.get(k);
+      return [k, p && p[0] / p[1] >= 60 ? 0 : 1];
+    }));
+    const handOf = (e) => (hasHands ? handByTrack.get(e.part * 100 + e.staff) : 0);
     for (const M of measures) for (const h of M.heads) h.hand = handOf(h);
 
     /* flatten in playback order */
@@ -378,6 +460,7 @@
     return {
       title, composer, xml: xmlText,
       notes, maxDur, hasHands,
+      staffHands: hasHands ? tracks.map((k) => handByTrack.get(k)) : null,   // hand of each staff, top to bottom
       hasPedal: pedalSpans.length > 0,
       range,
       onsets: {

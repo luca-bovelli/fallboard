@@ -636,7 +636,8 @@
       if (ui !== lastUi) {
         lastUi = ui;
         el.where.textContent = o.number;
-        el.whereOf.textContent = 'of ' + S.score.measures[S.score.measures.length - 1].number;
+        /* the last written bar: after a D.C. al Fine the last bar played is the Fine */
+        el.whereOf.textContent = 'of ' + S.score.docNumbers[S.score.docNumbers.length - 1];
         el.tempo.textContent = bpm;
         el.clock.textContent = fmt(t / S.speed) + ' / ' + fmt(d / S.speed);
         progressBounds = null;

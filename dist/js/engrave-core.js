@@ -47,6 +47,9 @@
     x = x.replace(/<creator\b[^>]*>[\s\S]*?<\/creator>\s*/g, '');
     x = x.replace(/<print\b[^>]*\/>\s*/g, '').replace(/<print\b[^>]*>[\s\S]*?<\/print>\s*/g, '');
     x = x.replace(/\s(?:default-x|default-y|relative-x|relative-y|width)="[^"]*"/g, '');
+    /* fonts the engine does not have ("Times New Roman") fall back to one that loses spaces and
+       "=": text keeps MuseScore's own font */
+    x = x.replace(/\sfont-family="[^"]*"/g, '');
     /* "Ped." and "*" written as loose symbols lose their place once the page is re-flowed, so
        they become pedal lines, which MuseScore positions itself under the bass staff */
     let down = false;
@@ -115,7 +118,196 @@
   }
   const avg = (list) => { const l = list.filter((v) => v !== null); return l.length ? l.reduce((a, b) => a + b, 0) / l.length : null; };
   function tidyRests(xml) {
-    return xml.replace(/<part\b[^>]*>[\s\S]*?<\/part>/g, (part) => tidyPart(part));
+    return xml.replace(/<part\b[^>]*>[\s\S]*?<\/part>/g, (part) => tidyPart(mergeRests(part)));
+  }
+
+  /* Rests in fragments ("six sixteenth rests" where one rest belongs): a run of consecutive rests
+     in one voice is rewritten as few rests as the meter allows. A whole bar of rest becomes a
+     bar rest; otherwise rests fill to the next beat, a full beat is one rest (dotted in compound
+     time), and two beats make one rest only from the first or third beat of a four-beat bar (or
+     the first of a three-beat bar). Rests with a fermata or other marking, in tuplets, or hidden
+     are left as they are. */
+  const REST_TYPES = [['whole', 4], ['half', 2], ['quarter', 1], ['eighth', 0.5], ['16th', 0.25], ['32nd', 0.125], ['64th', 0.0625]];
+  function restValue(q) {
+    for (const [t, v] of REST_TYPES) {
+      if (Math.abs(q - v) < 1e-9) return { type: t, dots: 0 };
+      if (Math.abs(q - v * 1.5) < 1e-9) return { type: t, dots: 1 };
+    }
+    return null;
+  }
+  function mergeRests(part) {
+    let div = 1, beats = 4, beatType = 4;
+    return part.replace(/(<measure\b[^>]*>)([\s\S]*?)(<\/measure>)/g, (all, open, body, close) => {
+      const d = /<divisions>\s*(\d+)/.exec(body); if (d) div = +d[1];
+      const ts = /<time\b[^>]*>[\s\S]*?<beats>\s*(\d+)[\s\S]*?<beat-type>\s*(\d+)/.exec(body); if (ts) { beats = +ts[1]; beatType = +ts[2]; }
+      if (!/<rest\b/.test(body)) return all;
+      const unit = 4 / beatType;                                   // a beat-type note, in quarters
+      const compound = (beatType === 8 || beatType === 16) && beats % 3 === 0 && beats > 3;
+      const B = compound ? 3 * unit : unit;                        // one beat, in quarters
+      const nBeats = compound ? beats / 3 : beats;
+      const len = beats * unit;
+      /* the bar in time order, by voice */
+      const items = [];
+      let t = 0, last = 0;
+      for (const m of body.matchAll(/<note\b[^>]*>[\s\S]*?<\/note>|<backup>[\s\S]*?<\/backup>|<forward>[\s\S]*?<\/forward>/g)) {
+        const s = m[0];
+        const q = +((/<duration>\s*(\d+)/.exec(s) || [])[1] || 0) / div;
+        if (s.startsWith('<backup')) { t -= q; continue; }
+        if (s.startsWith('<forward')) { t += q; continue; }
+        if (/<grace\b/.test(s) || /<cue\s*\/>/.test(s)) continue;
+        const chord = /<chord\s*\/>/.test(s);
+        const start = chord ? last : t;
+        if (!chord) { last = t; t += q; }
+        items.push({ at: m.index, text: s, start, end: start + q, rest: /<rest\b/.test(s), chord,
+          key: ((/<staff>\s*(\d+)/.exec(s) || [])[1] || '1') + '/' + ((/<voice>\s*([^<\s]+)/.exec(s) || [])[1] || '1'),
+          plain: /<rest\b/.test(s) && !/print-object="no"/.test(s) && !/<notations\b|<time-modification\b/.test(s) && !/measure="yes"/.test(s) });
+      }
+      const edits = new Map();   // index of a rest -> its replacement ('' for removed)
+      for (const key of new Set(items.map((i) => i.key))) {
+        const seq = items.filter((i) => i.key === key && !i.chord);
+        for (let a = 0; a < seq.length; ) {
+          if (!seq[a].plain) { a++; continue; }
+          let b = a;
+          while (b + 1 < seq.length && seq[b + 1].plain && Math.abs(seq[b + 1].start - seq[b].end) < 1e-9) b++;
+          const run = seq.slice(a, b + 1);
+          a = b + 1;
+          const from = run[0].start, to = run[run.length - 1].end;
+          /* the new rests */
+          const parts = [];
+          if (from < 1e-9 && Math.abs(to - len) < 1e-9 && seq.every((i) => i.rest)) parts.push({ q: len, bar: true });
+          else {
+            let p = from, ok = true;
+            while (p < to - 1e-9 && ok) {
+              const beatStart = Math.floor(p / B + 1e-9) * B;
+              let q = null;
+              if (Math.abs(p - beatStart) < 1e-9) {
+                const k = Math.round(p / B);
+                /* two beats as one rest: from beat 1 or 3 of four, or beat 1 of three */
+                if (!compound && to - p >= 2 * B - 1e-9 && ((nBeats === 4 && k % 2 === 0) || (nBeats === 3 && k === 0)) && restValue(2 * B)) q = 2 * B;
+                else if (to - p >= B - 1e-9 && restValue(B)) q = B;
+              }
+              if (q === null) {
+                /* within a beat: the largest plain value that fits, starts on its own grid and
+                   does not cross the beat */
+                const room = Math.min(to, beatStart + B) - p;
+                for (const [, v] of REST_TYPES) if (v <= room + 1e-9 && Math.abs((p - beatStart) / v - Math.round((p - beatStart) / v)) < 1e-9) { q = v; break; }
+              }
+              if (q === null) ok = false; else { parts.push({ q }); p += q; }
+            }
+            if (!ok) continue;
+          }
+          if (parts.length >= run.length) continue;
+          const first = run[0].text;
+          const make = (pt) => {
+            let s = first.replace(/<duration>\s*\d+\s*<\/duration>/, `<duration>${Math.round(pt.q * div)}</duration>`)
+              .replace(/<dot\s*\/>\s*/g, '').replace(/<beam\b[\s\S]*?<\/beam>\s*/g, '')
+              .replace(/<display-step>[\s\S]*?<\/display-step>\s*|<display-octave>[\s\S]*?<\/display-octave>\s*/g, '');
+            if (pt.bar) return s.replace(/<rest\b[^>]*?\/>|<rest\b[^>]*>[\s\S]*?<\/rest>/, '<rest measure="yes"/>').replace(/<type\b[^>]*>[\s\S]*?<\/type>\s*/, '<type>whole</type>');
+            const v = restValue(pt.q);
+            if (!v) return null;
+            const typed = /<type\b/.test(s) ? s.replace(/<type\b[^>]*>[\s\S]*?<\/type>/, `<type>${v.type}</type>` + '<dot/>'.repeat(v.dots)) : s.replace(/(<\/voice>)/, `$1<type>${v.type}</type>` + '<dot/>'.repeat(v.dots));
+            return typed;
+          };
+          const made = parts.map(make);
+          if (made.some((x) => x === null)) continue;
+          edits.set(run[0].at, made.join(''));
+          for (const r of run.slice(1)) edits.set(r.at, '');
+        }
+      }
+      /* A voice that crosses staves (its notes on the left hand's staff, its rests between them
+         on the right hand's) leaves a row of short rests on a staff that is simply silent. Those
+         rests are hidden, and the silence is written once, as plain rests in a voice of its own
+         on that staff. */
+      const added = [];
+      const staffOf = (i) => i.key.split('/')[0];
+      const voiceOf = (i) => i.key.split('/')[1];
+      for (const staff of new Set(items.map(staffOf))) {
+        const notesHere = items.filter((i) => !i.rest && staffOf(i) === staff && i.end > i.start);
+        const crossing = items.filter((i) => i.plain && !edits.has(i.at) && staffOf(i) === staff &&
+          items.some((o) => !o.rest && voiceOf(o) === voiceOf(i) && staffOf(o) !== staff && o.start < i.end + 1e-9 && o.end > i.start - B));
+        if (crossing.length < 2) continue;
+        crossing.sort((x, y) => x.start - y.start);
+        const silentBetween = (a, b) => !notesHere.some((nn) => nn.start < b - 1e-9 && nn.end > a + 1e-9);
+        const spans = [];
+        for (const r of crossing) {
+          const sp = spans[spans.length - 1];
+          if (sp && silentBetween(sp.to, r.start)) { sp.to = Math.max(sp.to, r.end); sp.rests.push(r); } else spans.push({ from: r.start, to: r.end, rests: [r] });
+        }
+        const otherHere = (a, b) => items.some((i) => staffOf(i) === staff && !crossing.includes(i) && i.start < b - 1e-9 && i.end > a + 1e-9 && !(i.rest && /print-object="no"/.test(i.text)));
+        for (const sp of spans) {
+          if (sp.rests.length < 2) continue;
+          /* the silence runs on to the bar's start or end when nothing else is on the staff there */
+          if (!otherHere(0, sp.from)) sp.from = 0;
+          if (!otherHere(sp.to, len)) sp.to = len;
+          if (sp.from < 1e-9 && Math.abs(sp.to - len) < 1e-9) {
+            for (const r of sp.rests) edits.set(r.at, r.text.replace(/^<note\b([^>]*)>/, '<note$1 print-object="no">'));
+            added.push({ staff, parts: [{ at: 0, q: len, bar: true }] });
+            continue;
+          }
+          const parts = [];
+          let p = sp.from, ok = true;
+          while (p < sp.to - 1e-9 && ok) {
+            const beatStart = Math.floor(p / B + 1e-9) * B;
+            let q = null;
+            if (Math.abs(p - beatStart) < 1e-9 && sp.to - p >= B - 1e-9 && restValue(B)) q = B;
+            if (q === null) { const room = Math.min(sp.to, beatStart + B) - p; for (const [, v] of REST_TYPES) if (v <= room + 1e-9 && Math.abs((p - beatStart) / v - Math.round((p - beatStart) / v)) < 1e-9) { q = v; break; } }
+            if (q === null) ok = false; else { parts.push({ at: p, q }); p += q; }
+          }
+          if (!ok || parts.length >= sp.rests.length) continue;
+          for (const r of sp.rests) edits.set(r.at, r.text.replace(/^<note\b([^>]*)>/, '<note$1 print-object="no">'));
+          added.push({ staff, parts });
+        }
+      }
+      if (!edits.size) return all;
+      let out = '', from = 0;
+      for (const it of items) {
+        if (!edits.has(it.at)) continue;
+        out += body.slice(from, it.at) + edits.get(it.at);
+        from = it.at + it.text.length;
+      }
+      out += body.slice(from);
+      if (added.length) {
+        /* the new rests go in an unused voice, laid over the bar from its start */
+        const used = new Set(items.map(voiceOf).map(Number).filter(Number.isFinite));
+        let voice = 9;
+        while (used.has(voice)) voice++;
+        let extra = `<backup><duration>${Math.round(t * div)}</duration></backup>`;
+        let pos = 0;
+        for (const { staff, parts } of added) {
+          for (const pt of parts) {
+            if (pt.at > pos + 1e-9) extra += `<forward><duration>${Math.round((pt.at - pos) * div)}</duration><voice>${voice}</voice><staff>${staff}</staff></forward>`;
+            const v = pt.bar ? { type: 'whole', dots: 0 } : restValue(pt.q);
+            extra += `<note><rest${pt.bar ? ' measure="yes"' : ''}/><duration>${Math.round(pt.q * div)}</duration><voice>${voice}</voice><type>${v.type}</type>${'<dot/>'.repeat(v.dots)}<staff>${staff}</staff></note>`;
+            pos = pt.at + pt.q;
+          }
+          extra += `<backup><duration>${Math.round(pos * div)}</duration></backup>`;
+          pos = 0;
+          voice++;
+        }
+        out += extra.replace(/<backup><duration>\d+<\/duration><\/backup>$/, '');
+      }
+      return open + out + close;
+    });
+  }
+
+  /* each staff's hand, top to bottom, the way score.js assigns them: two staves are right and
+     left; a single piano part on more gives its top staff to the right hand, its bottom staff to
+     the left, and each staff between to the hand of its register */
+  function staffHands(xml) {
+    const parts = xml.match(/<part\b[^>]*>[\s\S]*?<\/part>/g) || [];
+    if (parts.length !== 1) return null;
+    const n = Math.max(1, ...[...parts[0].matchAll(/<staves>\s*(\d+)/g)].map((m) => +m[1]));
+    if (n === 2) return [0, 1];
+    if (n < 2) return null;
+    const sum = new Array(n + 1).fill(0), count = new Array(n + 1).fill(0);
+    for (const m of parts[0].matchAll(/<note\b[^>]*>([\s\S]*?)<\/note>/g)) {
+      const p = /<step>\s*([A-G])[\s\S]*?(?:<alter>\s*(-?[\d.]+)[\s\S]*?)?<octave>\s*(-?\d+)/.exec(m[1]);
+      if (!p) continue;
+      const st = +((/<staff>\s*(\d+)/.exec(m[1]) || [])[1] || 1);
+      sum[st] += 12 * (+p[3] + 1) + { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[p[1]] + Math.round(+(p[2] || 0));
+      count[st]++;
+    }
+    return Array.from({ length: n }, (_, k) => (k === 0 ? 0 : k === n - 1 ? 1 : count[k + 1] && sum[k + 1] / count[k + 1] >= 60 ? 0 : 1));
   }
   function tidyPart(part) {
     /* clefs in force, by staff, carried from measure to measure */
@@ -176,7 +368,8 @@
           for (const r of staffRests) change.set(r, false);
         } else if (counterpoint) {
           /* counterpoint keeps its rests, except a voice's that plays nothing in the bar */
-          for (const r of staffRests) change.set(r, !notes.some((n) => n.voice === r.voice));
+          /* (a rest that is the staff's only sign of a silence stays, whatever its voice) */
+          for (const r of staffRests) change.set(r, !notes.some((n) => n.voice === r.voice) && sounding_(r.start, r.end));
         } else {
           /* rests where the staff is silent: one of each overlapping group is shown (the first
              voice's, else the longest); the others say the same thing again */
@@ -253,23 +446,24 @@
   /* drawn in several parts (figure, line, hooks); the parts of one must not be split between hands */
   const MULTI = new Set(['OttavaSegment', 'PedalSegment', 'TextLineSegment', 'HairpinSegment', 'Tuplet']);
 
-  function assignStaves(items, lines, sp) {
+  /* hands: which hand each staff belongs to, top to bottom (two staves: [0, 1]; a piano part on
+     three or more staves gives each a hand, as score.js does) */
+  function assignStaves(items, lines, sp, hands) {
     const L = lines;
-    if (L.length !== 10) return;
-    const mid = (L[4] + L[5]) / 2, bands = [[L[0], L[4]], [L[5], L[9]]];
+    if (L.length < 10 || L.length % 5) return;
+    const n = L.length / 5;
+    const bands = Array.from({ length: n }, (_, k) => [L[k * 5], L[k * 5 + 4]]);
+    const handOf = hands && hands.length === n ? hands : bands.map((_, k) => (k === 0 ? 0 : k === n - 1 ? 1 : k < n / 2 ? 0 : 1));
+    const bandAt = (y) => { let best = 0, bd = Infinity; bands.forEach((b, k) => { const d = Math.max(b[0] - y, 0, y - b[1]); if (d < bd) { bd = d; best = k; } }); return best; };
     const heads = [];
-    for (const it of items) if (it.cls === 'Note' && it.head) heads.push({ x: it.head[0], y: it.head[1], s: it.head[1] > mid ? 1 : 0 });
+    for (const it of items) if (it.cls === 'Note' && it.head) heads.push({ x: it.head[0], y: it.head[1], s: handOf[bandAt(it.head[1])] });
     const toBox = (b, x, y) => Math.hypot(Math.max(b[0] - x, 0, x - b[2]), Math.max(b[1] - y, 0, y - b[3]));
     const nearestHead = (b) => {
       let best = null, bd = Infinity;
       for (const h of heads) { const d = toBox(b, h.x, h.y); if (d < bd) { bd = d; best = h; } }
       return best && bd < sp * 8 ? best.s : undefined;
     };
-    const nearestBand = (b) => {
-      const cy = (b[1] + b[3]) / 2;
-      const d0 = Math.max(bands[0][0] - cy, 0, cy - bands[0][1]), d1 = Math.max(bands[1][0] - cy, 0, cy - bands[1][1]);
-      return d1 < d0 ? 1 : 0;
-    };
+    const nearestBand = (b) => handOf[bandAt((b[1] + b[3]) / 2)];
     const stems = [];
     for (const it of items) {
       if (it.cls === 'Note') continue;
@@ -316,7 +510,7 @@
   /* one MuseScore page -> { svg, w, right, y0, h, heads, lines } or null when the page is empty.
      Elements are grouped by class (and staff) so shared attributes are written once; noteheads
      stay in one group, in order, which is how the app tells them apart. */
-  function compact(svg, glyphs, wsp) {
+  function compact(svg, glyphs, wsp, hands) {
     const glyph = (key, d, sx, sy) => {
       let g = glyphs.map.get(key);
       if (!g) {
@@ -387,7 +581,7 @@
     }
     if (!items.length || !(page[3] > page[1])) return null;
     const staffLines = [...new Set(lines)].sort((p, q) => p - q);
-    assignStaves(items, staffLines, sp);
+    assignStaves(items, staffLines, sp, hands);
 
     const groups = new Map();
     for (const it of items) {
@@ -414,6 +608,7 @@
   /* WebMscore: the loaded webmscore class (Node build or the browser's worker build) */
   async function engrave(WebMscore, xml, wsp, onProgress) {
     const data = new TextEncoder().encode(prepareXml(xml, wsp));
+    const hands = staffHands(xml);
     const score = await WebMscore.load('musicxml', data);
     try {
       const n = await score.npages();
@@ -422,7 +617,7 @@
       const pages = [];
       const pageMap = new Map();
       for (let i = 0; i < n; i++) {
-        const pg = compact(await score.saveSvg(i, false), glyphs, wsp);
+        const pg = compact(await score.saveSvg(i, false), glyphs, wsp, hands);
         if (pg) { pageMap.set(i, pages.length); pages.push(pg); }
         if (onProgress) onProgress((i + 1) / n);
       }
@@ -443,5 +638,5 @@
     }
   }
 
-  return { LAYOUTS, layoutFor, prepareXml, engrave };
+  return { LAYOUTS, layoutFor, prepareXml, engrave, mergeRests, staffHands };
 });

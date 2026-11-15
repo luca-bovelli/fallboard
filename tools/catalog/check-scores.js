@@ -162,11 +162,24 @@ for (const f of fs.readdirSync(path.join(ROOT, 'catalog', 'raw', 'imslp'))) {
 }
 const expected = (e) => { const s = (e.src || []).find((x) => x.imslp && durations.has(x.imslp)); return s ? durations.get(s.imslp) : null; };
 
+/* the file as the app will get it: repaired by normalize.js, saved to .data/scores/ */
+const { normalize } = require('./normalize');
+const SCORES = path.join(ROOT, '.data', 'scores');
+const fixedPath = (mxl) => path.join(SCORES, path.basename(mxl, '.mxl') + '.musicxml');
+
 function check(entry, file) {
   const flags = [];
   const info = {};
   let xml;
   try { xml = unzip(path.join(DATA, file.mxl)); } catch (e) { return { flags: ['unreadable'], info: { error: 'zip: ' + e.message } }; }
+  const exp0 = expected(entry);
+  const fixed = normalize(xml, { seconds: exp0 });
+  info.fixes = fixed.fixes;
+  if (fixed.problems.length) info.problems = fixed.problems;
+  if (fixed.reject) return { flags: ['rejected'], info: { ...info, rejected: fixed.reject } };
+  xml = fixed.xml;
+  fs.mkdirSync(SCORES, { recursive: true });
+  fs.writeFileSync(fixedPath(file.mxl), xml);
   let score = null;
   try { score = FB.parseMusicXML(xml); } catch (e) { flags.push('unreadable'); info.error = e.message; }
   const s = scan(xml);
@@ -202,17 +215,16 @@ function check(entry, file) {
   return { flags, info, verdict: verdict(flags, info, file) };
 }
 
-/* what a file's flags mean for using it:
-     reject   the app cannot show it properly, or it is probably not the piece
-     fixable  usable once a known, automatic repair is made
-     ok       usable as it is (hidden notes, extra voices, the ending and the length are only
-              information) */
+/* what a repaired file's flags mean for using it:
+     reject   normalize.js could not repair it, the app cannot show it properly, or it is
+              probably not the piece
+     ok       usable (the app follows jumps and extra staves; overfull bars play in order;
+              hidden notes, voices, the ending and the length are information) */
 function verdict(flags, info, file) {
   const has = (f) => flags.includes(f);
-  if (has('unreadable') || has('hands') || has('parts') || has('empty-hand') || has('range')) return 'reject';
-  if (has('overfull') && info.overfull > Math.max(2, info.bars * 0.05)) return 'reject';
+  if (has('rejected') || has('unreadable') || has('hands') || has('parts') || has('empty-hand') || has('range')) return 'reject';
+  if (has('overfull') && info.overfull > Math.max(2, info.bars * 0.25)) return 'reject';
   if (has('key') && file.how !== 'number') return 'reject';
-  if (has('overfull') || has('no-tempo') || has('jumps') || has('lyrics') || has('chords') || has('key') || has('transposed')) return 'fixable';
   return 'ok';
 }
 
@@ -236,6 +248,12 @@ function main() {
   for (const r of results) for (const f of r.flags) count[f] = (count[f] || 0) + 1;
   const clean = results.filter((r) => !r.flags.length).length;
   console.log(`${results.length} files checked; ${clean} with no flag`);
+  const fx = {};
+  for (const r of results) for (const f of (r.info.fixes || [])) fx[f] = (fx[f] || 0) + 1;
+  console.log('repairs made: ' + JSON.stringify(fx));
+  const rj = {};
+  for (const r of results) if (r.info.rejected) rj[r.info.rejected] = (rj[r.info.rejected] || 0) + 1;
+  if (Object.keys(rj).length) console.log('could not be repaired: ' + JSON.stringify(rj));
   const v = {};
   for (const r of results) v[r.verdict] = (v[r.verdict] || 0) + 1;
   console.log('verdicts: ' + JSON.stringify(v));
@@ -246,4 +264,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { unzip, scan };
+module.exports = { unzip, scan, fixedPath };

@@ -2,8 +2,8 @@
 
      node tools/catalog/check-engrave.js [jobs]     jobs: files engraved at once (default 4)
 
-   Each file runs in its own process (the engine does not survive a second score) with a two-
-   minute limit. Recorded per file: whether it engraved, the time, the systems, how many systems
+   Each repaired file (.data/scores/, written by check-scores.js) runs in its own process (the
+   engine does not survive a second score) with a ten-minute limit. Recorded per file: whether it engraved, the time, the systems, how many systems
    were too dense for the width and had to be drawn smaller, and the first system's SVG for a
    visual review. */
 'use strict';
@@ -38,23 +38,23 @@ if (process.argv[2] === '--child') {
   return;
 }
 
-const { unzip } = require('./check-scores');
+const { fixedPath } = require('./check-scores');
 const checks = JSON.parse(fs.readFileSync(path.join(DATA, 'checks.json'), 'utf8'));
 const jobs = +process.argv[2] || 4;
 fs.mkdirSync(XML, { recursive: true });
 const done = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : {};
-const todo = checks.filter((c) => !done[c.mxl] && !c.flags.includes('unreadable'));
+const todo = checks.filter((c) => !done[c.mxl] && c.verdict !== 'reject' && fs.existsSync(fixedPath(c.mxl)));
 console.log(`${todo.length} files to engrave, ${jobs} at a time`);
 
 function one(c) {
   return new Promise((resolve) => {
-    const file = path.join(XML, path.basename(c.mxl, '.mxl') + '.musicxml');
-    if (!fs.existsSync(file)) fs.writeFileSync(file, unzip(path.join(DATA, c.mxl)));
+    /* the repaired file, as the app gets it */
+    const file = fixedPath(c.mxl);
     const child = spawn(process.execPath, [__filename, '--child', file], { stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '', err = '';
     child.stdout.on('data', (d) => { out += d; });
     child.stderr.on('data', (d) => { err += d; });
-    const timer = setTimeout(() => child.kill(), 120000);
+    const timer = setTimeout(() => child.kill(), 600000);
     child.on('exit', () => {
       clearTimeout(timer);
       const m = out.match(/@@(.*)\n/);
