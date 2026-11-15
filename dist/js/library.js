@@ -361,7 +361,7 @@
 
   /* ------------------------------------------------------------------ ornaments
      Drawn in a 100-unit square laid over the cover, in its line colour, from parts the cover's
-     hash picks: rules and borders after engraved editions, with music's own ornaments
+     hash picks: rules, corners and borders after engraved editions, with music's own ornaments
      as centrepieces (the turn, the mordent, the fermata, a star, a diamond). */
   const stroke = (w) => `stroke="currentColor" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
   const CENTRE = [
@@ -397,6 +397,25 @@
       case 2: return `<rect ${r(inset)} ${stroke(0.6)} stroke-dasharray="0.01 1.5"/><rect ${r(inset + 2.2)} ${stroke(0.3)}/>`;
       default: return `<rect ${r(inset)} ${stroke(1.1)}/><rect ${r(inset + 2.4)} ${stroke(0.3)}/><rect ${r(inset + 3.6)} ${stroke(0.3)}/>`;
     }
+  }
+  /* the coda sign as engraved: an oval heavy at its sides and fine at top and bottom, crossed by a
+     line each way */
+  const coda = (x, y, r) => {
+    const oval = (rx, ry) => `M${x - rx} ${y}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0Z`;
+    return `<path d="${oval(r, 1.18 * r)}${oval(0.6 * r, 1.03 * r)}" fill="currentColor" fill-rule="evenodd"/>` +
+      `<path d="M${x - 1.85 * r} ${y}H${x + 1.85 * r}M${x} ${y - 1.95 * r}V${y + 1.95 * r}" stroke="currentColor" stroke-width="0.3" stroke-linecap="butt"/>`;
+  };
+  /* the same piece at each corner of a frame, turned to face inward: a bracket, two arcs, a coda
+     sign or a star */
+  function corners(pick, at) {
+    const style = pick(4), out = [];
+    for (const [x, y, dx, dy] of [[at, at, 1, 1], [100 - at, at, -1, 1], [at, 100 - at, 1, -1], [100 - at, 100 - at, -1, -1]]) {
+      if (style === 0) out.push(`<path d="M${x + dx * 7} ${y}H${x}V${y + dy * 7}" ${stroke(0.5)}/><circle cx="${x + dx * 2.2}" cy="${y + dy * 2.2}" r="0.7" fill="currentColor"/>`);
+      else if (style === 1) out.push(`<path d="M${x + dx * 8} ${y}A8 8 0 0 ${dx * dy > 0 ? 0 : 1} ${x} ${y + dy * 8}M${x + dx * 5} ${y}A5 5 0 0 ${dx * dy > 0 ? 0 : 1} ${x} ${y + dy * 5}" ${stroke(0.35)}/>`);
+      else if (style === 2) out.push(coda(x + dx * 2.8, y + dy * 2.8, 1.5));
+      else out.push(CENTRE[4](x + dx * 2.6, y + dy * 2.6, 1.6));
+    }
+    return out.join('');
   }
   /* printer's marks: crop marks at two corners and a registration target */
   function marks(pick) {
@@ -515,7 +534,7 @@
       if (t.cat) part('cat', t.cat);
     } else if (layout === 'frame') {
       c.style.setProperty('--ts', fitSize(t.main, face, 72, 30, 17) + 'cqw');
-      art(layer(border(pick, 4.5)));
+      art(layer(border(pick, 4.5) + corners(pick, 10)));
       const stack = part('stack');
       stack.appendChild(make('span', 'who', t.who));
       stack.insertAdjacentHTML('beforeend', `<svg class="divider" viewBox="0 0 100 8" aria-hidden="true">${rule(pick, 8, 92, 4, 1.7)}</svg>`);
@@ -1127,20 +1146,46 @@
   /* The on-screen keyboard. iOS slides the whole page up to bring the field into view, which
      pushed the top of the library (what you want to see while typing) off the screen. Instead the
      library fits itself to what the keyboard leaves of the screen: its top stays at the top of
-     what you see, its search bar sits on the keyboard, and the list in between gets shorter */
+     what you see, its search bar sits on the keyboard, and the list in between gets shorter: the
+     keyboard crops the bottom off rather than pushing the top away.
+     While a field in the library has focus, the library is sized to the visible area (the visual
+     viewport) and placed wherever iOS has panned it to. Whether a keyboard is up is judged against
+     the layout viewport (clientHeight), which the keyboard leaves alone; window.innerHeight can
+     shrink with it on iOS, so it cannot tell. */
   if (window.visualViewport) {
     const vv = window.visualViewport;
+    const typing = () => {
+      const a = document.activeElement;
+      return !!a && el.lib.contains(a) && (a.isContentEditable || a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
+    };
+    let fitted = false;
     const fit = () => {
-      const up = window.innerHeight - vv.height > 80;
-      el.lib.classList.toggle('kb-up', up);
-      el.lib.style.top = up ? vv.offsetTop + 'px' : '';
-      el.lib.style.bottom = up ? 'auto' : '';
-      el.lib.style.height = up ? vv.height + 'px' : '';
+      const on = L.open && typing();
+      if (!on && !fitted) return;
+      fitted = on;
+      el.lib.classList.toggle('kb-up', on && document.documentElement.clientHeight - vv.height > 80);
+      el.lib.style.top = on ? vv.offsetTop + 'px' : '';
+      el.lib.style.bottom = on ? 'auto' : '';
+      el.lib.style.height = on ? vv.height + 'px' : '';
       sceneV++;
       kick(400);
     };
+    /* iOS reports the keyboard in steps as it slides in, so fit again once it has settled. Once
+       the library is short enough for the field to show above the keyboard, the pan iOS made to
+       reach it is undone (once per focus, so it never fights iOS), and the keyboard simply covers
+       what was the bottom of the screen. */
+    let unpanned = false;
+    const unpan = () => {
+      if (!fitted || unpanned || vv.offsetTop <= 0) return;
+      unpanned = true;
+      window.scrollTo(0, 0);
+      fit();
+    };
+    const settle = () => { if (!typing()) unpanned = false; fit(); setTimeout(fit, 120); setTimeout(() => { fit(); unpan(); }, 400); };
     vv.addEventListener('resize', fit);
     vv.addEventListener('scroll', fit);
+    el.lib.addEventListener('focusin', settle);
+    el.lib.addEventListener('focusout', () => setTimeout(settle, 0));
   }
 
   /* ------------------------------------------------------------------ glass */
