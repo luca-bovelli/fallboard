@@ -152,25 +152,35 @@
   }
 
   /* ------------------------------------------------------------------ recents
-     Every piece opened goes to the top of the library's list with how to open it again and a
-     miniature of its notes (up to 360 of them, spread evenly over the piece, each as start,
-     length, pitch and hand), drawn on the library's cards. Uploaded files are kept whole in
-     IndexedDB, since a file the browser gave once cannot be asked for again. */
+     Every piece opened goes to the top of the library's list with how to open it again and its
+     opening as a little piano roll, drawn on the library's cards: what people remember of a piece
+     is how it starts. The opening is whole bars, at least six seconds and at most eight bars; each
+     note is start and length in hundredths of a second, pitch and hand. Uploaded files are kept
+     whole in IndexedDB, since a file the browser gave once cannot be asked for again. */
   const RECENT_MAX = 12;
-  function thumbOf(score) {
-    const notes = score.notes, d = score.duration || 1, step = Math.max(1, notes.length / 360), out = [];
-    for (let i = 0; i < notes.length; i += step) {
-      const n = notes[Math.floor(i)];
-      out.push(Math.round(n.t0 / d * 1000), Math.max(1, Math.round((n.t1 - n.t0) / d * 1000)), n.midi, n.hand);
+  const OPENING = { seconds: 6, bars: 8, notes: 400 };
+  function rollOf(score) {
+    const notes = score.notes;
+    if (!notes.length) return null;
+    const t0 = notes[0].t0;
+    const starts = (score.measures || []).map((m) => m.t).filter((t) => t > t0 + 1e-3);
+    const enough = starts.find((t, i) => t - t0 >= OPENING.seconds || i + 1 >= OPENING.bars);
+    const end = enough !== undefined ? enough : Math.min(score.duration, t0 + 10);
+    const cs = (t) => Math.round((t - t0) * 100);
+    const out = [];
+    for (const n of notes) {
+      if (n.t0 >= end - 1e-3) break;
+      out.push(cs(n.t0), Math.max(4, Math.round((Math.min(n.t1, end) - n.t0) * 100)), n.midi, n.hand);
+      if (out.length >= OPENING.notes * 4) break;
     }
-    return out;
+    return { end: cs(end), bars: starts.filter((t) => t < end).map(cs), notes: out };
   }
   function remember(score, meta) {
     if (!meta.open) return;
     const o = store.get();
     const list = (o.recent || []).filter((r) => r.id !== meta.id);
     const nums = score.docNumbers || [];
-    list.unshift({ id: meta.id, title: meta.title, composer: meta.composer || '', open: meta.open, at: Date.now(), dur: Math.round(score.duration), bars: nums.length ? nums[nums.length - 1] : 0, thumb: thumbOf(score) });
+    list.unshift({ id: meta.id, title: meta.title, composer: meta.composer || '', open: meta.open, at: Date.now(), dur: Math.round(score.duration), bars: nums.length ? nums[nums.length - 1] : 0, roll: rollOf(score) });
     o.recent = list.slice(0, RECENT_MAX);
     o.last = meta.id;
     store.set(o);

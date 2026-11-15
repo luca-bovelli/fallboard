@@ -174,11 +174,14 @@
     if (onClick) b.addEventListener('click', onClick);
     return b;
   }
-  function head(page, title, lines, extra) {
-    const h = make('header', 'lib-head');
-    h.appendChild(make('h1', '', title, 'text'));
-    for (const line of lines) if (line) h.appendChild(typeof line === 'string' ? make('p', '', line, 'text') : line);
-    if (extra) h.appendChild(extra);
+  /* a page's heading; a piece's or a work's page leads with its cover, as an album's does */
+  function head(page, title, lines, extra, art) {
+    const h = make('header', 'lib-head' + (art ? ' with-cover' : ''));
+    const text = art ? make('div', 'head-text') : h;
+    text.appendChild(make('h1', '', title, 'text'));
+    for (const line of lines) if (line) text.appendChild(typeof line === 'string' ? make('p', '', line, 'text') : line);
+    if (extra) text.appendChild(extra);
+    if (art) h.append(art, text);
     page.appendChild(h);
     return h;
   }
@@ -199,8 +202,9 @@
      'num' (a grey number, then the name), 'work' (the grey catalogue number, then the name) */
   function row(e, style, n) {
     const d = L.data, group = d.kids.has(e.id);
-    const b = button('row' + (style === 'num' ? ' num one' : style === 'two' ? '' : ' one'), undefined, () => go(e));
+    const b = button('row' + (style === 'num' ? ' num one' : style === 'two' ? ' has-cover' : ' one has-cover'), undefined, () => go(e));
     if (style === 'num') b.appendChild(make('span', 'n', n != null ? String(n) : '', 'text'));
+    else b.appendChild(cover(e));
     const main = make('span', 'main');
     const title = make('b', '', undefined, 'text');
     if (style === 'work' && catOf(e)) title.appendChild(make('span', 'cat', catOf(e)));
@@ -220,13 +224,15 @@
     return box;
   }
 
-  /* a recent piece: its notes in miniature, then its name and where you left off */
+  /* a recent piece: its opening as a piano roll, falling as in the player, fading into darkness
+     where its name and where you left off are written */
   function card(r) {
     const b = button('card', undefined, () => { FB.app.open(r.open, r); close(); }, 'box');
-    const cv = make('canvas', '', undefined, 'img');
+    const cv = make('canvas', 'roll', undefined, 'img');
     cv.setAttribute('aria-hidden', 'true');
     cv._r = r;
     b.appendChild(cv);
+    b.appendChild(make('span', 'shade'));
     const t = make('span', 'txt');
     t.appendChild(make('b', '', r.title, 'text'));
     if (r.composer) t.appendChild(make('small', '', r.composer, 'text'));
@@ -237,10 +243,11 @@
   }
   /* the first card: your own MusicXML file */
   function uploadCard() {
-    const b = button('card', undefined, () => FB.app.upload(), 'box');
-    const art = make('span', 'art', undefined, 'box');
+    const b = button('card upload', undefined, () => FB.app.upload(), 'box');
+    const art = make('span', 'art');
     art.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
     b.appendChild(art);
+    b.appendChild(make('span', 'shade'));
     const t = make('span', 'txt');
     t.appendChild(make('b', '', 'Upload a score', 'text'));
     t.appendChild(make('small', '', 'MusicXML or .mxl', 'text'));
@@ -248,6 +255,10 @@
     b.appendChild(t);
     return b;
   }
+  /* the opening bars as the player's roll draws them: pitch across, time rising from the
+     keyboard's edge (the first notes lowest), each hand in its colour, bar lines faint. The
+     keyboard's edge sits above the card's text, so the opening is never under it */
+  const ROLL_FLOOR = 0.66;   // where the first notes land, as a share of the card's height
   function drawThumb(cv, r) {
     const w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
     if (!w || !h) return;
@@ -255,23 +266,263 @@
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.fillStyle = css.stage; c.fillRect(0, 0, w, h);
-    const t = r.thumb || [];
+    const roll = r.roll;
+    if (!roll || !roll.notes.length) return;
+    const t = roll.notes;
     let lo = 127, hi = 0;
     for (let i = 0; i < t.length; i += 4) { lo = Math.min(lo, t[i + 2]); hi = Math.max(hi, t[i + 2]); }
-    const padX = 12, padY = 12, span = Math.max(12, hi - lo), iw = w - padX * 2, ih = h - padY * 2;
+    lo -= 2; hi += 2;
+    const keyW = w / (hi - lo + 1), floor = h * ROLL_FLOOR, top = 10;
+    const yOf = (cs) => floor - (cs / roll.end) * (floor - top);
+    c.fillStyle = css.grid;
+    for (const b of roll.bars) c.fillRect(0, Math.round(yOf(b)), w, 1);
     for (let i = 0; i < t.length; i += 4) {
-      const x = padX + t[i] / 1000 * iw, len = Math.max(2, t[i + 1] / 1000 * iw);
-      const y = padY + (1 - (t[i + 2] - lo) / span) * ih - 1.25;
+      const y0 = yOf(t[i]), y1 = yOf(t[i] + t[i + 1]);
+      const x = (t[i + 2] - lo) * keyW;
       c.fillStyle = t[i + 3] ? css.lh : css.rh;
-      rr(c, x, y, len, 2.5, 1.25);
+      rr(c, x + keyW * 0.12, y1 + 0.5, keyW * 0.76, Math.max(2, y0 - y1 - 1), Math.min(2, keyW * 0.3));
       c.fill();
     }
-    if (r.pos > 0 && r.dur) {
-      const x = padX + Math.min(1, r.pos / r.dur) * iw;
-      c.fillStyle = css.now;
-      rr(c, x - 1, 6, 2, h - 12, 1);
-      c.fill();
+  }
+
+  /* ------------------------------------------------------------------ covers
+     Every piece and work has artwork of its own, decided by a hash of its id, so it is the same
+     on every visit: a palette and a mesh of soft colour fields, a layout, a typeface. The layouts
+     borrow from engraved editions and posters: an echoed title, an engraved double frame, a giant
+     numeral in outline, a title riding a staff. The name set large is the one people remember:
+     the nickname when there is one ("Raindrop"), else the piece's own name without its key or
+     number, which go underneath. The cover is one picture at every size (index.html .cover).
+     Composers will have photographs instead. */
+  const PALETTES = [
+    /* base, four colour fields, ink, lines */
+    ['#3424e8', ['#3a2bf0', '#3f8cf2', '#7fe6a8', '#3fe3cf'], '#f7f6ff', 'rgb(255 255 255 / 0.55)'],   // electric
+    ['#ff1d1d', ['#ff4a2a', '#ff8b3a', '#ffcf86', '#ff2b1f'], '#ffe8b5', 'rgb(255 232 181 / 0.6)'],    // ember
+    ['#1d1450', ['#5b3fe0', '#ef6aa6', '#ffb489', '#2a1a6e'], '#fff0f5', 'rgb(255 240 245 / 0.5)'],    // dusk
+    ['#05396b', ['#0a6bd8', '#1fd3c3', '#bafff0', '#063e7a'], '#f0fffb', 'rgb(240 255 251 / 0.55)'],   // lagoon
+    ['#4d1499', ['#9b38f2', '#ff6fb2', '#ffd0ea', '#5a1aa8'], '#fff2fb', 'rgb(255 242 251 / 0.55)'],   // orchid
+    ['#ff5f3a', ['#ff356c', '#ffb54a', '#fff0c4', '#ff7a2e'], '#2b0c13', 'rgb(43 12 19 / 0.45)'],      // sunrise
+    ['#d9e6ff', ['#9fbfff', '#f1d6ff', '#ffffff', '#b9f0ff'], '#18204a', 'rgb(24 32 74 / 0.45)'],      // glacier
+    ['#ffcf3a', ['#ff9a1f', '#fff2a8', '#f458b0', '#ffd84d'], '#3b0f2c', 'rgb(59 15 44 / 0.5)'],       // citrus
+    /* the classic editions: gilt on navy, green on cream, cream on claret, pale on moss */
+    ['#0e1c3c', ['#1d3672', '#13265a', '#28468a', '#0b1530'], '#e9c97c', 'rgb(233 201 124 / 0.8)'],   // gilt
+    ['#f2e9d4', ['#e9dcbc', '#f7f0de', '#e3d4ae', '#efe4c8'], '#1f4b35', 'rgb(31 75 53 / 0.75)'],      // folio
+    ['#470b1a', ['#8e1c36', '#d9504e', '#f6b388', '#5a0f22'], '#ffe9d8', 'rgb(255 233 216 / 0.55)'],   // claret
+    ['#0c3527', ['#1d7656', '#97df86', '#eef7bf', '#0f4a35'], '#f3ffe8', 'rgb(243 255 232 / 0.5)'],    // moss
+  ];
+  const CLASSIC = [8, 9, 10, 11];
+  /* the faces for the name set large: family, roughly how wide a letter is (in ems), style,
+     weight. Boska bold italic, Melodrama's upright drama, Switzer Thin set huge */
+  const FACE = {
+    boska: ['Boska, Georgia, serif', 0.5, 'italic', 900],
+    melodrama: ['Melodrama, Didot, Georgia, serif', 0.5, 'normal', 700],
+    switzer: ['Switzer, Inter, sans-serif', 0.55, 'normal', 200],
+  };
+  /* a name is measured in its own face to size it; until the faces have arrived the estimate
+     above stands in, and the covers are drawn again once they are here */
+  const measure = document.createElement('canvas').getContext('2d');
+  const FONTS = Object.values(FACE).map(([fam, , style, weight]) => `${style} ${weight} 40px ${fam}`).concat('italic 800 40px "Bodoni Moda"');
+  let fontsIn = false;
+  function widthOf(text, face) {
+    const [fam, f, style, weight] = FACE[face];
+    if (!fontsIn) return f * text.length;
+    measure.font = `${style} ${weight} 100px ${fam}`;
+    return measure.measureText(text).width / 100;
+  }
+  function loadFonts() {
+    if (!document.fonts || fontsIn) return;
+    Promise.all(FONTS.map((s) => document.fonts.load(s))).then(() => {
+      fontsIn = true;
+      if (L.open && L.data) { const top = el.scroll.scrollTop; render(false); el.scroll.scrollTop = top; }
+    }, () => {});
+  }
+  function idHash(id) {
+    let h = 2166136261;
+    for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  /* a stream of numbers from the hash, so each choice is independent of the others */
+  function chooser(id) {
+    let s = idHash(id) || 1;
+    return (n) => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s % n; };
+  }
+  /* the colour fields: three or four ellipses of the palette's colours, each its own size,
+     shape and place, over the base colour */
+  function meshOf(p, pick) {
+    const fields = p[1].filter((c, i) => i < 3 || pick(3)).map((c) => {
+      const w = 45 + pick(65), h = 35 + pick(65);
+      return `radial-gradient(ellipse ${w}% ${h}% at ${pick(101)}% ${pick(101)}%, ${c} 0, ${c} ${pick(18)}%, transparent 100%)`;
+    });
+    return fields.join(', ') + ', ' + p[0];
+  }
+
+  /* ------------------------------------------------------------------ ornaments
+     Drawn in a 100-unit square laid over the cover, in its line colour, from parts the cover's
+     hash picks: rules, corners and borders after engraved editions, with music's own ornaments
+     as centrepieces (the turn, the mordent, the fermata, a star, a diamond). */
+  const stroke = (w) => `stroke="currentColor" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+  const CENTRE = [
+    (x, y, s) => `<path d="M${x} ${y - s}L${x + s} ${y}L${x} ${y + s}L${x - s} ${y}Z" fill="currentColor"/>`,                                   // diamond
+    (x, y, s) => `<path d="M${x - 2.4 * s} ${y + 0.4 * s}C${x - 2.4 * s} ${y - 1.5 * s} ${x - 0.5 * s} ${y - 1.5 * s} ${x} ${y}S${x + 2.4 * s} ${y + 1.5 * s} ${x + 2.4 * s} ${y - 0.4 * s}" ${stroke(0.55 * s)}/>`,   // turn
+    (x, y, s) => `<path d="M${x - 2.4 * s} ${y + 0.5 * s}l${0.8 * s} ${-s}l${0.8 * s} ${s}l${0.8 * s} ${-s}l${0.8 * s} ${s}l${0.8 * s} ${-s}l${0.8 * s} ${s}M${x} ${y - 1.3 * s}V${y + 1.3 * s}" ${stroke(0.4 * s)}/>`,   // mordent
+    (x, y, s) => `<path d="M${x - 2.2 * s} ${y + 0.8 * s}A${2.2 * s} ${2.2 * s} 0 0 1 ${x + 2.2 * s} ${y + 0.8 * s}" ${stroke(0.45 * s)}/><circle cx="${x}" cy="${y + 0.35 * s}" r="${0.42 * s}" fill="currentColor"/>`,   // fermata
+    (x, y, s) => `<path d="M${x} ${y - 1.4 * s}Q${x + 0.25 * s} ${y - 0.25 * s} ${x + 1.4 * s} ${y}Q${x + 0.25 * s} ${y + 0.25 * s} ${x} ${y + 1.4 * s}Q${x - 0.25 * s} ${y + 0.25 * s} ${x - 1.4 * s} ${y}Q${x - 0.25 * s} ${y - 0.25 * s} ${x} ${y - 1.4 * s}Z" fill="currentColor"/>`,   // star
+  ];
+  /* a rule from x1 to x2 with a centrepiece, and dots or curls at its ends */
+  function rule(pick, x1, x2, y, s = 1.3) {
+    const mid = (x1 + x2) / 2, gap = 3.4 * s;
+    let out = `<path d="M${x1} ${y}H${mid - gap}M${mid + gap} ${y}H${x2}" ${stroke(0.32)}/>` + CENTRE[pick(CENTRE.length)](mid, y, s);
+    const ends = pick(3);
+    if (ends === 1) out += `<circle cx="${x1 - 1.6}" cy="${y}" r="0.55" fill="currentColor"/><circle cx="${x2 + 1.6}" cy="${y}" r="0.55" fill="currentColor"/>`;
+    if (ends === 2) out += `<path d="M${x1} ${y}c-1.6 0-2.4-1.9-1-2.5s2 1 0.8 1.6M${x2} ${y}c1.6 0 2.4-1.9 1-2.5s-2 1-0.8 1.6" ${stroke(0.32)}/>`;
+    return out;
+  }
+  /* a frame inset from the edge: double, beaded, dotted or thick and thin */
+  function border(pick, inset) {
+    const r = (i) => `x="${i}" y="${i}" width="${100 - 2 * i}" height="${100 - 2 * i}"`;
+    switch (pick(4)) {
+      case 0: return `<rect ${r(inset)} ${stroke(0.7)}/><rect ${r(inset + 2)} ${stroke(0.25)}/>`;
+      case 1: {
+        let beads = '';
+        const i = inset + 2.2, n = 26, len = 100 - 2 * i;
+        for (let k = 0; k <= n; k++) {
+          const t = (k / n) * len + i;
+          beads += `<circle cx="${t}" cy="${i}" r="0.42"/><circle cx="${t}" cy="${100 - i}" r="0.42"/><circle cx="${i}" cy="${t}" r="0.42"/><circle cx="${100 - i}" cy="${t}" r="0.42"/>`;
+        }
+        return `<rect ${r(inset)} ${stroke(0.35)}/><g fill="currentColor">${beads}</g><rect ${r(inset + 4.4)} ${stroke(0.35)}/>`;
+      }
+      case 2: return `<rect ${r(inset)} ${stroke(0.6)} stroke-dasharray="0.01 1.5"/><rect ${r(inset + 2.2)} ${stroke(0.3)}/>`;
+      default: return `<rect ${r(inset)} ${stroke(1.1)}/><rect ${r(inset + 2.4)} ${stroke(0.3)}/><rect ${r(inset + 3.6)} ${stroke(0.3)}/>`;
     }
+  }
+  /* the same piece at each corner of a frame, turned to face inward */
+  function corners(pick, at) {
+    const style = pick(4), out = [];
+    for (const [x, y, dx, dy] of [[at, at, 1, 1], [100 - at, at, -1, 1], [at, 100 - at, 1, -1], [100 - at, 100 - at, -1, -1]]) {
+      if (style === 0) out.push(`<path d="M${x + dx * 7} ${y}H${x}V${y + dy * 7}" ${stroke(0.5)}/><circle cx="${x + dx * 2.2}" cy="${y + dy * 2.2}" r="0.7" fill="currentColor"/>`);
+      else if (style === 1) out.push(`<path d="M${x + dx * 8} ${y}A8 8 0 0 ${dx * dy > 0 ? 0 : 1} ${x} ${y + dy * 8}M${x + dx * 5} ${y}A5 5 0 0 ${dx * dy > 0 ? 0 : 1} ${x} ${y + dy * 5}" ${stroke(0.35)}/>`);
+      else if (style === 2) out.push(`<g transform="translate(${x} ${y}) scale(${dx} ${dy})"><path d="M1 1C4 0.5 6.5 2 7 4.5C4.5 4 2 3 1 1ZM1 1C0.5 4 2 6.5 4.5 7C4 4.5 3 2 1 1Z" fill="currentColor"/></g>`);
+      else out.push(CENTRE[4](x + dx * 2.6, y + dy * 2.6, 1.6));
+    }
+    return out.join('');
+  }
+  /* printer's marks: crop marks at two corners and a registration target */
+  function marks(pick) {
+    const t = [[80, 9], [50, 7]][pick(2)];   // clear of the composer and number along the bottom
+    return `<path d="M4 9H8M9 4V8M96 9H92M91 4V8" ${stroke(0.3)}/>` +
+      `<circle cx="${t[0]}" cy="${t[1]}" r="2.6" ${stroke(0.3)}/><path d="M${t[0] - 4} ${t[1]}H${t[0] + 4}M${t[0]} ${t[1] - 4}V${t[1] + 4}" ${stroke(0.3)}/>`;
+  }
+  const layer = (inner) => `<svg class="orn" viewBox="0 0 100 100" aria-hidden="true">${inner}</svg>`;
+  /* what a cover says: the name to set large, what goes under it, a number for the numeral */
+  function coverText(e) {
+    const d = L.data, p = d.parentOf(e);
+    let main = d.kids.has(e.id) ? workName(e).replace(/ “[^”]*”$/, '') : signs(e.title);
+    let sub = '', num = '';
+    const key = / in ([A-G][♭♯]? (?:major|minor))$/.exec(main);
+    if (key) { sub = 'in ' + key[1]; main = main.slice(0, key.index); }
+    const no = /,? No\. ?(\d+)$/.exec(main);
+    if (no) { num = no[1]; main = main.slice(0, no.index); }
+    const lead = /^(\d+) (.+)$/.exec(main);
+    if (!num && lead) { num = lead[1]; main = lead[2]; }
+    if (!num && p && e.number) num = String(e.number);
+    const nick = nickOf(e);
+    if (nick) { sub = [main + (no ? ' No. ' + no[1] : ''), sub].filter(Boolean).join(' '); main = nick; }
+    else if (no) sub = ['No. ' + no[1], sub].filter(Boolean).join(' ');
+    if (e.kind === 'movement' && p && !sub) sub = workName(p).replace(/ “[^”]*”$/, '');
+    return { main, sub, num, who: d.comp.get(e.composer).name, cat: catOf(e) };
+  }
+  /* the largest size (in cqw) at which the name fits its box: its longest word on one line, the
+     whole of it within the box's area */
+  function fitSize(text, face, width, height, max) {
+    const longest = Math.max(...text.split(/\s+/).map((w) => widthOf(w, face)), 0.01);
+    const whole = widthOf(text, face);
+    return +Math.min(max, width / longest, Math.sqrt((width * height) / (whole * 0.95))).toFixed(2);
+  }
+  let maskSeq = 0;   // each outline's mask needs an id of its own on the page
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  function cover(e) {
+    const pick = chooser(e.id);
+    const t = coverText(e);
+    let layout = ['echo', 'frame', 'num', 'staff'][pick(4)];
+    if (layout === 'echo' && (/\s/.test(t.main) || t.main.length > 11)) layout = t.num ? 'num' : 'staff';
+    const p = layout === 'frame' ? PALETTES[CLASSIC[pick(CLASSIC.length)]] : PALETTES[pick(8)];
+    const face = layout === 'echo' ? (pick(3) ? 'boska' : 'melodrama') : layout === 'frame' ? (pick(2) ? 'melodrama' : 'boska')
+      : layout === 'num' ? 'boska' : pick(2) ? 'switzer' : 'melodrama';
+    const c = make('span', 'cover cv-' + layout, undefined, 'cover');
+    c.setAttribute('aria-hidden', 'true');
+    c.style.setProperty('--mesh', meshOf(p, pick));
+    c.style.setProperty('--ink', p[2]);
+    c.style.setProperty('--line', p[3]);
+    c.style.setProperty('--face', FACE[face][0]);
+    c.style.setProperty('--face-style', FACE[face][2]);
+    c.style.setProperty('--face-weight', FACE[face][3]);
+    c.dataset.base = p[0];
+    c.dataset.field = p[1][0];
+    const part = (cls, text) => { const s = make('span', cls, text); c.appendChild(s); return s; };
+    const art = (svg) => c.insertAdjacentHTML('beforeend', svg);
+    /* a word drawn in SVG, in the cover's 100-unit square: filled in ink, or as an outline that
+       lies outside the letters only (a stroke twice as wide, the letters masked out of it), so
+       the outline never eats into the letter's own shape */
+    const word = (text, x, y, size, fam, style, weight, outline, anchor = 'start') => {
+      const font = `font-family="${fam.replace(/"/g, "'")}" font-style="${style}" font-weight="${weight}" font-size="${size}" text-anchor="${anchor}" letter-spacing="${(-0.01 * size).toFixed(2)}"`;
+      const glyphs = `<text x="${x}" y="${y}" ${font}>${esc(text)}</text>`;
+      if (!outline) return glyphs.replace('<text ', '<text style="fill: var(--ink)" ');
+      const id = 'cvm' + (++maskSeq);
+      return `<mask id="${id}" maskUnits="userSpaceOnUse" x="-60" y="-60" width="220" height="220"><rect x="-60" y="-60" width="220" height="220" fill="#fff"/>${glyphs.replace('<text ', '<text fill="#000" ')}</mask>` +
+        glyphs.replace('<text ', `<text fill="none" stroke="currentColor" stroke-width="${outline * 2}" stroke-linejoin="round" mask="url(#${id})" `);
+    };
+    const [fam, fstyle, fweight] = [FACE[face][0], FACE[face][2], FACE[face][3]];
+    if (layout === 'echo') {
+      const s = fitSize(t.main, face, 86, 30, 34);
+      const y = 50 + 0.3 * s;
+      art(layer(marks(pick) + (pick(2) ? rule(pick, 62, 93, 20, 1.1) : '') +
+        word(t.main, 7, y - 1.02 * s, s, fam, fstyle, fweight, 0.32) + word(t.main, 7, y + 1.02 * s, s, fam, fstyle, fweight, 0.32) +
+        word(t.main, 7, y, s, fam, fstyle, fweight, 0)));
+      if (t.sub) part('sub', t.sub);
+      part('who', t.who);
+      if (t.cat) part('cat', t.cat);
+    } else if (layout === 'frame') {
+      c.style.setProperty('--ts', fitSize(t.main, face, 72, 30, 17) + 'cqw');
+      art(layer(border(pick, 4.5) + corners(pick, 10)));
+      const stack = part('stack');
+      stack.appendChild(make('span', 'who', t.who));
+      stack.insertAdjacentHTML('beforeend', `<svg class="divider" viewBox="0 0 100 8" aria-hidden="true">${rule(pick, 8, 92, 4, 1.7)}</svg>`);
+      stack.appendChild(make('span', 'main', t.main));
+      if (t.sub) stack.appendChild(make('span', 'sub', t.sub));
+      if (t.cat) stack.appendChild(make('span', 'cat', t.cat));
+    } else if (layout === 'num') {
+      c.style.setProperty('--ts', fitSize(t.main, face, 68, 34, 18) + 'cqw');
+      /* the numeral in outline, bleeding off the bottom right corner */
+      const big = t.num || (t.main.match(/\p{L}/u) || ['·'])[0];
+      art(layer(word(big, 104, 92, 96, '"Bodoni Moda", Didot, serif', 'italic', 800, 0.4, 'end') + rule(pick, 8, 40, 15, 1.1)));
+      part('who', t.who);
+      if (t.cat) part('cat', t.cat);
+      part('main', t.main);
+      if (t.sub) part('sub', t.sub);
+    } else {
+      c.style.setProperty('--ts', fitSize(t.main, face, 86, 26, face === 'switzer' ? 17 : 20) + 'cqw');
+      /* the staff ends in a final double barline */
+      art(layer(`<path d="M90.6 58V80.5" ${stroke(0.3)}/><path d="M93.2 58V80.5" ${stroke(1.2)}/>`));
+      part('staff'); part('who', t.who);
+      if (t.cat) part('cat', t.cat);
+      part('main', t.main);
+      if (t.sub) part('sub', t.sub);
+    }
+    return c;
+  }
+  /* a piece's or a work's page opens on its cover, as an album does, its colours behind */
+  function hero(page, e, title, lines, extra) {
+    const h = make('header', 'hero');
+    const art = cover(e);
+    const glow = make('span', 'hero-glow');
+    glow.style.setProperty('--mesh', art.style.getPropertyValue('--mesh'));
+    h.append(glow, art);
+    const text = make('div', 'hero-text');
+    text.appendChild(make('h1', '', title, 'text'));
+    for (const line of lines) if (line) text.appendChild(typeof line === 'string' ? make('p', '', line, 'text') : line);
+    if (extra) text.appendChild(extra);
+    h.appendChild(text);
+    page.appendChild(h);
+    return h;
   }
   function flushThumbs() {
     const list = L.thumbs;
@@ -280,7 +531,7 @@
   }
 
   function tile(c) {
-    const b = button('tile', undefined, () => { clearQuery(); go2([{ view: 'home' }, { view: 'composer', id: c.id }]); }, 'box');
+    const b = button('tile', undefined, () => push({ view: 'composer', id: c.id }), 'box');
     b.appendChild(make('b', '', c.name, 'text'));
     b.appendChild(make('small', '', lifeOf(c), 'text'));
     const era = make('span', 'era');
@@ -388,16 +639,16 @@
     work(page, item) {
       const d = L.data, e = d.byId.get(item.id), c = d.comp.get(e.composer);
       const yearOf = e.year || (d.parentOf(e) || {}).year;
-      const who = button('link', c.full, () => go2([{ view: 'home' }, { view: 'composer', id: c.id }]), 'text');
+      const who = button('link', c.full, () => push({ view: 'composer', id: c.id }), 'text');
       const p = d.parentOf(e);
       const lines = [who, [catOf(e), e.key && keyText(e.key), yearOf].filter(Boolean).join(' · ')];
-      if (p) lines.push(button('link', 'Part of ' + workName(p), () => push({ view: 'work', id: p.id }), 'text'));
+      if (p) lines.push(button('link quiet', 'Part of ' + workName(p), () => push({ view: 'work', id: p.id }), 'text'));
       let actions = null;
       if (e.s || e.b) {
         actions = make('div', 'actions');
         actions.appendChild(playButton(e));
       }
-      head(page, workName(e), lines, actions);
+      hero(page, e, workName(e), lines, actions);
       const s = make('section', 'lib-sec');
       const k = d.kids.get(e.id);
       s.appendChild(rows(k, 'num', k.length > 6));
@@ -405,6 +656,19 @@
     },
 
     piece(page, item) { pieceView(page, L.data.byId.get(item.id)); },
+
+    /* #library/~covers: sixty covers side by side, to judge the designs together */
+    covers(page) {
+      head(page, 'Covers', ['The artwork of the pieces and works in Explore']);
+      const grid = make('div', 'cover-grid');
+      for (const e of [...L.data.explore.pieces, ...L.data.explore.works].slice(0, 60)) {
+        const b = button('cover-pick', undefined, () => go(e));
+        b.appendChild(cover(e));
+        b.appendChild(make('span', '', nameOf(e, true)));
+        grid.appendChild(b);
+      }
+      page.appendChild(grid);
+    },
 
     search(page) {
       const q = L.query.trim();
@@ -445,8 +709,8 @@
     const d = L.data, c = d.comp.get(e.composer), p = d.parentOf(e);
     const year = e.year || (p && p.year), pub = e.pub || (p && p.pub);
     const title = pieceName(e, false);
-    const lines = [button('link', c.full, () => go2([{ view: 'home' }, { view: 'composer', id: c.id }]), 'text')];
-    if (p) lines.push(button('link', [catOf(e), workName(p)].filter(Boolean).join(' · '), () => push({ view: 'work', id: p.id }), 'text'));
+    const lines = [button('link', c.full, () => push({ view: 'composer', id: c.id }), 'text')];
+    if (p) lines.push(button('link quiet', [catOf(e), workName(p)].filter(Boolean).join(' · '), () => push({ view: 'work', id: p.id }), 'text'));
     else if (catOf(e)) lines.push(catOf(e));
     const actions = make('div', 'actions');
     const file = d.fileOf(e);
@@ -457,8 +721,8 @@
     pdf.appendChild(make('span', '', 'PDF', 'text'));
     pdf.disabled = !own;
     pdf.title = own ? 'Download the sheet music as a PDF (A4)' : 'No score of its own yet';
-    actions.appendChild(pdf);
-    const h = head(page, title, lines, actions);
+    if (own) actions.appendChild(pdf);
+    const h = hero(page, e, title, lines, actions);
     if (!own) h.querySelector('h1').appendChild(dot());
 
     if (e.about) section(page, 'About').appendChild(make('p', 'lib-about', e.about, 'text'));
@@ -487,36 +751,88 @@
     if (!own) { s.appendChild(make('p', 'lib-note', 'This piece has no score of its own yet' + (file ? ': Play opens it within ' + workName(file) + '.' : '.'), 'text')); return; }
     s.appendChild(make('p', 'lib-note', 'A4, the same layout for every piece in the library. Download it as a PDF to print or keep.', 'text'));
     const pages = make('div', 'pages');
-    s.appendChild(pages);
-    if (!TOUCH.matches) pageArrows(s.querySelector('.sec-head'), pages);
+    const box = make('div', 'carousel');
+    box.appendChild(pages);
+    s.appendChild(box);
+    if (!TOUCH.matches) carouselArrows(box, pages);
     showPages(e, pages);
   }
-  /* with a mouse there is no swiping: arrows turn the preview a page at a time */
-  function pageArrows(headRow, pages) {
-    const box = make('div', 'page-arrows');
-    const arrow = (dir, label, path) => {
-      const b = button('btn icon small', undefined, () => {
-        const pg = pages.querySelector('.sheet-page');
-        const step = pg ? pg.offsetWidth + CARD_GAP : pages.clientWidth;
-        pages.scrollBy({ left: dir * step, behavior: 'smooth' });
-      });
-      b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + path + '"/></svg>';
+  /* with a mouse there is no swiping: glass arrows at the carousel's sides turn it a page at a
+     time. They show only while there is somewhere to go: none when everything fits, no back
+     arrow at the start, no forward arrow at the end */
+  const ARROW = { prev: 'm14.5 5.5-6.5 6.5 6.5 6.5', next: 'm9.5 5.5 6.5 6.5-6.5 6.5' };
+  function carouselArrows(box, strip) {
+    const step = () => { const pg = strip.firstElementChild; return pg ? pg.offsetWidth + parseFloat(getComputedStyle(strip).columnGap || '0') : strip.clientWidth; };
+    const arrow = (dir, label) => {
+      const b = button('round glass-material carousel-arrow ' + (dir < 0 ? 'prev' : 'next'), undefined, () => strip.scrollBy({ left: dir * step(), behavior: 'smooth' }));
+      b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + (dir < 0 ? ARROW.prev : ARROW.next) + '"/></svg>';
       b.setAttribute('aria-label', label);
       b.title = label;
+      b.hidden = true;
       return b;
     };
-    const prev = arrow(-1, 'Previous page', 'm14.5 5.5-6.5 6.5 6.5 6.5');
-    const next = arrow(1, 'Next page', 'm9.5 5.5 6.5 6.5-6.5 6.5');
+    const prev = arrow(-1, 'Previous page'), next = arrow(1, 'Next page');
     box.append(prev, next);
-    headRow.appendChild(box);
     const sync = () => {
-      prev.disabled = pages.scrollLeft < 2;
-      next.disabled = pages.scrollLeft + pages.clientWidth > pages.scrollWidth - 2;
+      const over = strip.scrollWidth > strip.clientWidth + 1;
+      prev.hidden = !over || strip.scrollLeft < 2;
+      next.hidden = !over || strip.scrollLeft + strip.clientWidth > strip.scrollWidth - 2;
+      sceneV++; kick(200);
     };
-    pages.addEventListener('scroll', sync, { passive: true });
-    new ResizeObserver(sync).observe(pages);
-    new MutationObserver(sync).observe(pages, { childList: true });
+    strip.addEventListener('scroll', sync, { passive: true });
+    new ResizeObserver(sync).observe(strip);
+    new MutationObserver(sync).observe(strip, { childList: true });
     sync();
+    return { prev, next, step };
+  }
+
+  /* ------------------------------------------------------------------ the sheet music, full screen
+     A page of the preview opens the pages full screen, one at a time, each as large as the screen
+     allows, with the PDF to download in the corner. Swipe, scroll or use the arrows (or the arrow
+     keys) to turn pages; the close button or Escape goes back. */
+  function openViewer(e, index) {
+    engraveFor(e).then((out) => {
+      closeViewer();
+      const v = make('div', 'viewer');
+      v.setAttribute('role', 'dialog');
+      v.setAttribute('aria-label', 'Sheet music: ' + pieceName(e, true));
+      const strip = make('div', 'viewer-pages');
+      out.pages.forEach((src, i) => {
+        const pg = make('div', 'viewer-page');
+        const img = make('img', '', undefined, 'img');
+        img.src = src;
+        img.alt = 'Page ' + (i + 1) + ' of ' + out.pages.length;
+        pg.appendChild(img);
+        strip.appendChild(pg);
+      });
+      v.appendChild(strip);
+      const shut = button('round glass-material viewer-close', undefined, closeViewer);
+      shut.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+      shut.setAttribute('aria-label', 'Close');
+      shut.title = 'Close';
+      const save = button('round glass-material viewer-save', undefined, () => savePdf(e));
+      save.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg>';
+      save.setAttribute('aria-label', 'Download the PDF');
+      save.title = 'Download the PDF';
+      v.append(shut, save);
+      el.lib.appendChild(v);
+      L.viewer = { el: v, strip, arrows: TOUCH.matches ? null : carouselArrows(v, strip) };
+      requestAnimationFrame(() => { const pg = strip.children[index]; if (pg) strip.scrollLeft = pg.offsetLeft - (strip.clientWidth - pg.offsetWidth) / 2; });
+      shut.focus({ preventScroll: true });
+      sceneV++; kick(500);
+    });
+  }
+  function closeViewer() {
+    if (!L.viewer) return;
+    L.viewer.el.remove();
+    L.viewer = null;
+    sceneV++; kick(300);
+  }
+  function turnViewer(dir) {
+    const v = L.viewer;
+    if (!v) return;
+    const pg = v.strip.firstElementChild;
+    v.strip.scrollBy({ left: dir * (pg ? pg.offsetWidth + parseFloat(getComputedStyle(v.strip).columnGap || '0') : v.strip.clientWidth), behavior: 'smooth' });
   }
 
   /* the pages as they will print, engraved here by MuseScore's engine (js/print.js); kept for
@@ -551,10 +867,11 @@
       if (!box.isConnected) return;
       box.textContent = '';
       out.pages.forEach((src, i) => {
-        const pg = make('div', 'sheet-page');
-        const img = make('img');
+        const pg = button('sheet-page', undefined, () => openViewer(e, i));
+        pg.setAttribute('aria-label', 'Page ' + (i + 1) + ' of ' + out.pages.length + ', full screen');
+        const img = make('img', '', undefined, 'img');
         img.src = src;
-        img.alt = 'Page ' + (i + 1) + ' of ' + out.pages.length;
+        img.alt = '';
         pg.appendChild(img);
         box.appendChild(pg);
       });
@@ -611,6 +928,8 @@
     const page = el.page;
     page.textContent = '';
     L.thumbs = [];
+    const now = L.stack[L.stack.length - 1];
+    L.query = now.view === 'search' ? now.q || '' : '';
     const searching = !!L.query.trim();
     el.lib.classList.toggle('is-searching', searching);
     el.scopes.hidden = !searching;
@@ -625,9 +944,6 @@
     } else if (searching) VIEWS.search(page);
     else { const top = L.stack[L.stack.length - 1]; VIEWS[top.view](page, top); }
     if (enter) { page.classList.remove('is-entering'); void page.offsetWidth; page.classList.add('is-entering'); }
-    /* the address names the view (#library/chopin/op-28/15), so a reload, a bookmark or a shared
-       link comes back to it */
-    if (L.open) history.replaceState(null, '', '#library' + hashOf(L.stack[L.stack.length - 1]));
     syncScopes();
     fitShelves();
     flushThumbs();
@@ -635,28 +951,49 @@
     sceneV++;
     kick(400);
   }
-  const hashOf = (top) => (top.view === 'recent' ? '/recent' : top.view === 'pieces' ? '/' + top.id + '/~pieces' : top.view === 'works' ? '/' + top.id + '/~works' : top.id ? '/' + top.id : '');
+  /* Every step in the library (home, a composer, a search, a piece…) is an entry on the
+     browser's history holding the steps up to it, and the address names it
+     (#library/chopin/op-28/15, #library/~search/raindrop) for reloads, bookmarks and shared links.
+     So the back button, Escape, the browser's back, a phone's back gesture and a swipe in from
+     the left edge all go one step back the same way: out of a piece into the search it came
+     from, out of a search into the page it started on, and from the library's home to the
+     player. */
+  const hashOf = (top) => (top.view === 'recent' ? '/recent' : top.view === 'covers' ? '/~covers' : top.view === 'search' ? '/~search/' + encodeURIComponent(top.q || '')
+    : top.view === 'pieces' ? '/' + top.id + '/~pieces' : top.view === 'works' ? '/' + top.id + '/~works' : top.id ? '/' + top.id : '');
+  const urlOf = (item) => '#library' + hashOf(item);
+  const entry = (stack) => ({ fb: 'library', stack: stack.map((s) => ({ ...s })) });
+  const inHistory = () => !!(history.state && history.state.fb === 'library');
+  /* show the step on top: its search text in the field, where it was scrolled */
+  function show(enter) {
+    const top = L.stack[L.stack.length - 1];
+    el.query.value = top.view === 'search' ? top.q || '' : '';
+    el.clear.hidden = !el.query.value;
+    render(enter);
+    el.scroll.scrollTop = top.top || 0;
+  }
   function push(item) {
-    L.stack[L.stack.length - 1].top = el.scroll.scrollTop;
-    if (L.query) clearQuery();
+    const cur = L.stack[L.stack.length - 1];
+    cur.top = el.scroll.scrollTop;
+    if (L.open && inHistory()) history.replaceState(entry(L.stack), '', urlOf(cur));
     L.stack.push(item);
-    render(true);
-    el.scroll.scrollTop = 0;
+    if (L.open) history.pushState(entry(L.stack), '', urlOf(item));
+    show(true);
   }
-  function go2(stack) {
-    L.stack = stack;
-    if (L.query) clearQuery();
-    render(true);
-    el.scroll.scrollTop = 0;
-  }
-  /* back: out of a search, up a level, or at the top back to the player */
   function back() {
-    if (L.query) { clearQuery(); el.query.blur(); render(true); el.scroll.scrollTop = L.stack[L.stack.length - 1].top || 0; return; }
-    if (L.stack.length < 2) { close(); return; }
-    L.stack.pop();
-    render(true);
-    el.scroll.scrollTop = L.stack[L.stack.length - 1].top || 0;
+    if (L.viewer) { closeViewer(); return; }
+    if (!el.menu.hidden) { closeMenu(); return; }
+    if (inHistory()) { history.back(); return; }
+    /* no history of our own (it could not be written): step back by hand */
+    if (L.stack.length > 1) { L.stack.pop(); show(true); } else closeNow();
   }
+  window.addEventListener('popstate', (e) => {
+    const s = e.state;
+    if (s && s.fb === 'library') {
+      L.stack = s.stack.map((x) => ({ ...x }));
+      if (!L.open) present();
+      show(true);
+    } else if (L.open) closeNow();
+  });
   function openEntry(e) {
     const d = L.data, f = d.fileOf(e);
     if (!f) return;
@@ -688,24 +1025,24 @@
     S.asked = q;
     S.worker.postMessage({ type: 'find', id: ++S.seq, q, limit: 200 });
   }
+  /* typing starts a search as a step of its own; more typing updates it in place; emptying the
+     field steps back out of it */
   let searchTimer = 0;
   function onQuery() {
-    const was = !!L.query.trim();
-    L.query = el.query.value;
-    el.clear.hidden = !L.query;
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-      if (!L.data) return;
-      const now = !!L.query.trim();
-      if (!was && now) L.stack[L.stack.length - 1].top = el.scroll.scrollTop;
-      render(was !== now);
-      el.scroll.scrollTop = now ? 0 : L.stack[L.stack.length - 1].top || 0;
-    }, 90);
+    const v = el.query.value;
+    el.clear.hidden = !v;
+    const top = L.stack[L.stack.length - 1];
+    if (top.view === 'search') {
+      if (!v.trim()) { clearTimeout(searchTimer); back(); return; }
+      top.q = v;
+      if (inHistory()) history.replaceState(entry(L.stack), '', urlOf(top));
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => { if (L.open && L.data && L.stack[L.stack.length - 1] === top) { render(false); el.scroll.scrollTop = 0; } }, 90);
+    } else if (v.trim() && L.data) push({ view: 'search', q: v });
   }
-  function clearQuery() { el.query.value = ''; L.query = ''; el.clear.hidden = true; }
   el.query.addEventListener('input', onQuery);
   el.query.addEventListener('keydown', (e) => { if (e.key === 'Enter') el.query.blur(); });
-  el.clear.addEventListener('click', (e) => { e.preventDefault(); clearQuery(); onQuery(); el.query.focus(); });
+  el.clear.addEventListener('click', (e) => { e.preventDefault(); el.query.value = ''; onQuery(); el.query.focus(); });
   /* the scopes in the glass layer: the same choice as Explore's tabs */
   function syncScopes() {
     for (const b of el.scopes.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.tab === L.tab));
@@ -764,7 +1101,7 @@
   const css = {};
   function readTheme() {
     const cs = getComputedStyle(document.documentElement);
-    for (const k of ['bg', 'stage', 'lane', 'rh', 'lh', 'now']) css[k] = cs.getPropertyValue('--' + k).trim();
+    for (const k of ['bg', 'stage', 'lane', 'grid', 'rh', 'lh', 'now']) css[k] = cs.getPropertyValue('--' + k).trim();
   }
   function rr(c, x, y, w, h, r) {
     r = Math.max(0, Math.min(r, w / 2, h / 2));
@@ -801,12 +1138,27 @@
       const r = g.getBoundingClientRect();
       if (r.width && r.height) bands.push([r.left - 32, r.top - 32, r.right + 32, r.bottom + 32]);
     }
-    for (const n of el.page.querySelectorAll('[data-paint]')) {
+    /* the full-screen sheet music, when open, is all there is under its glass */
+    const scope = L.viewer ? L.viewer.el : el.page;
+    for (const n of scope.querySelectorAll('[data-paint]')) {
       const r = n.getBoundingClientRect();
       if (!r.width || !bands.some((b) => r.right > b[0] && r.bottom > b[1] && r.left < b[2] && r.top < b[3])) continue;
       const x = r.left - root.left, y = r.top - root.top;
       if (n.tagName === 'CANVAS') { if (n.width) ctx.drawImage(n, x, y, r.width, r.height); continue; }
+      /* a page of sheet music is drawn as the paper it shows: drawing the SVG itself could lock
+         the canvas, and the glass could no longer read it */
+      if (n.tagName === 'IMG') { ctx.fillStyle = '#fff'; ctx.fillRect(x, y, r.width, r.height); continue; }
       const cs = getComputedStyle(n);
+      if (n.dataset.paint === 'cover') {
+        /* the cover's palette, as a plain two-colour wash: enough for the glass to refract */
+        const g = ctx.createLinearGradient(x, y, x + r.width, y + r.height);
+        g.addColorStop(0, n.dataset.field || css.lane);
+        g.addColorStop(1, n.dataset.base || css.lane);
+        ctx.fillStyle = g;
+        rr(ctx, x, y, r.width, r.height, parseFloat(cs.borderTopLeftRadius) || 0);
+        ctx.fill();
+        continue;
+      }
       if (n.dataset.paint === 'box') {
         ctx.fillStyle = cs.backgroundColor;
         rr(ctx, x, y, r.width, r.height, parseFloat(cs.borderTopLeftRadius) || 0);
@@ -834,6 +1186,7 @@
       ctx.fillStyle = css.bg;
       if (fromTop) ctx.fillRect(0, 0, root.width, black); else ctx.fillRect(0, black, root.width, root.height - black);
     };
+    if (L.viewer) return;
     /* Explore's pinned heading hides the list above its tabs */
     const head = el.page.querySelector('.explore-head.is-pinned');
     if (head) { const r = head.getBoundingClientRect(); fade(r.bottom - root.top - 12 - parseFloat(getComputedStyle(head.lastChild).height), r.bottom - root.top, true); }
@@ -876,42 +1229,75 @@
   }).observe(el.lib);
 
   /* ------------------------------------------------------------------ open and close */
-  function open() {
-    if (L.open) return;
+  /* the library on screen, without touching the history (a step back or forward reached it) */
+  function present() {
     L.open = true;
     el.lib.classList.remove('is-closing');
     el.lib.hidden = false;
     FB.app.covered(true);
     readTheme();
+    loadFonts();
     initGlass();
-    if (!L.data) load().then(() => { if (L.open) render(true); startSearch(); }, () => { if (L.open) render(false); });
+    if (!L.data) load().then(() => { if (L.open) show(true); startSearch(); }, () => { if (L.open) render(false); });
     else startSearch();
-    /* home shows the latest recents each time; anywhere else stays where it was */
-    if (L.stack.length === 1 || !L.data) render(true);
-    else { history.replaceState(null, '', '#library' + hashOf(L.stack[L.stack.length - 1])); kick(400); }
     requestAnimationFrame(pinCheck);
     kick(600);
   }
+  /* open where it was left (home shows the latest recents each time), one history entry per step */
+  function open() {
+    if (L.open) return;
+    L.stack.forEach((s, i) => history.pushState(entry(L.stack.slice(0, i + 1)), '', urlOf(s)));
+    present();
+    show(true);
+  }
+  /* leave for the player: back past all of the library's steps, as if each had been undone */
   function close() {
     if (!L.open) return;
+    if (inHistory()) history.go(-L.stack.length);
+    else closeNow();
+  }
+  function closeNow() {
+    if (!L.open) return;
     L.open = false;
+    closeViewer();
     el.query.blur();
     el.lib.classList.add('is-closing');
     setTimeout(() => { if (!L.open) { el.lib.hidden = true; el.lib.classList.remove('is-closing'); } }, 200);
-    history.replaceState(null, '', location.pathname + location.search);
     FB.app.covered(false);
     el.menuBtn.focus({ preventScroll: true });
   }
   el.back.addEventListener('click', back);
+  /* Installed on a phone's home screen there is no browser around the app to give the swipe in
+     from the left edge, so the library gives it: the same step back as the button. In a browser
+     the browser's own gesture already steps back through the library's history. */
+  const STANDALONE = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (STANDALONE) {
+    let swipe = null;
+    el.lib.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      swipe = e.touches.length === 1 && t.clientX < 24 ? { x: t.clientX, y: t.clientY } : null;
+    }, { passive: true });
+    el.lib.addEventListener('touchmove', (e) => {
+      if (!swipe) return;
+      const t = e.touches[0], dx = t.clientX - swipe.x, dy = Math.abs(t.clientY - swipe.y);
+      if (dy > 40 && dy > dx) swipe = null;
+      else if (dx > 72) { swipe = null; back(); }
+    }, { passive: true });
+    el.lib.addEventListener('touchend', () => { swipe = null; }, { passive: true });
+  }
   el.file.addEventListener('change', () => { if (L.open && el.file.files && el.file.files.length) close(); }, true);
   document.addEventListener('keydown', (e) => {
     if (!L.open) return;
+    if (L.viewer) {
+      if (e.key === 'Escape') { e.preventDefault(); closeViewer(); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); turnViewer(1); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); turnViewer(-1); }
+      return;
+    }
     const typing = e.target === el.query;
     if (e.key === 'Escape') {
       e.preventDefault();
-      if (!el.menu.hidden) closeMenu();
-      else if (L.query) back();
-      else if (typing) el.query.blur();
+      if (typing && !L.query) el.query.blur();
       else back();
     } else if (!typing && (e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'))) {
       e.preventDefault();
@@ -925,6 +1311,9 @@
     const d = L.data, stack = [{ view: 'home' }];
     if (!path || !d) return stack;
     if (path === 'recent') return [...stack, { view: 'recent' }];
+    if (path === '~covers') return [...stack, { view: 'covers' }];
+    const sought = /^~search\/(.*)$/.exec(path);
+    if (sought) return [...stack, { view: 'search', q: sought[1] }];
     const list = /^(.+)\/~(pieces|works)$/.exec(path);
     if (list && d.comp.has(list[1])) return [...stack, { view: 'composer', id: list[1] }, { view: list[2], id: list[1] }];
     if (d.comp.has(path)) return [...stack, { view: 'composer', id: path }];
@@ -938,8 +1327,11 @@
   FB.library = { open, close, isOpen: () => L.open };
   const asked = /^#library(?:\/(.+))?$/.exec(location.hash);
   if (asked) {
+    /* a link into the library: the player's entry underneath, then a step for each level, so
+       back walks up through them to the player */
+    history.replaceState(null, '', location.pathname + location.search);
     open();
-    load().then(() => { L.stack = stackFor(asked[1] && decodeURIComponent(asked[1])); if (L.open) render(true); }, () => {});
+    load().then(() => { for (const item of stackFor(asked[1] && decodeURIComponent(asked[1])).slice(1)) push(item); }, () => {});
   } else if (FB.app && FB.app.firstVisit) open();
   else if ('requestIdleCallback' in window) requestIdleCallback(() => load().catch(() => {}));
 })();

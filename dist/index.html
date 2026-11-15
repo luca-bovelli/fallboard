@@ -8,6 +8,9 @@
 <title>Fallboard Piano</title>
 <link rel="license" href="credits.html">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap">
+<!-- the library's covers: Boska and Melodrama (display serifs) and Switzer Thin from Fontshare, Bodoni Moda for numerals -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@1,6..96,800&display=swap">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=boska@500,501,900,901&f[]=melodrama@500,700&f[]=switzer@100,200,400&display=swap">
 <style>
   /* Layout: the music fills the page down to the keys. What you are looking at (the piece, roll
      or score) floats over the top of it as glass; how it plays back (which hands, step and play,
@@ -102,8 +105,9 @@
     --fs-field: 16px;
     --r-card: 18px;
     --content-max: 720px;    /* the library's column stops growing here (see .library) */
+    --cover-s: 44px;         /* a cover in a list */
+    --cover-l: 420px;        /* a cover heading a piece's or a work's page, at most */
     --card-w: 208px;
-    --thumb-h: 92px;
 
     --dur-press: 120ms;  /* press feedback, a step of a slider */
     --dur-state: 180ms;  /* colour and opacity changes */
@@ -599,22 +603,20 @@
   /* with a mouse: one row of cards filling the column, as many as fit (library.js fitShelves) */
   .shelf.fitted { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); overflow: visible; margin-inline: 0; padding-inline: 0; }
   .shelf.fitted .card { width: auto; }
-  /* arrows that turn the sheet music preview, beside its heading */
-  .page-arrows { display: flex; gap: var(--gap); }
-  .btn.small { height: 36px; min-width: 36px; }
   .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-w), 1fr)); gap: 12px; }
+  /* a card: one picture filling it (the piece's opening as a piano roll, library.js drawThumb),
+     fading into darkness at the bottom, where its name is written. No box under the text */
   .card {
-    position: relative; isolation: isolate; flex: none; width: var(--card-w); scroll-snap-align: start;
-    display: flex; flex-direction: column; padding: 0; border: 0; border-radius: var(--r-card); overflow: hidden;
-    background: var(--lane); color: inherit; text-align: left; cursor: pointer;
+    position: relative; isolation: isolate; flex: none; width: var(--card-w); aspect-ratio: 4 / 5; scroll-snap-align: start;
+    display: flex; flex-direction: column; justify-content: flex-end; padding: 0; border: 0; border-radius: var(--r-card); overflow: hidden;
+    background: var(--stage); color: inherit; text-align: left; cursor: pointer;
   }
   .cards .card { width: auto; }
-  /* the piece in miniature: its notes across the whole piece, each hand in its colour, and a red
-     line where you left off */
-  .card canvas, .card .art { display: block; width: 100%; height: var(--thumb-h); background: var(--stage); }
-  .card .art { display: grid; place-items: center; }
+  .card .roll, .card .art { position: absolute; inset: 0; z-index: -2; display: block; width: 100%; height: 100%; }
+  .card .art { display: grid; place-items: center; padding-bottom: 34%; }
   .card .art svg { width: 28px; height: 28px; fill: none; stroke: var(--t1); stroke-width: 1.8; stroke-linecap: round; opacity: var(--o-inactive); }
-  .card .txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 10px 12px 12px; }
+  .card .shade { position: absolute; inset: 0; z-index: -1; background: linear-gradient(to bottom, transparent 52%, var(--bg) 92%); pointer-events: none; }
+  .card .txt { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 0 12px 12px; }
   .card b, .card small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .card b { font-size: var(--fs-m); font-weight: 600; }
   .card small { font-size: var(--fs-s); color: var(--t2); }
@@ -645,6 +647,79 @@
   .row.num { grid-template-columns: 2.4ch minmax(0, 1fr) auto; }
   .row + .row::before { content: ""; position: absolute; top: 0; left: 12px; right: 12px; border-top: 1px solid var(--grid-2); }
   .row.num + .row.num::before { left: calc(12px + 2.4ch + 12px); }
+  .row.has-cover { grid-template-columns: var(--cover-s) minmax(0, 1fr) auto; }
+  .row.has-cover + .row.has-cover::before { left: calc(12px + var(--cover-s) + 12px); }
+
+  /* ---------- covers ----------
+     Every piece and work has artwork of its own, built by library.js cover() from its id: a mesh
+     gradient from one of a dozen palettes, one of four layouts (an echoed title, an engraved
+     frame, a giant numeral, a title on a staff), bold italic display serifs and fine lines, its
+     most remembered name (the nickname when it has one) large. Everything inside is measured in
+     cqw, a hundredth of the cover's own width, so a cover is the same picture at every size. The
+     palette and the colours inside are artwork, not interface: they follow none of the page's
+     colour tokens. */
+  .cover {
+    position: relative; flex: none; overflow: hidden; container-type: inline-size; aspect-ratio: 1;
+    width: var(--cover-s); border-radius: 8px; color: var(--ink); background: var(--mesh); text-align: left;
+    font-synthesis: none; line-height: 1; -webkit-font-smoothing: antialiased;
+  }
+  .cover > * { position: absolute; margin: 0; }
+  .cover .who { font: 400 4.4cqw/1 Switzer, var(--font); letter-spacing: 0.24em; text-transform: uppercase; }
+  .cover .cat { font: 400 4.4cqw/1 Switzer, var(--font); letter-spacing: 0.06em; }
+  .cover .main { font: var(--face-style, italic) var(--face-weight, 900) var(--ts) / 0.92 var(--face); letter-spacing: -0.01em; text-wrap: balance; }
+  .cover .sub { font: italic 500 5.8cqw/1.15 Boska, Georgia, serif; }
+  .cover .line { border-color: var(--line); }
+  /* ornaments (library.js): drawn in a 100-unit square over the whole cover, or a 100 × 8 strip */
+  .cover svg { color: var(--line); overflow: visible; }
+  .cover .orn { inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .cover .divider { width: 60cqw; height: 4.8cqw; }
+
+  /* an echoed title: the name large, with its outline repeated above and below, and a dotted
+     corner like a printer's mark */
+  .cv-echo .who { left: 7cqw; bottom: 8cqw; }
+  .cv-echo .sub { left: 7cqw; right: 7cqw; bottom: 14cqw; }
+  .cv-echo .cat { right: 7cqw; bottom: 7.6cqw; }
+
+  /* an engraved frame, as on a nineteenth-century edition: two rules, an ornament under the
+     composer, everything centred */
+  .cv-frame .stack { inset: 12cqw 11cqw; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3.2cqw; text-align: center; }
+  .cv-frame .stack > * { position: static; }
+
+  /* a giant numeral (or letter) in outline, bleeding off the corner, the name set beside it */
+  .cv-num .who { left: 8cqw; top: 8cqw; }
+  .cv-num .main { left: 8cqw; right: 22cqw; bottom: 17cqw; }
+  .cv-num .sub { left: 8cqw; right: 8cqw; bottom: 8.5cqw; }
+  .cv-num .cat { right: 8cqw; top: 8cqw; }
+
+  /* the name riding across a staff of five fine lines */
+  .cv-staff .staff { left: 0; right: 0; top: 58cqw; height: 22.5cqw; background: repeating-linear-gradient(to bottom, var(--line) 0 0.5cqw, transparent 0.5cqw 5.5cqw); }
+  .cv-staff .main { left: 7cqw; right: 7cqw; bottom: 47cqw; }   /* above the staff, so thin letters stay clear of its lines */
+  .cv-staff .who { left: 7cqw; top: 8cqw; }
+  .cv-staff .cat { right: 7cqw; top: 7.6cqw; }
+  .cv-staff .sub { left: 7cqw; right: 7cqw; bottom: 7.5cqw; }
+
+  /* #library/~covers: covers side by side, large, each with its name under it */
+  .cover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px 16px; }
+  .cover-pick { display: flex; flex-direction: column; gap: 8px; padding: 0; border: 0; background: none; color: var(--t2); font: inherit; font-size: var(--fs-s); text-align: left; cursor: pointer; }
+  .cover-pick .cover { width: 100%; border-radius: 10px; }
+
+  /* a piece's or a work's page opens on its cover, as an album does: large and centred, its
+     colours glowing behind the heading, the name and the buttons centred under it */
+  .hero { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+  .hero-glow {
+    position: absolute; z-index: -1; left: calc(-1 * var(--col-l)); right: calc(-1 * var(--col-r));
+    top: calc(-1 * (var(--lib-top) + var(--control) + var(--edge))); height: calc(100% + 120px);
+    background: var(--mesh); filter: blur(70px) saturate(1.2); opacity: 0.5; pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent); mask-image: linear-gradient(to bottom, #000 35%, transparent);
+  }
+  .hero .cover { width: min(100%, var(--cover-l)); border-radius: 12px; box-shadow: 0 30px 90px rgb(0 0 0 / 0.55); }
+  .hero-text { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+  .hero-text h1 { margin: 0; font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; text-wrap: balance; }
+  .hero-text p { margin: 0; font-size: var(--fs-m); color: var(--t2); }
+  .hero-text .link { padding: 0; border: 0; background: none; color: var(--t1); font: inherit; font-size: var(--fs-l); font-weight: 600; cursor: pointer; }
+  .hero-text .link.quiet { color: var(--t2); font-size: var(--fs-m); font-weight: 400; }
+  @media (hover: hover) { .hero-text .link:hover { text-decoration: underline; text-underline-offset: 3px; } }
+  .hero .actions { justify-content: center; margin-top: 10px; }
   .row .main { min-width: 0; }
   .row b, .row small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row b { font-size: var(--fs-l); font-weight: 600; }
@@ -709,8 +784,28 @@
   .pages { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
     margin-inline: calc(-1 * var(--bleed-l)) calc(-1 * var(--bleed-r)); padding-inline: var(--bleed-l) var(--bleed-r); scroll-padding-inline: var(--bleed-l) var(--bleed-r); }
   .pages::-webkit-scrollbar { display: none; }
-  .sheet-page { flex: none; width: var(--page-w, 220px); aspect-ratio: 210 / 297; border-radius: 6px; overflow: hidden; scroll-snap-align: start; background: var(--lane); }
+  .sheet-page { flex: none; width: var(--page-w, 220px); aspect-ratio: 210 / 297; padding: 0; border: 0; border-radius: 6px; overflow: hidden; scroll-snap-align: start; background: var(--lane); cursor: zoom-in; }
   .sheet-page img { display: block; width: 100%; height: 100%; background: #fff; }
+  /* a carousel's arrows: glass, at its sides, halfway down */
+  .carousel { position: relative; }
+  .carousel-arrow { position: absolute; z-index: 2; top: 50%; width: var(--control); height: var(--control); margin-top: calc(var(--control) / -2); box-shadow: var(--shadow-float); }
+  .carousel-arrow.prev { left: var(--gap); }
+  .carousel-arrow.next { right: var(--gap); }
+  /* the sheet music full screen: one page at a time, as large as fits between the controls */
+  .viewer { position: absolute; inset: 0; z-index: 8; background: var(--bg); animation: lib-in var(--dur-move) var(--ease); }
+  .viewer-pages {
+    --vp-w: min(calc(100vw - 2 * var(--edge)), calc((100dvh - 2 * (var(--lib-top) + var(--control) + var(--edge))) * 210 / 297));
+    position: absolute; inset: 0; display: flex; align-items: center; column-gap: 24px; overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scrollbar-width: none; padding-inline: calc((100vw - var(--vp-w)) / 2);
+  }
+  .viewer-pages::-webkit-scrollbar { display: none; }
+  .viewer-page { flex: none; width: var(--vp-w); aspect-ratio: 210 / 297; border-radius: 4px; overflow: hidden; scroll-snap-align: center; background: #fff; }
+  .viewer-page img { display: block; width: 100%; height: 100%; }
+  .viewer .round { width: var(--control); height: var(--control); box-shadow: var(--shadow-float); }
+  .viewer-close { position: absolute; z-index: 2; top: var(--lib-top); left: var(--gutter-l); }
+  .viewer-save { position: absolute; z-index: 2; top: var(--lib-top); right: var(--gutter-r); }
+  .viewer .carousel-arrow.prev { left: var(--gutter-l); }
+  .viewer .carousel-arrow.next { right: var(--gutter-r); }
   .sheet-page.is-waiting { display: grid; place-items: center; padding: 16px; text-align: center; font-size: var(--fs-s); color: var(--t2); }
 
   /* the glass layer */
@@ -746,7 +841,7 @@
   .lib-search .clear svg { width: 18px; height: 18px; fill: var(--t2); }
 
   @media (max-width: 640px) {
-    .library { --card-w: 176px; --thumb-h: 84px; }
+    .library { --card-w: 176px; }
     .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .sheet-page { --page-w: 168px; }
   }
