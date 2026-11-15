@@ -30,7 +30,9 @@ const zlib = require('zlib');
 
 const ROOT = path.join(__dirname, '..', '..');
 const DATA = path.join(ROOT, '.data', 'pdmx');
-const { matches } = JSON.parse(fs.readFileSync(path.join(DATA, 'matches.json'), 'utf8'));
+/* every source's matches: .data/<source>/matches.json, file paths relative to that folder */
+const SOURCES = ['pdmx', 'asap'].map((name) => ({ name, dir: path.join(ROOT, '.data', name) })).filter((src) => fs.existsSync(path.join(src.dir, 'matches.json')));
+const sourceDir = (name) => path.join(ROOT, '.data', name || 'pdmx');
 const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'catalog', 'catalog.json'), 'utf8'));
 const byId = new Map(catalog.entries.map((e) => [e.id, e]));
 
@@ -165,13 +167,14 @@ const expected = (e) => { const s = (e.src || []).find((x) => x.imslp && duratio
 /* the file as the app will get it: repaired by normalize.js, saved to .data/scores/ */
 const { normalize } = require('./normalize');
 const SCORES = path.join(ROOT, '.data', 'scores');
-const fixedPath = (mxl) => path.join(SCORES, path.basename(mxl, '.mxl') + '.musicxml');
+/* one repaired file per source file: the source's name and its path, made safe for a file name */
+const fixedPath = (mxl, source = 'pdmx') => path.join(SCORES, source + '-' + mxl.replace(/.(mxl|musicxml|xml)$/i, '').replace(/[^w.-]+/g, '_').slice(-120) + '.musicxml');
 
 function check(entry, file) {
   const flags = [];
   const info = {};
   let xml;
-  try { xml = unzip(path.join(DATA, file.mxl)); } catch (e) { return { flags: ['unreadable'], info: { error: 'zip: ' + e.message } }; }
+  try { xml = unzip(path.join(sourceDir(file.source), file.mxl)); } catch (e) { return { flags: ['unreadable'], info: { error: 'zip: ' + e.message } }; }
   const exp0 = expected(entry);
   const fixed = normalize(xml, { seconds: exp0 });
   info.fixes = fixed.fixes;
@@ -179,7 +182,7 @@ function check(entry, file) {
   if (fixed.reject) return { flags: ['rejected'], info: { ...info, rejected: fixed.reject } };
   xml = fixed.xml;
   fs.mkdirSync(SCORES, { recursive: true });
-  fs.writeFileSync(fixedPath(file.mxl), xml);
+  fs.writeFileSync(fixedPath(file.mxl, file.source), xml);
   let score = null;
   try { score = FB.parseMusicXML(xml); } catch (e) { flags.push('unreadable'); info.error = e.message; }
   const s = scan(xml);
@@ -230,10 +233,15 @@ function verdict(flags, info, file) {
 
 function main() {
   const results = [];
-  for (const [id, files] of Object.entries(matches)) {
+  const all = {};
+  for (const src of SOURCES) {
+    const { matches } = JSON.parse(fs.readFileSync(path.join(src.dir, 'matches.json'), 'utf8'));
+    for (const [id, files] of Object.entries(matches)) for (const f of files.slice(0, 2)) (all[id] = all[id] || []).push({ ...f, source: src.name });
+  }
+  for (const [id, files] of Object.entries(all)) {
     const entry = byId.get(id);
-    const here = files.filter((f) => fs.existsSync(path.join(DATA, f.mxl)));
-    const checked = here.map((f) => ({ id, mxl: f.mxl, title: f.title, how: f.how, quality: f.quality, ...check(entry, f) }));
+    const here = files.filter((f) => fs.existsSync(path.join(sourceDir(f.source), f.mxl)));
+    const checked = here.map((f) => ({ id, source: f.source, mxl: f.mxl, key: f.source + ':' + f.mxl, title: f.title, how: f.how, quality: f.quality, license: f.license, ...check(entry, f) }));
     for (const c of checked) c.verdict = verdict(c.flags, c.info, c);
     /* two files of one piece should agree */
     if (checked.length > 1) {
@@ -243,7 +251,10 @@ function main() {
     }
     results.push(...checked);
   }
-  fs.writeFileSync(path.join(DATA, 'checks.json'), JSON.stringify(results, null, 1));
+  fs.writeFileSync(path.join(ROOT, '.data', 'checks.json'), JSON.stringify(results, null, 1));
+  const bySource = {};
+  for (const r of results) bySource[r.source] = (bySource[r.source] || 0) + 1;
+  console.log('files by source: ' + JSON.stringify(bySource));
   const count = {};
   for (const r of results) for (const f of r.flags) count[f] = (count[f] || 0) + 1;
   const clean = results.filter((r) => !r.flags.length).length;

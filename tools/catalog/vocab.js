@@ -23,7 +23,7 @@ const GENRES = [
   ['Fantasy Piece', 'fantasiestücke', 'fantasiestück', 'fantasy pieces', 'fantasy piece', 'morceaux fantastiques'],
   ['Piano Sonata', 'piano sonatas', 'piano sonata', 'klaviersonaten', 'klaviersonate', 'sonates pour piano', 'фортепианная соната', 'фортепианные сонаты'],
   ['Keyboard Sonata', 'keyboard sonatas', 'keyboard sonata', 'sonate per clavicembalo', 'essercizi'],
-  ['Prelude', 'preludes', 'prelude', 'préludes', 'prélude', 'präludien', 'präludium', 'praeludium', 'praeludia', 'preludi', 'preludio', 'preludium', 'прелюдии', 'прелюдия', 'прелюдий'],
+  ['Prelude', 'preludes', 'prelude', 'préludes', 'prélude', 'präludien', 'präludium', 'praeludium', 'præludium', 'praeludia', 'preludi', 'preludio', 'preludium', 'прелюдии', 'прелюдия', 'прелюдий'],
   ['Fugue', 'fugues', 'fugue', 'fugen', 'fuge', 'fughe', 'fuga', 'фуги', 'фуга'],
   ['Fughetta', 'fughettas', 'fughetta', 'fughette'],
   ['Étude', 'études', 'etudes', 'étude', 'etude', 'studies', 'study', 'studien', 'studie', 'etüden', 'etüde', 'studi', 'studio', 'etiudy', 'etiuda', 'этюды', 'этюд'],

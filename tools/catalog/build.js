@@ -320,6 +320,13 @@ function fromImslpPage(composer, page) {
     e.kind = 'set';
     e._count = +count;
   }
+  /* IMSLP's header gives the count but no list ("8 pieces" for Kreisleriana, "3 movements"):
+     numbered pieces or movements, so "Kreisleriana 1" and "op 27 2 3" find something */
+  const headCount = /^(\d+)\s+(\w+)/.exec(head || (f['Number of Movements/Sections'] || '').trim());
+  if (!items.length && !e._count && headCount && +headCount[1] > 1 && +headCount[1] <= 60 && !/variation|bar|measure|minute/i.test(headCount[2])) {
+    e._count = +headCount[1];
+    e.kind = /movement|section|part/i.test(headCount[2]) && !plural ? 'work' : 'set';
+  }
   e._tree = tree.length > 1 || (tree[0] && tree[0].children.length) ? tree : [];
   if (!e._tree.length && tree[0] && !e.key && tree[0].keys.length === 1) e.key = tree[0].keys[0];
   if (!e._tree.length && tree[0] && tree[0].nicks.length) e.nick.push(...tree[0].nicks);

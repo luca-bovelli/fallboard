@@ -128,17 +128,8 @@ function matchOf(r, composer) {
   return { entry: movementOf(top.entry, text) || top.entry, how: found, query: text };
 }
 
-/* a file of one movement belongs to the movement: "Movement I", "1- Allemande" */
-function movementOf(work, text) {
-  const kids = catalog.entries.filter((e) => e.parent === work.id && e.kind === 'movement');
-  if (!kids.length) return null;
-  const n = (text.match(/\b(?:movement|mvt|mvmt|satz|mouvement)\s*([ivx]+|\d+)\b|\b(\d)(?:st|nd|rd|th)\s+(?:movement|mvt)\b/) || []).slice(1).find(Boolean);
-  if (n) { const num = /^\d+$/.test(n) ? +n : { i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8 }[n]; const k = kids.find((x) => x.number === num); if (k) return k; }
-  /* a movement named in the title by a word of its own ("allemande", "presto agitato") */
-  const words = new Set(fold(text).split(/[^\p{L}]+/u).filter((x) => x.length >= 4));
-  const scored = kids.map((k) => ({ k, hits: fold(k.title).split(/[^\p{L}]+/u).filter((x) => x.length >= 4 && words.has(x)).length })).filter((x) => x.hits).sort((a, b) => b.hits - a.hits);
-  return scored.length && (scored.length === 1 || scored[0].hits > scored[1].hits) ? scored[0].k : null;
-}
+/* a file of one movement belongs to the movement (movement.js) */
+const movementOf = (work, text) => require('./movement').movementOf(catalog, work, text);
 
 async function main() {
   const rl = readline.createInterface({ input: fs.createReadStream(CSV, { encoding: 'utf8', highWaterMark: 1 << 20 }), crlfDelay: Infinity });

@@ -1,4 +1,4 @@
-/* Engraves every checked score file once, at the medium width, into .data/pdmx/engrave.json.
+/* Engraves every checked score file once, at the medium width, into .data/engrave.json.
 
      node tools/catalog/check-engrave.js [jobs]     jobs: files engraved at once (default 4)
 
@@ -14,7 +14,7 @@ const { spawn } = require('child_process');
 const ROOT = path.join(__dirname, '..', '..');
 const DATA = path.join(ROOT, '.data', 'pdmx');
 const XML = path.join(DATA, 'xml');
-const OUT = path.join(DATA, 'engrave.json');
+const OUT = path.join(ROOT, '.data', 'engrave.json');
 
 if (process.argv[2] === '--child') {
   // webmscore's Node build predates Node's own fetch and read-only navigator
@@ -39,17 +39,20 @@ if (process.argv[2] === '--child') {
 }
 
 const { fixedPath } = require('./check-scores');
-const checks = JSON.parse(fs.readFileSync(path.join(DATA, 'checks.json'), 'utf8'));
+const checks = JSON.parse(fs.readFileSync(path.join(ROOT, '.data', 'checks.json'), 'utf8'));
 const jobs = +process.argv[2] || 4;
 fs.mkdirSync(XML, { recursive: true });
+/* results are keyed by source and path ("pdmx:mxl/..."); an older run kept PDMX paths alone */
 const done = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : {};
-const todo = checks.filter((c) => !done[c.mxl] && c.verdict !== 'reject' && fs.existsSync(fixedPath(c.mxl)));
+const older = path.join(DATA, 'engrave.json');
+if (fs.existsSync(older)) for (const [k, v] of Object.entries(JSON.parse(fs.readFileSync(older, 'utf8')))) if (!done['pdmx:' + k]) done['pdmx:' + k] = v;
+const todo = checks.filter((c) => !done[c.key] && c.verdict !== 'reject' && fs.existsSync(fixedPath(c.mxl, c.source)));
 console.log(`${todo.length} files to engrave, ${jobs} at a time`);
 
 function one(c) {
   return new Promise((resolve) => {
     /* the repaired file, as the app gets it */
-    const file = fixedPath(c.mxl);
+    const file = fixedPath(c.mxl, c.source);
     const child = spawn(process.execPath, [__filename, '--child', file], { stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '', err = '';
     child.stdout.on('data', (d) => { out += d; });
@@ -70,7 +73,7 @@ function one(c) {
   await Promise.all(Array.from({ length: jobs }, async () => {
     while (i < todo.length) {
       const c = todo[i++];
-      done[c.mxl] = await one(c);
+      done[c.key] = await one(c);
       if (++n % 25 === 0) { save(); console.log(`${n}/${todo.length} after ${((Date.now() - t0) / 60000).toFixed(1)} min`); }
     }
   }));
