@@ -1006,7 +1006,9 @@
     else { const top = L.stack[L.stack.length - 1]; VIEWS[top.view](page, top); }
     if (enter) { page.classList.remove('is-entering'); void page.offsetWidth; page.classList.add('is-entering'); }
     el.lib.classList.toggle('has-hero', !!page.querySelector('.hero'));
+    el.lib.classList.remove('is-titled', 'tabs-pinned');
     L.titled = undefined;
+    setFade(false);
     syncScopes();
     fitShelves();
     flushThumbs();
@@ -1352,6 +1354,10 @@
       const was = tabs.classList.contains('is-pinned');
       const pinned = el.scroll.scrollTop >= layoutTop(mark) - parseFloat(getComputedStyle(tabs).top) - 0.5;
       tabs.classList.toggle('is-pinned', pinned);
+      if (el.lib.classList.contains('tabs-pinned') !== pinned) {
+        el.lib.classList.toggle('tabs-pinned', pinned);   // the top fade reaches down behind them
+        setFade(true);
+      }
       if (pinned && !was && scrolled === true && speed > 0.05 && !STILL.matches) {
         const k = Math.min(8, 2 + speed * 5);
         tabs.animate([
@@ -1368,9 +1374,9 @@
   }
   /* The page's name, small, in the middle of the top bar once its heading has gone up under the
      bar (as iOS does): the last heading marked with data-title that has passed the bar's bottom,
-     so on the home it reads Library, then Explore. While it shows, the top fade turns into a
-     bar: black down to just under the text, so nothing behind it gets in its way. */
-  let sceneUntil = 0;
+     so on the home it reads Library, then Explore. While it shows, the top fade is at full
+     strength (index.html .lib-scroll), even over an album cover's glow. */
+  let sceneUntil = 0;   // until then, the glass's scene is repainted every frame (the search bar riding the keyboard)
   function titleCheck() {
     let on = null;
     if (!L.viewer && !L.query.trim()) {
@@ -1388,8 +1394,41 @@
     }
     el.title.classList.toggle('is-on', !!on);
     el.lib.classList.toggle('is-titled', !!on);
-    sceneUntil = performance.now() + 400;   // the fade changes over --dur-move: repaint the glass's scene meanwhile
-    kick(400);
+    setFade(true);
+  }
+  /* The top fade (index.html .lib-scroll): half strength over an album cover until the small
+     title shows; down to the bottom of Explore's tabs while they are pinned. Eased here, frame by
+     frame, over --dur-move; the glass's scene is repainted along with it */
+  const FADE_MS = 280;
+  let fadeNow = null, fadeFrom = null, fadeTo = null, fadeAt = 0;
+  function fadeTarget() {
+    const cs = getComputedStyle(document.documentElement);
+    const control = parseFloat(cs.getPropertyValue('--control')) || 44, edge = parseFloat(cs.getPropertyValue('--edge')) || 16;
+    const c = el.lib.classList;
+    return { floor: c.contains('has-hero') && !c.contains('is-titled') ? 0.5 : 0, span: (c.contains('tabs-pinned') ? 2 * control : control) + edge };
+  }
+  function applyFade(v) {
+    fadeNow = v;
+    el.scroll.style.setProperty('--top-floor', v.floor.toFixed(3));
+    el.scroll.style.setProperty('--top-span', v.span.toFixed(1) + 'px');
+    sceneV++;
+    kick();
+  }
+  function setFade(animate) {
+    const to = fadeTarget();
+    if (fadeTo && to.floor === fadeTo.floor && to.span === fadeTo.span) return;
+    fadeTo = to;
+    if (!animate || !fadeNow || STILL.matches) { fadeAt = 0; applyFade(to); return; }
+    fadeFrom = fadeNow;
+    const first = !fadeAt;
+    fadeAt = performance.now();
+    if (first) requestAnimationFrame(stepFade);
+  }
+  function stepFade() {
+    if (!fadeAt) return;
+    const t = Math.min(1, (performance.now() - fadeAt) / FADE_MS), e = 1 - Math.pow(1 - t, 3);
+    applyFade({ floor: fadeFrom.floor + (fadeTo.floor - fadeFrom.floor) * e, span: fadeFrom.span + (fadeTo.span - fadeFrom.span) * e });
+    if (t < 1) requestAnimationFrame(stepFade); else fadeAt = 0;
   }
   el.scroll.addEventListener('scroll', () => { trackSpeed(); pinCheck(true); sceneV++; kick(); }, { passive: true });
   el.page.addEventListener('scroll', () => { sceneV++; kick(); }, { passive: true, capture: true });
