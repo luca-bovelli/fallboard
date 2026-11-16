@@ -322,13 +322,13 @@
     return cardItem(b, r.title, r.composer);
   }
   /* the first card: your own MusicXML file. Not a piece, so no picture: an empty square in a dim
-     dashed line, the upload icon (the PDF viewer's download icon, turned up) and "Upload a score"
-     underlined, both dimmed, in its middle; what it takes under it, where a piece's composer goes */
+     dashed line, the upload icon (a tray, its sides turned up, an arrow rising out of it) and
+     "Upload a score" in small type, underlined, both dimmed, in its middle; what it takes under it, where a piece's composer goes */
   function uploadCard() {
     const b = button('card upload', undefined, () => FB.app.upload(), 'box');
     b.setAttribute('aria-label', 'Upload a score, MusicXML or .mxl');
     const up = make('span', 'up');
-    up.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 19h14"/></svg>';
+    up.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
     up.appendChild(make('b', '', 'Upload a score', 'text'));
     b.appendChild(up);
     const item = make('div', 'card-item');
