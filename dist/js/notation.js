@@ -50,6 +50,7 @@
       this.token = 0;
       this.cache = new Map();     // layout key -> engraving, for the current score
       this.pending = new Map();   // layout key -> promise
+      this.partials = new Map();  // layout key -> the engraving so far, while it is engraved
       this.reset();
 
       this.defs = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -101,6 +102,7 @@
       this.meta = meta;
       this.cache.clear();
       this.pending.clear();
+      this.partials.clear();
       this.clearDom();
       this.reset();
       if (this.visible) this.ensure();
@@ -173,7 +175,25 @@
           // the engine runs in a worker and stays silent if it fails to start, so give it a deadline
           let timer;
           const late = new Promise((_, rej) => { timer = setTimeout(() => rej(new Error('The engraver did not respond. The falling-note view still works.')), 120000); });
-          try { eng = await Promise.race([FB.engrave.engrave(W, score.xml, layout.wsp), late]); } finally { clearTimeout(timer); }
+          /* the start of the score shows as soon as its first systems are engraved; the rest
+             joins it as it comes */
+          const part = (eng) => {
+            if (token !== this.token) return;
+            this.partials.set(layout.key, eng);
+            if (this.visible && this.layoutKey === layout.key && this.eng) this.grow(eng, layout.key);
+            else if (this.visible && !this.eng && (this.layout() || {}).key === layout.key) { this.install(eng, layout.key); this.onStatus(null); }
+          };
+          try {
+            /* a long score: its first systems from its opening bars, at once (all but the last,
+               which the cut may shorten), while the whole is laid out */
+            if (FB.engrave.isLong(score.xml)) {
+              const quick = await Promise.race([FB.engrave.engrave(W, FB.engrave.truncateXml(score.xml, 40), layout.wsp), late]);
+              const keep = quick.pages.length - 1;
+              if (keep > 0) part({ ...quick, pages: quick.pages.slice(0, keep), meas: quick.meas.map((m) => (m && m[0] < keep ? m : null)), partial: true });
+            }
+            eng = await Promise.race([FB.engrave.engrave(W, score.xml, layout.wsp, null, part), late]);
+          } finally { clearTimeout(timer); }
+          this.partials.delete(layout.key);
         }
         if (token === this.token) this.cache.set(layout.key, eng);
         return eng;
@@ -198,12 +218,16 @@
       const layout = this.layout();
       if (!layout || (this.eng && this.layoutKey === layout.key)) return;
       const token = this.token;
+      /* engraving began in the background: show what there is of it already */
+      const part = this.partials.get(layout.key);
+      if (part) { this.install(part, layout.key); this.onStatus(null); }
       try {
         const eng = await this.fetchEngraving(layout, false);
         if (token !== this.token || !this.visible) return;
         const now = this.layout();
         if (now && now.key !== layout.key) { this.ensure(); return; }
-        this.install(eng, layout.key);
+        if (this.eng && this.layoutKey === layout.key) this.grow(eng, layout.key);
+        else this.install(eng, layout.key);
         this.onStatus(null);
       } catch (e) {
         if (token === this.token) this.onStatus(e.message || 'The score could not be engraved.', true);
@@ -217,6 +241,7 @@
       this.layoutKey = key;
       this.pagesEl.style.setProperty('--sp', (this.pagesEl.clientWidth - 12) / eng.wsp + 'px');
       this.defs.innerHTML = '<defs>' + eng.defs + '</defs>';
+      this.defsLength = eng.defs.length;
       this.match();
       const firstBar = eng.pages.map(() => -1);
       eng.meas.forEach((m, di) => { if (m && firstBar[m[0]] < 0) firstBar[m[0]] = di; });
@@ -231,6 +256,30 @@
         return d;
       });
       this.forceScroll = true;
+      if (this.onChange) this.onChange();
+    }
+
+    /* more of the same engraving (its systems so far, then all of them): new systems join the
+       end, and the bars on them are matched; what is already on screen stays as it is */
+    grow(eng, key) {
+      if (!this.eng || this.layoutKey !== key) { this.install(eng, key); return; }
+      const from = this.sys.length;
+      if (eng.pages.length < from) return;   // the whole's first part, behind the opening already shown
+      this.eng = eng;
+      if (this.defsLength !== eng.defs.length) { this.defs.innerHTML = '<defs>' + eng.defs + '</defs>'; this.defsLength = eng.defs.length; }
+      const firstBar = eng.pages.map(() => -1);
+      eng.meas.forEach((m, di) => { if (m && firstBar[m[0]] < 0) firstBar[m[0]] = di; });
+      this.firstBar = firstBar;
+      for (let i = from; i < eng.pages.length; i++) {
+        const p = eng.pages[i], d = document.createElement('div');
+        d.className = 'sys';
+        d.dataset.i = i;
+        d.style.aspectRatio = `${p.w || eng.w} / ${p.h}`;
+        this.pagesEl.appendChild(d);
+        this.io.observe(d);
+        this.sys.push(d);
+      }
+      this.match();
       if (this.onChange) this.onChange();
     }
 

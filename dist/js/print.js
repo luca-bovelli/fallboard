@@ -7,7 +7,7 @@
    (engrave-core.js prepareXml).
 
      FB.print.render(WebMscore, xml, { title, subtitle, composer }, onPage)
-       -> { pages: [svg, ...], pdf: Uint8Array } */
+       -> { pages: [svg, ...] (none when onPage takes them), pdf: Uint8Array } */
 (function (root, factory) {
   const node = typeof module === 'object' && module.exports;
   const api = factory(node ? require('./engrave-core.js') : root.FB && root.FB.engrave);
@@ -49,14 +49,17 @@
     return x.replace(/(<score-(?:partwise|timewise)\b[^>]*>)/, '$1' + head);
   }
 
+  /* onPage(svg, index, count), if given, receives each page as soon as it is drawn (so a long
+     score shows its first pages at once), and the pages are not kept; without it they are
+     returned. The PDF comes last. */
   async function render(WebMscore, xml, info, onPage) {
     const score = await WebMscore.load('musicxml', new TextEncoder().encode(prepare(xml, info)));
     try {
       const n = await score.npages();
       const pages = [];
       for (let i = 0; i < n; i++) {
-        pages.push(await score.saveSvg(i, true));
-        if (onPage) onPage(pages[i], i, n);
+        const svg = await score.saveSvg(i, true);
+        if (onPage) onPage(svg, i, n); else pages.push(svg);
       }
       return { pages, pdf: await score.savePdf() };
     } finally {
@@ -64,5 +67,17 @@
     }
   }
 
-  return { PAGE, prepare, render };
+  /* a long score's first page, from its opening bars alone (engrave-core.js truncateXml): drawn
+     in a moment, while the whole score takes its time to lay out. Null when the opening fits on
+     one page, whose layout could then differ from the whole's */
+  async function first(WebMscore, xml, info, bars = 48) {
+    const score = await WebMscore.load('musicxml', new TextEncoder().encode(core.truncateXml(prepare(xml, info), bars)));
+    try {
+      return (await score.npages()) > 1 ? await score.saveSvg(0, true) : null;
+    } finally {
+      try { score.destroy(); } catch (e) { /* already gone */ }
+    }
+  }
+
+  return { PAGE, prepare, render, first };
 });

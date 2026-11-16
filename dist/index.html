@@ -848,6 +848,8 @@
   .viewer-pages::-webkit-scrollbar { display: none; }
   .viewer-page { flex: none; width: var(--vp-w); aspect-ratio: 210 / 297; border-radius: 4px; overflow: hidden; scroll-snap-align: center; background: #fff; }
   .viewer-page img { display: block; width: 100%; height: 100%; }
+  /* a page not drawn yet: the shape of the paper, in the page's grey, until it is */
+  .viewer-page.is-blank { background: var(--lane); }
   .viewer .round { width: var(--control); height: var(--control); box-shadow: var(--shadow-float); }
   .viewer-close { position: absolute; z-index: 2; top: var(--lib-top); left: var(--gutter-l); }
   .viewer-save { position: absolute; z-index: 2; top: var(--lib-top); right: var(--gutter-r); }

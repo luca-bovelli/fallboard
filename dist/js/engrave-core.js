@@ -605,38 +605,58 @@
     };
   }
 
-  /* WebMscore: the loaded webmscore class (Node build or the browser's worker build) */
-  async function engrave(WebMscore, xml, wsp, onProgress) {
+  /* A score cut to its first bars, each part alike. The engine lays out a whole score before it
+     draws any of it (16 s for the Goldberg Variations' 1,942 bars) and breaks lines from the
+     start, so the opening alone, laid out in a moment, shows the score's first systems and
+     pages exactly as the whole will: all but the last, which the cut may shorten */
+  function truncateXml(xml, bars) {
+    return xml.replace(/(<part\b[^>]*>)([\s\S]*?)(<\/part>)/g, (m, open, body, close) => {
+      let at = -1;
+      for (let k = 0; k < bars; k++) { at = body.indexOf('</measure>', at + 1); if (at < 0) return m; }
+      return open + body.slice(0, at + '</measure>'.length) + close;
+    });
+  }
+  /* a score long enough that its opening is worth showing first */
+  const isLong = (xml) => xml.length > 400000;
+
+  /* WebMscore: the loaded webmscore class (Node build or the browser's worker build).
+     onPart, if given, receives the engraving so far, after the first systems and then every few,
+     marked partial and with the number of systems to come (total), so a view can show the start
+     of a long score while the rest is engraved: bars on systems not yet engraved have no
+     position (null in meas) */
+  async function engrave(WebMscore, xml, wsp, onProgress, onPart) {
     const data = new TextEncoder().encode(prepareXml(xml, wsp));
     const hands = staffHands(xml);
     const score = await WebMscore.load('musicxml', data);
     try {
       const n = await score.npages();
       const mp = await score.measurePositions();
+      const bars = mp.elements.slice().sort((a, b) => a.id - b.id);
       const glyphs = { map: new Map(), defs: [] };
       const pages = [];
       const pageMap = new Map();
+      const r = (v) => Math.round(v * 10) / 10;
+      /* A bar too dense for the width runs past the page edge (MuseScore reports a justification
+         error and leaves it). Such a system keeps its own, wider width, so the app draws it
+         scaled down to fit the screen; every other system keeps the common staff size. */
+      const snapshot = () => {
+        const w = pages[0].w, pad = (w / wsp) * 1.2;
+        const fit = ({ w: _, right, ...p }) => (right > w + 1 ? { ...p, w: Math.ceil(right + pad) } : p);
+        const meas = bars.map((e) => (pageMap.has(e.page) ? [pageMap.get(e.page), r(e.x), r(e.y), r(e.sx), r(e.sy)] : null));
+        return { v: 2, wsp, w, defs: glyphs.defs.join(''), pages: pages.map(fit), meas };
+      };
       for (let i = 0; i < n; i++) {
         const pg = compact(await score.saveSvg(i, false), glyphs, wsp, hands);
         if (pg) { pageMap.set(i, pages.length); pages.push(pg); }
         if (onProgress) onProgress((i + 1) / n);
+        if (onPart && pages.length && i < n - 1 && (i < 2 || i % 4 === 3)) onPart({ ...snapshot(), partial: true, total: n });
       }
       if (!pages.length) throw new Error('This score could not be engraved.');
-      const r = (v) => Math.round(v * 10) / 10;
-      const meas = mp.elements
-        .slice()
-        .sort((a, b) => a.id - b.id)
-        .map((e) => (pageMap.has(e.page) ? [pageMap.get(e.page), r(e.x), r(e.y), r(e.sx), r(e.sy)] : null));
-      /* A bar too dense for the width runs past the page edge (MuseScore reports a justification
-         error and leaves it). Such a system keeps its own, wider width, so the app draws it
-         scaled down to fit the screen; every other system keeps the common staff size. */
-      const w = pages[0].w, pad = (w / wsp) * 1.2;
-      const fit = ({ w: _, right, ...p }) => (right > w + 1 ? { ...p, w: Math.ceil(right + pad) } : p);
-      return { v: 2, wsp, w, defs: glyphs.defs.join(''), pages: pages.map(fit), meas };
+      return snapshot();
     } finally {
       try { score.destroy(); } catch (e) { /* already gone */ }
     }
   }
 
-  return { LAYOUTS, layoutFor, prepareXml, engrave, mergeRests, staffHands };
+  return { LAYOUTS, layoutFor, prepareXml, engrave, mergeRests, staffHands, truncateXml, isLong };
 });

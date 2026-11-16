@@ -894,36 +894,43 @@
      allows, with the PDF to download in the corner. Swipe, scroll or use the arrows (or the arrow
      keys) to turn pages; the close button or Escape goes back. */
   function openViewer(e, index) {
-    engraveFor(e).then((out) => {
-      closeViewer();
-      const v = make('div', 'viewer');
-      v.setAttribute('role', 'dialog');
-      v.setAttribute('aria-label', 'Sheet music: ' + pieceName(e, true));
-      const strip = make('div', 'viewer-pages');
-      out.pages.forEach((src, i) => {
-        const pg = make('div', 'viewer-page');
-        const img = make('img', '', undefined, 'img');
-        img.src = src;
-        img.alt = 'Page ' + (i + 1) + ' of ' + out.pages.length;
-        pg.appendChild(img);
-        strip.appendChild(pg);
-      });
-      v.appendChild(strip);
-      const shut = button('round glass-material viewer-close', undefined, closeViewer);
-      shut.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
-      shut.setAttribute('aria-label', 'Close');
-      shut.title = 'Close';
-      const save = button('round glass-material viewer-save', undefined, () => savePdf(e));
-      save.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg>';
-      save.setAttribute('aria-label', 'Download the PDF');
-      save.title = 'Download the PDF';
-      v.append(shut, save);
-      el.lib.appendChild(v);
-      L.viewer = { el: v, strip, arrows: TOUCH.matches ? null : carouselArrows(v, strip) };
-      requestAnimationFrame(() => { const pg = strip.children[index]; if (pg) strip.scrollLeft = pg.offsetLeft - (strip.clientWidth - pg.offsetWidth) / 2; });
-      shut.focus({ preventScroll: true });
-      sceneV++; kick(500);
-    });
+    const job = engraveFor(e);
+    closeViewer();
+    const v = make('div', 'viewer');
+    v.setAttribute('role', 'dialog');
+    v.setAttribute('aria-label', 'Sheet music: ' + pieceName(e, true));
+    const strip = make('div', 'viewer-pages');
+    v.appendChild(strip);
+    const shut = button('round glass-material viewer-close', undefined, closeViewer);
+    shut.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+    shut.setAttribute('aria-label', 'Close');
+    shut.title = 'Close';
+    const save = button('round glass-material viewer-save', undefined, () => savePdf(e));
+    save.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg>';
+    save.setAttribute('aria-label', 'Download the PDF');
+    save.title = 'Download the PDF';
+    v.append(shut, save);
+    el.lib.appendChild(v);
+    L.viewer = { el: v, strip, arrows: TOUCH.matches ? null : carouselArrows(v, strip) };
+    /* a blank page for each page to come, filled as it is drawn */
+    const fill = (i) => {
+      if (!v.isConnected) { job.watchers.delete(fill); return; }
+      while (strip.children.length < job.total) strip.appendChild(make('div', 'viewer-page is-blank'));
+      const pg = strip.children[i];
+      if (i < 0 || !pg || !job.pages[i] || pg.firstChild) return;
+      const img = make('img', '', undefined, 'img');
+      img.src = job.pages[i];
+      img.alt = 'Page ' + (i + 1) + ' of ' + job.total;
+      img.decoding = 'async';
+      pg.appendChild(img);
+      pg.classList.remove('is-blank');
+      sceneV++; kick(200);
+    };
+    job.watchers.add(fill);
+    job.pages.forEach((src, i) => fill(i));
+    requestAnimationFrame(() => { const pg = strip.children[index]; if (pg) strip.scrollLeft = pg.offsetLeft - (strip.clientWidth - pg.offsetWidth) / 2; });
+    shut.focus({ preventScroll: true });
+    sceneV++; kick(500);
   }
   function closeViewer() {
     if (!L.viewer) return;
@@ -938,8 +945,13 @@
     v.strip.scrollBy({ left: dir * (pg ? pg.offsetWidth + parseFloat(getComputedStyle(v.strip).columnGap || '0') : v.strip.clientWidth), behavior: 'smooth' });
   }
 
-  /* the pages as they will print, engraved here by MuseScore's engine (js/print.js); kept for
-     the session so the PDF and a second visit are instant */
+  /* the pages as they will print, engraved here by MuseScore's engine (js/print.js). A job holds
+     the pages drawn so far (pages, in order), how many there will be (total, known with the
+     first), and tells its watchers as each arrives (with its index; -1 when all are drawn and
+     the PDF is made, -2 if it failed); done resolves then. The engine lays out the whole score
+     before the first page, then draws one page at a time: a long piece (the Goldberg Variations,
+     171 pages) shows its first page as soon as it is drawn, and the rest follow. Kept for the
+     session, so the PDF and a second visit are instant */
   function printInfo(e) {
     const d = L.data, c = d.comp.get(e.composer), p = d.parentOf(e);
     const sub = [e.kind === 'movement' && p ? workName(p) : '', catOf(e)].filter(Boolean).join(' · ');
@@ -947,42 +959,72 @@
   }
   function engraveFor(e) {
     if (L.prints.has(e.id)) return L.prints.get(e.id);
-    const job = (async () => {
+    const job = { pages: [], total: 0, provisional: false, pdf: null, error: null, watchers: new Set() };
+    const tell = (i) => { for (const f of [...job.watchers]) f(i); };
+    job.done = (async () => {
       const url = e.b ? 'scores/' + e.b + '.musicxml' + V : 'library/scores/' + e.s + V;
       const r = await fetch(url);
       if (!r.ok) throw new Error('The score could not be downloaded.');
       const xml = await FB.readScoreFile(new File([await r.blob()], url.split('/').pop().split('?')[0]));
       const W = await FB.loadEngine();
-      const out = await FB.print.render(W, xml, printInfo(e), (svg, i, n) => { job.progress = [i + 1, n]; if (job.onPage) job.onPage(svg, i, n); });
-      return { pages: out.pages.map((svg) => URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))), pdf: URL.createObjectURL(new Blob([out.pdf], { type: 'application/pdf' })) };
+      const page = (svg) => URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+      /* a long score: its first page from its opening bars, in a moment, while the whole lays out
+         (provisional: more pages are coming, how many is not known yet) */
+      if (FB.engrave.isLong(xml)) {
+        const svg = await FB.print.first(W, xml, printInfo(e));
+        if (svg) { job.pages[0] = page(svg); job.total = 1; job.provisional = true; tell(0); }
+      }
+      const out = await FB.print.render(W, xml, printInfo(e), (svg, i, n) => {
+        job.total = n;
+        job.provisional = false;
+        job.pages[i] = page(svg);
+        tell(i);
+      });
+      job.pdf = URL.createObjectURL(new Blob([out.pdf], { type: 'application/pdf' }));
+      tell(-1);
+      return job;
     })();
-    job.catch(() => L.prints.delete(e.id));
+    job.done.catch((err) => { job.error = err; L.prints.delete(e.id); tell(-2); });
     L.prints.set(e.id, job);
     return job;
   }
+  /* the preview: a blank sheet for each page once the count is known, each filled as it is drawn */
   function showPages(e, box) {
     box.textContent = '';
     const waiting = make('div', 'sheet-page is-waiting', 'Laying out the pages…', 'box');
     box.appendChild(waiting);
     const job = engraveFor(e);
-    job.onPage = (svg, i, n) => { if (waiting.isConnected) waiting.textContent = 'Laying out page ' + (i + 1) + ' of ' + n + '…'; };
-    job.then((out) => {
-      if (!box.isConnected) return;
-      box.textContent = '';
-      out.pages.forEach((src, i) => {
-        const pg = button('sheet-page', undefined, () => openViewer(e, i));
-        pg.setAttribute('aria-label', 'Page ' + (i + 1) + ' of ' + out.pages.length + ', full screen');
-        const img = make('img', '', undefined, 'img');
-        img.src = src;
-        img.alt = '';
-        pg.appendChild(img);
-        box.appendChild(pg);
-      });
+    const fill = (i) => {
+      if (!box.isConnected) { job.watchers.delete(fill); return; }
+      if (i === -2) { waiting.textContent = (job.error && job.error.message) || 'The pages could not be laid out.'; return; }
+      if (!job.total) return;
+      const sheets = box.querySelectorAll('.sheet-page:not(.is-waiting)');
+      for (let k = sheets.length; k < job.total; k++) {
+        const pg = button('sheet-page is-blank', undefined, () => openViewer(e, k));
+        pg.setAttribute('aria-label', 'Page ' + (k + 1) + ', full screen');
+        box.insertBefore(pg, waiting.isConnected ? waiting : null);
+      }
+      /* the first page came from the opening alone: the rest are being laid out */
+      if (job.provisional) { waiting.textContent = 'Laying out the other pages…'; if (!waiting.isConnected) box.appendChild(waiting); }
+      else waiting.remove();
+      if (i < 0) return;
+      const pg = box.querySelectorAll('.sheet-page:not(.is-waiting)')[i];
+      if (!pg || !job.pages[i] || pg.firstChild) return;
+      const img = make('img', '', undefined, 'img');
+      img.src = job.pages[i];
+      img.alt = '';
+      img.decoding = 'async';
+      img.loading = 'lazy';
+      pg.appendChild(img);
+      pg.classList.remove('is-blank');
       sceneV++; kick(200);
-    }, (err) => { if (box.isConnected) { waiting.textContent = err.message || 'The pages could not be laid out.'; } });
+    };
+    job.watchers.add(fill);
+    job.pages.forEach((src, i) => fill(i));
+    if (job.error) fill(-2);
   }
   async function savePdf(e) {
-    const out = await engraveFor(e);
+    const out = await engraveFor(e).done;
     const c = L.data.comp.get(e.composer);
     const name = (c.name + ' – ' + pieceName(e, true) + (catOf(e) ? ', ' + catOf(e) : '')).replace(/[\\/:*?"<>|“”]+/g, '').replace(/\s+/g, ' ').trim() + '.pdf';
     const a = document.createElement('a');
