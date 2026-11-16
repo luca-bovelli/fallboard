@@ -1392,19 +1392,20 @@
   const layoutTop = (node) => { let y = 0; for (let n = node; n && n !== el.scroll; n = n.offsetParent) y += n.offsetTop; return y; };
   const STILL = window.matchMedia('(prefers-reduced-motion: reduce)');
   /* Explore's tabs pin under the top bar, and ease into their place rather than stopping dead
-     (as a sticky element alone does). d is how far their place in the page is below where they
-     pin; within EASE of it either way they fall behind the page a little, slowing evenly until
-     they rest, never faster than the page: at distance d from where they pin they sit at
-     (d + EASE)² / 4 EASE, which is 0 and still at -EASE, and back in step with the page at +EASE */
+     (as a sticky element alone does): over the EASE px of scrolling either side of where they
+     pin, they fall behind the page a little, slowing evenly until they rest. The easing is a
+     scroll-driven animation in the CSS (index.html .explore-tabs), so it moves in step with the
+     scroll itself; set from a script on every scroll event it lagged a frame behind on the
+     iPhone and jittered. Here only its scroll range is kept up to date: where they pin, in
+     scroll offset, less and more EASE */
   const EASE = 28;
   function pinCheck() {
     const tabs = el.page.querySelector('.explore-tabs'), mark = el.page.querySelector('.explore-mark');
     if (tabs && mark) {
-      const d = layoutTop(mark) - parseFloat(getComputedStyle(tabs).top) - el.scroll.scrollTop;
-      const pinned = d <= 0.5;
-      const at = d > -EASE && d < EASE && !STILL.matches ? (d + EASE) ** 2 / (4 * EASE) : Math.max(d, 0);
-      const lag = at - Math.max(d, 0);   // the sticky position does the rest
-      tabs.style.transform = lag > 0.05 ? 'translateY(' + lag.toFixed(2) + 'px)' : '';
+      const at = layoutTop(mark) - parseFloat(getComputedStyle(tabs).top);
+      const range = Math.round(at - EASE) + 'px ' + Math.round(at + EASE) + 'px';
+      if (tabs.dataset.range !== range) { tabs.dataset.range = range; tabs.style.setProperty('--settle', range); }
+      const pinned = el.scroll.scrollTop >= at - 0.5;
       tabs.classList.toggle('is-pinned', pinned);
       if (el.lib.classList.contains('tabs-pinned') !== pinned) {
         el.lib.classList.toggle('tabs-pinned', pinned);   // the top fade reaches down behind them

@@ -790,6 +790,20 @@
   /* above the fades (z-index 3), with the rest of the glass: the page has no stacking context of
      its own, so this counts in the library's */
   .explore-tabs { position: sticky; top: var(--stick); z-index: 4; }
+  /* easing into their place as they pin (library.js pinCheck sets --settle, the scroll range):
+     over its first half they fall behind the page, more and more (quadratic in), and over its
+     second they catch up with where they pin, slowing to rest (quadratic out): never faster than
+     the page, and 7 px (a quarter of the 28 px each side) behind at most. Driven by the scroll
+     itself, so it keeps in step with it */
+  .lib-scroll { scroll-timeline: --lib-page block; }
+  @supports (animation-timeline: scroll()) {
+    .explore-tabs { animation: tabs-settle linear both; animation-timeline: --lib-page; animation-range: var(--settle, 0px 0px); }
+  }
+  @keyframes tabs-settle {
+    0% { transform: translateY(0); animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53); }
+    50% { transform: translateY(7px); animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+    100% { transform: translateY(0); }
+  }
   .library .seg { box-shadow: var(--shadow-float); }
 
   /* buttons on a piece's page: one white for the main action, the rest flat */

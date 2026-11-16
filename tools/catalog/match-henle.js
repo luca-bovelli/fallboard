@@ -106,6 +106,11 @@ for (const ed of raw.editions) {
         const w = top && top.why;
         if (named.length === 1) hit = named[0].entry;
         else if (top && keyOk(top.entry) && (!want || w.key) && w.named >= 1 && w.words && w.matched * 3 >= w.words * 2 && (!next || top.score - next.score >= 15)) hit = top.entry;
+        /* a year in Henle's title ("Images (1894)") must be the entry's, or its work's: "Images
+           (1894)" are the Images oubliées, not the Images of 1901 */
+        const year = +((p.title.match(/\((1[5-9]\d\d)\)/) || [])[1] || 0);
+        const its = hit && (hit.year || (byId.get(hit.parent) || {}).year);
+        if (hit && year && its && Math.abs(its - year) > 1) hit = null;
         if (hit) { byTitle.push(`${p.title} -> ${search.label(hit)}`); break; }
       }
     }
