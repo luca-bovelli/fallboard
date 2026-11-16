@@ -266,11 +266,36 @@
     coverSoon.observe(hold);
     return hold;
   }
+  /* A list's rows: those a screen can show at once, then the rest in slices between frames, so a
+     tap that swaps a long list (Explore's tabs, a search) never holds up the frames of what
+     answers it (the pill sliding, the press letting go). A view that must reach far down at once
+     (going back to where a list was scrolled) finishes them first: finishRows() */
+  const ROWS_NOW = 16;
+  let rowsLeft = [];
   function rows(list, style, cols = true) {
     lazyNow = 30;
     const box = make('div', 'rows' + (cols ? ' cols' : ''));
-    list.forEach((e, i) => box.appendChild(row(e, style, style === 'num' ? e.number || i + 1 : null)));
+    const one = (i) => box.appendChild(row(list[i], style, style === 'num' ? list[i].number || i + 1 : null));
+    let i = 0;
+    for (; i < Math.min(ROWS_NOW, list.length); i++) one(i);
+    if (i < list.length) {
+      const job = { box, more: (budget) => { const end = performance.now() + budget; while (i < list.length && performance.now() < end) one(i++); return i < list.length; } };
+      rowsLeft.push(job);
+      if (rowsLeft.length === 1) setTimeout(rowsSlice, 0);
+    }
     return box;
+  }
+  function rowsSlice() {
+    /* lists no longer on the page are dropped; each slice takes a few ms, then lets a frame by */
+    rowsLeft = rowsLeft.filter((j) => j.box.isConnected || !j.box.parentNode);
+    const job = rowsLeft[0];
+    if (!job) return;
+    if (!job.more(6)) rowsLeft.shift();
+    if (rowsLeft.length) setTimeout(rowsSlice, 0);
+  }
+  function finishRows() {
+    for (const j of rowsLeft) if (j.box.isConnected) j.more(Infinity);
+    rowsLeft = [];
   }
 
   /* a recent piece: its opening as a piano roll, falling as in the player, fading into darkness
@@ -546,7 +571,31 @@
     albumLayout.set(key, layout);
     return layout;
   }
+  /* A cover, once made, is kept (the last few hundred, by entry and by whether the fonts were in)
+     and copied when it is wanted again: making one measures its words and parses its drawing, a
+     copy does neither. The same covers come back all the time: a search's results as each letter
+     is typed, Explore's lists as its tabs are switched, a list gone back to. A copy's outline masks
+     get ids of their own, as every mask on the page must */
+  const coversMade = new Map();
   function cover(e) {
+    const key = (fontsIn ? '' : '~') + e.id;
+    const kept = coversMade.get(key);
+    if (kept) {
+      coversMade.delete(key); coversMade.set(key, kept);   // most recently wanted last
+      const c = kept.cloneNode(true);
+      for (const m of c.querySelectorAll('mask')) {
+        const id = 'cvm' + (++maskSeq);
+        c.querySelector(`[mask="url(#${m.id})"]`).setAttribute('mask', `url(#${id})`);
+        m.id = id;
+      }
+      return c;
+    }
+    const c = makeCover(e);
+    coversMade.set(key, c.cloneNode(true));
+    if (coversMade.size > 400) coversMade.delete(coversMade.keys().next().value);
+    return c;
+  }
+  function makeCover(e) {
     const album = albumOf(e);
     const pick = chooser(album.id);
     const t = coverText(e);
@@ -806,15 +855,20 @@
         else page.appendChild(make('p', 'lib-note', 'No composer matches “' + q + '”. The library has ' + L.data.comp.size + ' composers, from Bach to Shostakovich.', 'text'));
         return;
       }
-      if (!S.results || S.results.q !== q) {
-        ask(q);
-        page.appendChild(make('p', 'lib-note', S.ready ? 'Searching…' : 'Getting the search ready…', 'text'));
+      /* what is typed now if it has been found, else the results last found while it is: never a
+         "Searching…" in between. Only a search opened cold (a reload, before the index is built)
+         has nothing yet to show */
+      const res = S.cache.get(q) || S.results;
+      if (!res || res.q !== q) ask(q);
+      S.shownQ = res ? res.q : null;
+      if (!res) {
+        if (!S.ready) page.appendChild(make('p', 'lib-note', 'Getting the search ready…', 'text'));
         return;
       }
       const want = L.tab === 'works' ? (e) => L.data.kids.has(e.id) : (e) => !L.data.kids.has(e.id);
-      const found = S.results.ids.map((id) => L.data.byId.get(id)).filter((e) => e && want(e));
+      const found = res.ids.map((id) => L.data.byId.get(id)).filter((e) => e && want(e));
       if (found.length) page.appendChild(rows(found, 'two'));
-      else page.appendChild(make('p', 'lib-note', 'No ' + L.tab + ' match “' + q + '”. Try a composer, a key or a catalogue number, like rach 23 2 or bb minor' + (L.tab === 'pieces' ? ', or look under Works.' : ', or look under Pieces.'), 'text'));
+      else page.appendChild(make('p', 'lib-note', 'No ' + L.tab + ' match “' + res.q + '”. Try a composer, a key or a catalogue number, like rach 23 2 or bb minor' + (L.tab === 'pieces' ? ', or look under Works.' : ', or look under Pieces.'), 'text'));
     },
   };
 
@@ -1159,6 +1213,7 @@
     el.query.value = top.view === 'search' ? top.q || '' : '';
     el.clear.hidden = !el.query.value;
     render(enter);
+    if (top.top) finishRows();   // back to where it was scrolled: the rows down to there must be in
     el.scroll.scrollTop = top.top || 0;
   }
   function push(item) {
@@ -1194,41 +1249,74 @@
   }
 
   /* ------------------------------------------------------------------ search */
-  /* the search runs in a worker (js/search-worker.js); results come back as catalogue ids */
-  const S = { worker: null, ready: false, seq: 0, asked: '', results: null };
-  function startSearch() {
+  /* The search runs in a worker (js/search-worker.js); results come back as catalogue ids. One
+     search at a time is out with the worker: what is typed meanwhile waits (only the latest), so
+     the worker never works through letters already typed past. Answers are kept by query (the
+     last few dozen), so typing back, or going back to a search, shows its results at once. */
+  const S = { worker: null, ready: false, seq: 0, flying: null, next: null, results: null, shownQ: null, from: null, cache: new Map() };  function startSearch() {
     if (S.worker || !window.Worker) return;
     try { S.worker = new Worker('js/search-worker.js' + V); } catch (e) { return; }
     S.worker.onmessage = (e) => {
       const m = e.data;
       if (m.type === 'ready') S.ready = true;
-      else if (m.type === 'found' && m.id === S.seq) {
-        S.results = { q: S.asked, ids: m.ids };
-        if (L.open && L.query.trim() === S.asked) render(false);
+      else if (m.type === 'found') {
+        const res = { q: S.flying, ids: m.ids };
+        S.flying = null;
+        S.cache.set(res.q, res);
+        if (S.cache.size > 40) S.cache.delete(S.cache.keys().next().value);
+        S.results = res;
+        if (S.next !== null) { const n = S.next; S.next = null; if (!S.cache.has(n)) send(n); }
+        landed(res);
       }
     };
     S.worker.postMessage({ type: 'init', url: new URL('library/catalog.json' + V, location.href).href });
   }
+  function send(q) { S.flying = q; S.worker.postMessage({ type: 'find', id: ++S.seq, q, limit: 200 }); }
   function ask(q) {
     startSearch();
-    if (!S.worker || (S.asked === q && S.results && S.results.q === q)) return;
-    S.asked = q;
-    S.worker.postMessage({ type: 'find', id: ++S.seq, q, limit: 200 });
+    if (!S.worker || S.cache.has(q) || q === S.flying || q === S.next) return;
+    if (S.flying !== null) S.next = q;
+    else send(q);
+  }
+  /* an answer is in: shown if it is for what is typed, or the best there is while that is found */
+  function landed(res) {
+    if (!L.open || !L.data) return;
+    const top = L.stack[L.stack.length - 1];
+    if (S.from) {
+      /* a search typed on another page opens with its first results, not before */
+      const from = S.from;
+      S.from = null;
+      if (from === top && el.query.value.trim()) push({ view: 'search', q: el.query.value });
+      return;
+    }
+    if (top.view !== 'search' || L.tab === 'composers') return;
+    const q = (top.q || '').trim();
+    if (res.q !== q && S.cache.has(q)) return;   // answered after what is typed now was found
+    if (res.q === S.shownQ) return;
+    render(false);
+    el.scroll.scrollTop = 0;
   }
   /* typing starts a search as a step of its own; more typing updates it in place; emptying the
-     field steps back out of it */
-  let searchTimer = 0;
+     field steps back out of it. Until new results are in, the page keeps what it shows: the
+     results before, or (for a search begun elsewhere) the page it was begun on */
   function onQuery() {
-    const v = el.query.value;
+    const v = el.query.value, q = v.trim();
     el.clear.hidden = !v;
     const top = L.stack[L.stack.length - 1];
     if (top.view === 'search') {
-      if (!v.trim()) { clearTimeout(searchTimer); back(); return; }
+      if (!q) { back(); return; }
       top.q = v;
       if (inHistory()) history.replaceState(entry(L.stack), '', urlOf(top));
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => { if (L.open && L.data && L.stack[L.stack.length - 1] === top) { render(false); el.scroll.scrollTop = 0; } }, 90);
-    } else if (v.trim() && L.data) push({ view: 'search', q: v });
+      /* composers are matched here and now; pieces and works once the worker has them */
+      if (L.tab === 'composers' || (S.cache.has(q) && q !== S.shownQ)) { render(false); el.scroll.scrollTop = 0; }
+      else ask(q);
+    } else if (!q) S.from = null;
+    else if (L.data) {
+      ask(q);
+      /* a cold search (the index still being built) opens at once, saying so */
+      if (L.tab === 'composers' || S.cache.has(q) || !S.worker || !S.ready) push({ view: 'search', q: v });
+      else S.from = top;
+    }
   }
   el.query.addEventListener('input', onQuery);
   el.query.addEventListener('keydown', (e) => { if (e.key === 'Enter') el.query.blur(); });
@@ -1389,7 +1477,14 @@
     const GL = window.FBGlass;
     if (glass || !GL) return;
     try {
-      glass = new GL.GlassBackdrop({ root: () => el.lib, reducedTransparency: () => window.matchMedia('(prefers-contrast: more)').matches });
+      /* fps: set by pace() below. At the glass's own 30 a second it redrew every other frame of a
+         scroll (every fourth on a 120 Hz screen), showing the page as it was frames before */
+      glass = new GL.GlassBackdrop({ root: () => el.lib, fps: Infinity, reducedTransparency: () => window.matchMedia('(prefers-contrast: more)').matches,
+        record: (step, ms) => {
+          if (step === 'glass.frame.cpu') glassCost = glassCost ? glassCost * 0.8 + ms * 0.2 : ms;
+          /* the cost of each step of a frame, for profiling: set FB.glassRecord = (step, ms) => … */
+          if (FB.glassRecord) FB.glassRecord(step, ms);
+        } });
       GL.attachGlassMaterials(glass, el.lib);
     } catch (e) { glass = null; }
   }
@@ -1400,9 +1495,24 @@
   function frame(ms) {
     frameQueued = false;
     if (!L.open || !glass) return;
+    pace(ms);
     if (performance.now() < sceneUntil) sceneV++;
     glass.update(el.lib.clientWidth, el.lib.clientHeight, ms, paint, String(sceneV));
     if (ms < busyUntil) kick();
+  }
+  /* How often the glass redraws while the page under it moves: on every frame while a redraw is
+     cheap next to the frame (any recent phone, at 60 or 120 Hz), so what shows through it is
+     never older than the frame being drawn; every other frame where it is not (a slow device),
+     so the page around it keeps its frame rate. Between the two by a margin, so it doesn't flip.
+     A frame is the screen's: the shortest gap between frames in a run (a slow frame is longer) */
+  let glassCost = 0, frameGap = 1000 / 60, lastFrame = 0, everyOther = false;
+  function pace(ms) {
+    const gap = ms - lastFrame;
+    lastFrame = ms;
+    if (gap > 4 && gap < 50) frameGap = Math.min(frameGap * 1.002, gap, 20);   // no screen is slower than 50 Hz
+    if (!everyOther && glassCost > frameGap * 0.4) everyOther = true;
+    else if (everyOther && glassCost < frameGap * 0.25) everyOther = false;
+    glass.options.fps = everyOther ? 1000 / (frameGap * 1.2) : Infinity;
   }
   /* What the scene can draw, measured once per layout rather than on every frame (on Explore that
      was hundreds of nodes, each measured and its style read sixty times a second while the page

@@ -296,7 +296,10 @@
      then takes its place from the chosen part (app.js FB.placePill sets --pill-x and --pill-w) */
   .seg.fit { grid-auto-columns: unset; grid-template-columns: repeat(var(--n, 2), minmax(max-content, 1fr)); }
   .seg.fit button { padding: 0 var(--seg-margin); }
-  .seg.fit::after { left: var(--pill-x, 4px); width: var(--pill-w, 0px); transform: none; transition: left var(--dur-move) var(--ease), width var(--dur-move) var(--ease); }
+  /* moved by a transform, not by left: a transform slides on the compositor, so the pill keeps
+     its frames while the page swaps a long list under it. Its width (where the parts differ)
+     still changes by itself */
+  .seg.fit::after { left: 0; width: var(--pill-w, 0px); transform: translateX(var(--pill-x, 4px)); transition: transform var(--dur-move) var(--ease), width var(--dur-move) var(--ease); }
   .seg.fit.is-placing::after { transition: none; }   /* a bar just built or shown: the pill starts in place */
   .seg button svg { width: 20px; height: 20px; flex: none; }
   /* icons: always drawn in a solid colour; a dimmed icon fades as one layer (opacity on the
