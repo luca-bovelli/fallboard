@@ -24,10 +24,11 @@
    furthest apart in hue, the lighter to the right hand; the player's --rh and --lh when there is
    no cover, or when the flat roll stands in.
 
-   The keys: a white keyboard, neutral, each white key a rounded rectangle, so black dents show
-   between them at the top and bottom, with hairline seams between. A struck white key takes its
-   hand's colour, as vivid as it can be at a middle lightness, laid over the key and fading out
-   down it; a struck black key becomes a cap of that colour, its sides a deeper shade. Keys light
+   The keys: a white keyboard, neutral, below a black line, each white key a rounded rectangle, so
+   black dents show between them at the top and bottom, with hairline seams between. A struck
+   white key takes its hand's colour at full saturation, darkened as an overlay darkens it (gold,
+   not olive), laid over the key and fading out down it; a struck black key becomes a cap of that
+   colour, its sides a deeper shade. Keys light
    fully the moment a note starts and go dark within 60 ms of its end. The hands' icons
    (--hand-r, --hand-l) take the hands' colours. */
 (function () {
@@ -92,18 +93,21 @@
   }
   function handColours(rgb) {
     const [, C, h] = toLch(rgb);
-    /* on the keys: the hue as vivid as the screen can show it at a middle lightness: where the hue
-       is most vivid (yellow light, blue dark), held within 0.5..0.62, since a colour that strong
-       reads best neither light nor dark */
-    const vivid = (L) => lch(clamp(L, 0.05, 0.97), 0.4, h);
-    let cusp = 0.6, best = -1;
-    for (let L = 0.3; L <= 0.97; L += 0.01) { const c = toLch(vivid(L))[1]; if (c > best) { best = c; cusp = L; } }
-    const kL = clamp(cusp, 0.5, 0.62);
+    /* on the keys: the hue at full saturation (its strongest channel full, its weakest none),
+       darkened as an overlay of grey 0.3 darkens it: the full and the empty channels stay and the
+       middle one falls, so a yellow turns gold where darkening it any other way turns it olive.
+       Then no lighter than 0.75 (yellows and greens are light even at full saturation); the rim,
+       where the note lands, is the full hue; a black key's sides are deeper */
+    const p = srgb(rgb), hi = Math.max(...p), lo = Math.min(...p);
+    const pure = p.map((v) => (hi - lo > 1e-4 ? (v - lo) / (hi - lo) : 1));
+    const overlay = (b) => pure.map((a) => lin(a < 0.5 ? 2 * a * b : 1 - 2 * (1 - a) * (1 - b)));
+    const cap = (c, most) => { const L = toLab(c)[0]; return L <= most ? c : c.map((v) => v * Math.pow(most / L, 3)); };
+    const key = cap(overlay(0.3), 0.75);
     return {
       lin: rgb,                                         // the bloom's colour
       note: srgb(rgb), rim: srgb(lift(rgb, 0.55)),      // a glass note's tint and its rim light
       lab: toLab(lch(0.5, Math.min(0.22, C * 1.5), h)), // the field's colour, at lightness 0.5
-      key: vivid(kL), keyRim: vivid(kL + 0.08), keyDeep: vivid(kL * 0.62),
+      key, keyRim: cap(pure.map(lin), 0.83), keyDeep: cap(key, toLab(key)[0] * 0.62),
     };
   }
 
@@ -477,8 +481,8 @@
   /* ------------------------------------------------------------------ a recent piece's card
      Its opening bars (r.roll: start and length in hundredths of a second, pitch and hand, the bar
      starts and the end; js/app.js rollOf) as the player shows them as it begins: on the player's
-     keys, the first notes landing where the keyboard would be, at 0.66 of the card's height, the
-     rest rising above, lit in the piece's hands' colours, with the grid's lanes and bar lines. Still:
+     keys, the first notes landing on the card's bottom edge, where the keyboard would be, the rest
+     rising above, lit in the piece's hands' colours, with the grid's lanes and bar lines. Still:
      a card's noise does not move. Drawn into the card's 2D canvas; false without WebGL 2. */
   let whiteAt = null;   // how many white keys lie below each key, from A0
   function thumb(cv, r, theme) {
@@ -486,7 +490,7 @@
     const w = cv.clientWidth, H = cv.clientHeight;
     if (!w || !H) return true;
     if (!whiteAt) { whiteAt = new Int16Array(128); for (let m = 21, n = 0; m < 128; m++) { whiteAt[m] = n; if (!FB.isBlack(m)) n++; } }
-    const dpr = Math.min(2, window.devicePixelRatio || 1), h = Math.round(H * 0.66), top = 10, roll = r.roll, t = roll.notes;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), h = H, top = 10, roll = r.roll, t = roll.notes;
     let lo = 127, hi = 0;
     for (let i = 0; i < t.length; i += 4) { lo = Math.min(lo, t[i + 2]); hi = Math.max(hi, t[i + 2]); }
     const left = whiteAt[clamp(lo, 21, 108)] - 1.5, W = w / (whiteAt[clamp(hi, 21, 108)] + 2.5 - left), bw = W * 0.58;
@@ -568,7 +572,7 @@
     /* each white key a rounded rectangle: black behind them shows as a small dent where two keys'
        corners meet, at the top and the bottom; between, a hairline seam of grey. The keys start
        below a black line (TOP px) that parts them from the roll */
-    const TOP = 2, rad = Math.min(3.5, W * 0.22);
+    const TOP = 4, rad = Math.min(3.5, W * 0.22);
     c.fillStyle = '#000'; c.fillRect(0, 0, w, h);
     c.fillStyle = '#bcbcbc'; c.fillRect(0, TOP + rad, w, h - TOP - 2 * rad);
     const grad = (a, b, cc) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, a); g.addColorStop(0.88, b); g.addColorStop(1, cc); return g; };

@@ -24,6 +24,11 @@ const CASES = [
   // Henle's levels of difficulty
   ['chopin op 10 henle 9', 'chopin', /Op\. 10 No\. 1\b/],
   ['chopin op 10 9/9', 'chopin', /Op\. 10 No\. 1\b/],
+  ['chopin op 10 henle 9/9', 'chopin', /Op\. 10 No\. 1\b/],
+  ['chopin op 10 8-9/9', 'chopin', /Op\. 10 No\. 1\b/],
+  ['chopin op 10 8 – 9/9', 'chopin', /Op\. 10 No\. 1\b/],
+  ['chopin op 10 henle 8-9/9', 'chopin', /Op\. 10 No\. 1\b/],
+  ['schubert impromptu level 8 to 9', 'schubert', /D\. 935 No\. 4\b/],
   ['schubert impromptu level 8', 'schubert', /D\. 935 No\. 4\b/],
   ['bach beginner musette', 'bach', /126/],
   ['chopin hard etude op 10 c minor', 'chopin', /Op\. 10 No\. 12\b/],

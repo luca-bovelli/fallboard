@@ -66,16 +66,18 @@
 
   /* ---------- levels of difficulty ---------- */
 
-  /* Henle's levels (1 to 9, an entry's h): "henle 6", "level 6", "6/9", "henle 4-6", "henle 4 to 6",
-     and Henle's bands, with or without "henle": "easy" or "beginner" (1 to 3), "medium" or
+  /* Henle's levels (1 to 9, an entry's h), each way of writing one also taking a range: "henle 6",
+     "level 6", "6/9", "henle 6/9", "henle 4-6", "henle 4 to 6", "4-6/9", "henle 4–6/9"; and
+     Henle's bands, with or without "henle": "easy" or "beginner" (1 to 3), "medium" or
      "intermediate" (4 to 6), "difficult", "hard" or "advanced" (7 to 9). Read from the query as
      typed, before anything else, since "6/9" would otherwise be two numbers */
   const BANDS = { easy: [1, 3], beginner: [1, 3], medium: [4, 6], intermediate: [4, 6], difficult: [7, 9], hard: [7, 9], advanced: [7, 9] };
   function takeLevel(q) {
     let range = null, word = false;
     const cut = (re, f) => { if (!range) q = q.replace(re, (...m) => { range = f(...m); return m[1] + ' '; }); };
-    cut(/(^|\s)(?:henle|level|lvl)\s*([1-9])(?:\s*(?:-|–|to)\s*([1-9]))?(?=\s|$)/i, (m, pre, a, b) => [+a, +(b || a)].sort((x, y) => x - y));
-    cut(/(^|\s)([1-9])\s*\/\s*9(?=\s|$)/, (m, pre, a) => [+a, +a]);
+    const span = (m, pre, a, b) => [+a, +(b || a)].sort((x, y) => x - y);
+    cut(/(^|\s)(?:henle|level|lvl)\s*([1-9])(?:\s*(?:-|–|to)\s*([1-9]))?(?:\s*\/\s*9)?(?=\s|$)/i, span);
+    cut(/(^|\s)([1-9])(?:\s*(?:-|–|to)\s*([1-9]))?\s*\/\s*9(?=\s|$)/i, span);
     cut(/(^|\s)(?:(?:henle|level)\s+)?(easy|beginner|medium|intermediate|difficult|hard|advanced)(?=\s|$)/i, (m, pre, w) => { word = !/henle|level/i.test(m); return BANDS[w.toLowerCase()]; });
     return { text: q, range, word };
   }

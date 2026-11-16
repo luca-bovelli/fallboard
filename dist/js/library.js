@@ -298,22 +298,25 @@
     rowsLeft = [];
   }
 
-  /* a recent piece: its opening as a piano roll, falling as in the player, fading into darkness
-     where its name and where you left off are written */
+  /* a recent piece: a square card, its opening as a piano roll rising from the bottom edge as in
+     the player, its name at the top over a dark grey wash; the composer under the card */
+  function cardItem(b, title, under) {
+    const item = make('div', 'card-item');
+    b.appendChild(make('span', 'shade'));
+    b.appendChild(make('b', 'title', title, 'text'));
+    b.setAttribute('aria-label', under ? title + ', ' + under : title);
+    item.appendChild(b);
+    if (under) item.appendChild(make('small', 'by', under, 'text'));
+    return item;
+  }
   function card(r) {
     const b = button('card', undefined, () => { FB.app.open(r.open, r); close(); }, 'box');
     const cv = make('canvas', 'roll', undefined, 'img');
     cv.setAttribute('aria-hidden', 'true');
     cv._r = r;
     b.appendChild(cv);
-    b.appendChild(make('span', 'shade'));
-    const t = make('span', 'txt');
-    t.appendChild(make('b', '', r.title, 'text'));
-    if (r.composer) t.appendChild(make('small', '', r.composer, 'text'));
-    t.appendChild(make('span', 'where', r.bars ? 'Bar ' + (r.bar || 1) + ' of ' + r.bars : '', 'text'));
-    b.appendChild(t);
     L.thumbs.push([cv, r]);
-    return b;
+    return cardItem(b, r.title, r.composer);
   }
   /* the first card: your own MusicXML file */
   function uploadCard() {
@@ -321,18 +324,12 @@
     const art = make('span', 'art');
     art.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
     b.appendChild(art);
-    b.appendChild(make('span', 'shade'));
-    const t = make('span', 'txt');
-    t.appendChild(make('b', '', 'Upload a score', 'text'));
-    t.appendChild(make('small', '', 'MusicXML or .mxl', 'text'));
-    t.appendChild(make('span', 'where', 'From this device', 'text'));
-    b.appendChild(t);
-    return b;
+    return cardItem(b, 'Upload a score', 'MusicXML or .mxl');
   }
   /* the opening bars as the player's roll draws them: pitch across, time rising from the
-     keyboard's edge (the first notes lowest), each hand in its colour, bar lines faint. The
-     keyboard's edge sits above the card's text, so the opening is never under it */
-  const ROLL_FLOOR = 0.66;   // where the first notes land, as a share of the card's height
+     keyboard's edge at the bottom of the card (the first notes lowest), each hand in its colour,
+     bar lines faint. Drawn lit by js/roll-gl.js; this flat one is for browsers without WebGL 2 */
+  const ROLL_FLOOR = 1;   // where the first notes land, as a share of the card's height
   function drawThumb(cv, r) {
     if (FB.rollGL && FB.rollGL.thumb(cv, r, css)) return;   // lit, as the player draws it; below, the flat roll without WebGL 2
     const w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
