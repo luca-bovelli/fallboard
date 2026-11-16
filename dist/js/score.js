@@ -457,7 +457,7 @@
     const docBeats = new Array(measures.length).fill(null);
     occ.forEach((o) => { if (docBeats[o.doc] === null) docBeats[o.doc] = []; docBeats[o.doc].push(o.beat); });
 
-    return {
+    return FB.scoreLookups({
       title, composer, xml: xmlText,
       notes, maxDur, hasHands,
       staffHands: hasHands ? tracks.map((k) => handByTrack.get(k)) : null,   // hand of each staff, top to bottom
@@ -476,14 +476,68 @@
       tempo,
       totalBeats,
       duration: beatToSec(totalBeats),
-      beatToSec, secToBeat,
-      measureAt(t) {
-        let lo = 0, hi = occ.length - 1;
-        while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (occ[mid].t <= t + 1e-6) lo = mid; else hi = mid - 1; }
-        return lo;
-      },
-      tempoAt(t) { return segAtSec(t); },
+    });
+  };
+
+  /* A score's lookups, made from its data: beats to seconds and back, the bar playing at a time,
+     the tempo there. Kept apart from the parsing so a score parsed in the worker (functions do
+     not cross from it) gets them back on arrival */
+  FB.scoreLookups = function (s) {
+    const tempo = s.tempo, occ = s.measures;
+    const segAtBeat = (b) => {
+      let lo = 0, hi = tempo.length - 1;
+      while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (tempo[mid].b <= b) lo = mid; else hi = mid - 1; }
+      return tempo[lo];
     };
+    const segAtSec = (t) => {
+      let lo = 0, hi = tempo.length - 1;
+      while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (tempo[mid].sec <= t) lo = mid; else hi = mid - 1; }
+      return tempo[lo];
+    };
+    s.beatToSec = (b) => { const g = segAtBeat(b); return g.sec + ((b - g.b) * 60) / g.bpm; };
+    s.secToBeat = (t) => { const g = segAtSec(t); return g.b + ((t - g.sec) * g.bpm) / 60; };
+    s.measureAt = (t) => {
+      let lo = 0, hi = occ.length - 1;
+      while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (occ[mid].t <= t + 1e-6) lo = mid; else hi = mid - 1; }
+      return lo;
+    };
+    s.tempoAt = (t) => segAtSec(t);
+    return s;
+  };
+
+  /* Parsing off the page. A big score (the Goldberg Variations: 16 MB of MusicXML, 483,000
+     elements) takes seconds to parse, which on the page would freeze it, even before its first
+     frame. So it is parsed in a worker (js/score-worker.js, with js/xml-lite.js for a DOMParser),
+     and only the result crosses back; where a worker cannot start, here as before */
+  let parser = null, parses = 0;
+  const parsing = new Map();
+  const here = (job) => { try { job.resolve(FB.parseMusicXML(job.xml)); } catch (e) { job.reject(e); } };
+  FB.parseScore = function (xml) {
+    return new Promise((resolve, reject) => {
+      const job = { xml, resolve, reject };
+      if (!parser && typeof Worker !== 'undefined') {
+        try {
+          parser = new Worker('js/score-worker.js' + (window.FB_VERSION ? '?v=' + window.FB_VERSION : ''));
+          parser.onmessage = (e) => {
+            const j = parsing.get(e.data.id);
+            if (!j) return;
+            parsing.delete(e.data.id);
+            if (e.data.error) j.reject(new Error(e.data.error));
+            else j.resolve(FB.scoreLookups({ ...e.data.score, xml: j.xml }));
+          };
+          parser.onerror = (e) => {
+            e.preventDefault();
+            parser = false;
+            for (const j of parsing.values()) here(j);
+            parsing.clear();
+          };
+        } catch (e) { parser = false; }
+      }
+      if (!parser) { setTimeout(() => here(job), 0); return; }
+      const id = ++parses;
+      parsing.set(id, job);
+      parser.postMessage({ id, xml });
+    });
   };
 
   /* ---------- .mxl (zipped MusicXML) ---------- */

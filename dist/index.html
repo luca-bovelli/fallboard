@@ -7,9 +7,15 @@
 <meta name="theme-color" content="#000000">
 <title>Fallboard Piano</title>
 <link rel="license" href="credits.html">
+<!-- the font hosts, connected to while the page is read -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap">
-<!-- the library's covers: Boska, Melodrama and Switzer from Fontshare (ITF Free Font License); Nyght Serif (SIL OFL, dist/fonts/nyght) is declared below -->
-<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=boska@500,501,900,901&f[]=melodrama@500,700&f[]=switzer@100,200,400&display=swap">
+<!-- the library's covers: Boska, Melodrama and Switzer from Fontshare (ITF Free Font License); Nyght Serif (SIL OFL, dist/fonts/nyght) is declared below.
+     Only the library uses them, so they load without holding up the player's first frame (media="print" until loaded) -->
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=boska@500,501,900,901&f[]=melodrama@500,700&f[]=switzer@100,200,400&display=swap" media="print" onload="this.media='all'">
 <style>
   /* Nyght Serif by Maksym Kobuzan, SIL Open Font License 1.1 (fonts/nyght/OFL.txt): the covers' outlined
      words and numerals, and their echoed titles */

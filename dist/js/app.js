@@ -839,7 +839,9 @@
     try {
       const xml = await readXml();
       if (request !== scoreRequest) return;
-      const score = FB.parseMusicXML(xml);
+      /* parsed in a worker (js/score-worker.js): a big score no longer freezes the page */
+      const score = await FB.parseScore(xml);
+      if (request !== scoreRequest) return;
       if (!score.notes.length) throw new Error('This score has no notes to play.');
       status(null);
       setScore(score, getMeta(score));
