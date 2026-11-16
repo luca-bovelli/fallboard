@@ -60,7 +60,7 @@ To refresh a composer's raw data, run a puller with names: `node tools/catalog/p
 
 ## Search
 
-`tools/catalog/search.js` reads one query box: keys in any spelling ("bbm", "b-flat minor", "B♭ minor", "b moll"), catalogue numbers with or without names ("op 23 no 2", "23 2", "bwv846", "hob xvi 52"), composer spellings and prefixes ("rach", "tschaikowsky", "szopen"), genres in any language, nicknames, one typo per word, and Henle's levels of difficulty ("henle 6", "level 6", "6/9", "henle 4-6", "henle easy"). `tools/catalog/test-search.js` holds the queries it is held to.
+`tools/catalog/search.js` reads one query box: keys in any spelling ("bbm", "b-flat minor", "B♭ minor", "b moll"), catalogue numbers with or without names ("op 23 no 2", "23 2", "bwv846", "hob xvi 52"), composer spellings and prefixes ("rach", "tschaikowsky", "szopen"), genres in any language, nicknames, one typo per word, and Henle's levels of difficulty ("henle 6", "level 6", "6/9", "henle 4-6", "easy", "hard", "advanced"). `tools/catalog/test-search.js` holds the queries it is held to.
 
 ## Sources
 

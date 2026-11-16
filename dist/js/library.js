@@ -358,6 +358,15 @@
     measure.font = `${style} ${weight} 100px ${fam}`;
     return measure.measureText(text).width / 100;
   }
+  /* where a word's ink reaches, left and right of where it starts, per unit of size: an italic's
+     slant carries its top right well past its advance width */
+  function inkOf(text, face) {
+    const [fam, f, style, weight] = FACE[face];
+    if (!fontsIn) return { left: 0, right: f * text.length * 1.15 };
+    measure.font = `${style} ${weight} 100px ${fam}`;
+    const m = measure.measureText(text);
+    return { left: -m.actualBoundingBoxLeft / 100, right: m.actualBoundingBoxRight / 100 };
+  }
   function loadFonts() {
     if (!document.fonts || fontsIn) return;
     Promise.all(FONTS.map((s) => document.fonts.load(s))).then(() => {
@@ -569,11 +578,14 @@
       if (t.cat) stack.appendChild(make('span', 'cat', t.cat));
     } else if (layout === 'num') {
       c.style.setProperty('--ts', fitSize(t.main, face, 84, 26, 18) + 'cqw');
-      /* the numeral in outline in the top right, bleeding off the edge, at most 56 units wide so
-         it keeps clear of the composer and number at the top left */
+      /* the numeral in outline in the top right, its ink (slant and outline included) within the
+         cover's margin on the right, and at most 46 units wide so it keeps clear of the composer
+         and number at the top left */
       const big = t.num || (t.main.match(/\p{L}/u) || ['·'])[0];
-      const size = Math.min(82, 56 / Math.max(widthOf(big, 'outline'), 0.01));
-      art(layer(word(big, 104, 70, size.toFixed(2), ofam, ostyle, oweight, 0.3, 'end', 0.5)));
+      const ink = inkOf(big, 'outline');
+      const size = Math.min(82, 46 / Math.max(ink.right - ink.left, 0.01));
+      const x = 92 - 0.3 - ink.right * size;
+      art(layer(word(big, x.toFixed(2), 70, size.toFixed(2), ofam, ostyle, oweight, 0.3, 'start', 0.5)));
       part('who', t.who);
       if (t.cat) part('cat', t.cat);
       part('main', t.main);
@@ -830,17 +842,20 @@
       f.appendChild(dd);
       facts.appendChild(f);
     };
+    /* Henle's level, first and set apart: the row's pill, larger, its band beside it; the pill
+       opens the Henle edition that grades it */
     if (e.h) {
       const lv = make('span', 'level');
-      lv.appendChild(document.createTextNode(e.h + ' of 9, ' + LEVEL_BAND[e.h] + ' '));
-      const by = make('a', 'by', 'Henle', 'text');
-      by.href = 'https://www.henle.de/en/Levels-of-Difficulty/';
-      by.target = '_blank';
-      by.rel = 'noopener';
-      by.title = 'Graded by the G. Henle Verlag (Rolf Koenen)';
-      lv.appendChild(by);
-      if (e.hn) henleEdition(e.hn).then((url) => { if (url) { by.href = url; by.title = 'Graded by the G. Henle Verlag in its edition HN ' + e.hn; } });
-      fact('Difficulty', lv);
+      const pill = make('a', 'lvl');
+      pill.appendChild(make('b', '', String(e.h), 'text'));
+      pill.appendChild(make('small', '', '/9', 'text'));
+      pill.href = 'https://www.henle.de/en/Levels-of-Difficulty/';
+      pill.target = '_blank';
+      pill.rel = 'noopener';
+      pill.title = 'Graded by the G. Henle Verlag (Rolf Koenen)';
+      if (e.hn) henleEdition(e.hn).then((url) => { if (url) { pill.href = url; pill.title = 'Graded by the G. Henle Verlag in its edition HN ' + e.hn; } });
+      lv.append(pill, make('span', 'band', LEVEL_BAND[e.h][0].toUpperCase() + LEVEL_BAND[e.h].slice(1), 'text'));
+      fact('Henle level', lv);
     }
     fact('Key', e.key && keyText(e.key));
     fact('Catalogue', (e.cat || []).join(' · '));

@@ -114,18 +114,27 @@ for (const ed of raw.editions) {
         if (hit) { byTitle.push(`${p.title} -> ${search.label(hit)}`); break; }
       }
     }
-    if (hit) { if (!found.has(hit.id)) found.set(hit.id, []); found.get(hit.id).push([p.level, ed.hn]); }
+    if (hit) { if (!found.has(hit.id)) found.set(hit.id, []); found.get(hit.id).push([p.level, ed.hn, norm(p.title.replace(/\([^)]*\)/g, ' '))]); }
     else missed.push(`${(c && c.name) || ed.composer}: ${p.title} (HN ${ed.hn})`);
   }
 }
 
-/* one level per entry: the most frequent, then the higher; the edition is the first that gives it */
+/* one level per entry. Several editions grading one Henle piece: the level given most often, then
+   the higher. Several Henle pieces on one entry (Henle grades BWV 846's Prelude 1 and its Fugue 6;
+   the catalogue has the pair as one piece): the hardest, since playing it means playing both.
+   The edition is one that gives that level */
 const levels = {};
 for (const [id, list] of found) {
-  const count = new Map();
-  for (const [l] of list) count.set(l, (count.get(l) || 0) + 1);
-  const level = [...count].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0];
-  levels[id] = [level, list.find(([l]) => l === level)[1]];
+  const byPiece = new Map();
+  for (const x of list) { if (!byPiece.has(x[2])) byPiece.set(x[2], []); byPiece.get(x[2]).push(x); }
+  let best = null;
+  for (const graded of byPiece.values()) {
+    const count = new Map();
+    for (const [l] of graded) count.set(l, (count.get(l) || 0) + 1);
+    const level = [...count].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0];
+    if (!best || level > best[0]) best = [level, graded.find(([l]) => l === level)[1]];
+  }
+  levels[id] = best;
 }
 /* a set or sonata graded whole lends its level to its parts */
 let lent = 0;

@@ -4,7 +4,7 @@
      search.find('rach 23 2')                        // [{ entry, score, label }, ...]
 
    A query is read in this order, each part leaving the rest of the text to the next:
-     level      Henle's level of difficulty: "henle 6", "level 6", "6/9", "henle 4-6", "henle easy"
+     level      Henle's level of difficulty: "henle 6", "level 6", "6/9", "henle 4-6", "easy", "hard"
      key        "b-flat minor", "bb minor", "B♭ minor", "bbm", "Bbm", "fm", "in bb", "b moll" (German,
                 where b is B-flat and h is B), "si bémol mineur"; dashes count as spaces
      numbers    "Op. 23 No. 2", "op23/2", "23 2", "BWV 846", "K. 331", "D 899 3", "Hob XVI:52",
@@ -67,16 +67,17 @@
   /* ---------- levels of difficulty ---------- */
 
   /* Henle's levels (1 to 9, an entry's h): "henle 6", "level 6", "6/9", "henle 4-6", "henle 4 to 6",
-     and "henle easy" (1 to 3), "medium" (4 to 6), "difficult" (7 to 9). Read from the query as
+     and Henle's bands, with or without "henle": "easy" or "beginner" (1 to 3), "medium" or
+     "intermediate" (4 to 6), "difficult", "hard" or "advanced" (7 to 9). Read from the query as
      typed, before anything else, since "6/9" would otherwise be two numbers */
-  const BANDS = { easy: [1, 3], medium: [4, 6], difficult: [7, 9], hard: [7, 9] };
+  const BANDS = { easy: [1, 3], beginner: [1, 3], medium: [4, 6], intermediate: [4, 6], difficult: [7, 9], hard: [7, 9], advanced: [7, 9] };
   function takeLevel(q) {
-    let range = null;
+    let range = null, word = false;
     const cut = (re, f) => { if (!range) q = q.replace(re, (...m) => { range = f(...m); return m[1] + ' '; }); };
     cut(/(^|\s)(?:henle|level|lvl)\s*([1-9])(?:\s*(?:-|–|to)\s*([1-9]))?(?=\s|$)/i, (m, pre, a, b) => [+a, +(b || a)].sort((x, y) => x - y));
     cut(/(^|\s)([1-9])\s*\/\s*9(?=\s|$)/, (m, pre, a) => [+a, +a]);
-    cut(/(^|\s)(?:henle|level)\s+(easy|medium|difficult|hard)(?=\s|$)/i, (m, pre, w) => BANDS[w.toLowerCase()]);
-    return { text: q, range };
+    cut(/(^|\s)(?:(?:henle|level)\s+)?(easy|beginner|medium|intermediate|difficult|hard|advanced)(?=\s|$)/i, (m, pre, w) => { word = !/henle|level/i.test(m); return BANDS[w.toLowerCase()]; });
+    return { text: q, range, word };
   }
   function keyMatches(q, k) {
     if (!q || !k) return null;
@@ -254,8 +255,11 @@
       return { text: rest.join(' '), ids };
     }
 
-    function find(query, limit = 10) {
-      const lv = takeLevel(query);
+    /* plain: read the query without levels, for a band word that found nothing as a level ("easy
+       sonata" when no sonata is that easy: then it is the "Sonata facile") */
+    function find(query, limit = 10, plain = false) {
+      const asked = query;
+      const lv = plain ? { text: query, range: null } : takeLevel(query);
       query = lv.text;
       const raw = query;
       /* "op10", "no4", "wtc1": letters and digits written together are two words; "3rd",
@@ -337,6 +341,7 @@
         score -= d.depth;
         results.push({ entry: e, score, why });
       }
+      if (!results.length && lv.word) return find(asked, limit, true);
       results.sort((a, b) => b.score - a.score);
       return results.slice(0, limit).map((r) => ({ ...r, label: label(r.entry) }));
     }

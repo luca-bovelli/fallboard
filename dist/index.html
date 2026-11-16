@@ -771,9 +771,13 @@
   .row b .cat { margin-right: 8px; font-weight: 500; color: var(--t2); }
   .row .aside { display: flex; align-items: center; gap: var(--gap); color: var(--t2); }
   /* Henle's level of difficulty, at the end of a row: "6/9", or a work's range, "4–6/9" */
-  .lvl { display: inline-flex; align-items: baseline; padding: 3px 8px; border-radius: 999px; background: var(--fill); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .lvl b { font-size: var(--fs-s); font-weight: 600; color: var(--t1); }
-  .lvl small { font-size: var(--fs-xs); font-weight: 500; color: var(--t2); }
+  .lvl { display: inline-flex; align-items: baseline; padding: 3px 8px; border-radius: 999px; background: var(--fill); font-size: var(--fs-s); font-variant-numeric: tabular-nums; white-space: nowrap; text-decoration: none; }
+  .lvl b { font-size: inherit; font-weight: 650; color: var(--t1); }
+  .lvl small { font-size: inherit; font-weight: 500; color: var(--t2); }
+  /* in a piece's details: the same pill, larger, with the band beside it ("7/9 Difficult") */
+  .facts .level { display: flex; align-items: center; gap: var(--gap); }
+  .facts .lvl { padding: 4px 10px; font-size: var(--fs-m); }
+  .facts .band { color: var(--t2); font-size: var(--fs-m); }
   .row .aside svg { width: 16px; height: 16px; color: var(--t1); opacity: var(--o-inactive); }
   @media (min-width: 632px) { .rows.cols .row::before { display: none; } }   /* two columns of 300 px fit from here */
 
@@ -830,7 +834,6 @@
   .facts div { min-width: 0; }
   .facts dt { font-size: var(--fs-xs); font-weight: 600; color: var(--t2); }
   .facts dd { margin: 2px 0 0; font-size: var(--fs-l); }
-  .facts dd .by { margin-left: 4px; font-size: var(--fs-s); color: var(--t2); text-decoration: underline; text-decoration-color: var(--grid-2); text-underline-offset: 3px; }
   .facts dd button { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--grid-2); text-underline-offset: 3px; }
 
   /* the sheet music as it will print: A4 pages in a shelf */

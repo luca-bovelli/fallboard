@@ -25,6 +25,10 @@ const CASES = [
   ['chopin op 10 henle 9', 'chopin', /Op\. 10 No\. 1\b/],
   ['chopin op 10 9/9', 'chopin', /Op\. 10 No\. 1\b/],
   ['schubert impromptu level 8', 'schubert', /D\. 935 No\. 4\b/],
+  ['bach beginner musette', 'bach', /126/],
+  ['chopin hard etude op 10 c minor', 'chopin', /Op\. 10 No\. 12\b/],
+  // a band word that finds nothing as a level is read as a word: no Mozart sonata is easy
+  ['mozart easy sonata', 'mozart', /K\. 545\b/],
   // keys written short, in small letters ("am" stays a word)
   ['chopin ballade fm', 'chopin', /Op\. 52\b/],
   ['chopin fantaisie fm', 'chopin', /Op\. 49\b/],
