@@ -321,20 +321,19 @@
     if (wash) { b.style.setProperty('--wr', wash[0]); b.style.setProperty('--wl', wash[1]); }
     return cardItem(b, r.title, r.composer);
   }
-  /* the first card: your own MusicXML file. Not a piece, so not a piece's card: everything in it
-     centred, a round button over a soft light from above, what it does and what it takes */
+  /* the first card: your own MusicXML file. Not a piece, so no picture: an empty square in a dim
+     dashed line, the upload icon (the PDF viewer's download icon, turned up) and "Upload a score"
+     underlined, both dimmed, in its middle; what it takes under it, where a piece's composer goes */
   function uploadCard() {
     const b = button('card upload', undefined, () => FB.app.upload(), 'box');
     b.setAttribute('aria-label', 'Upload a score, MusicXML or .mxl');
     const up = make('span', 'up');
-    const disc = make('span', 'disc', undefined, 'box');
-    disc.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>';
-    up.appendChild(disc);
+    up.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 19h14"/></svg>';
     up.appendChild(make('b', '', 'Upload a score', 'text'));
-    up.appendChild(make('small', '', 'MusicXML or .mxl', 'text'));
     b.appendChild(up);
     const item = make('div', 'card-item');
     item.appendChild(b);
+    item.appendChild(make('small', 'by', 'MusicXML or .mxl', 'text'));
     return item;
   }
   /* the opening bars as the player's roll draws them: pitch across, time rising from the
