@@ -299,7 +299,8 @@
   }
 
   /* a recent piece: a square card, its opening as a piano roll rising from the bottom edge as in
-     the player, its name at the top over a dark grey wash; the composer under the card */
+     the player, its name at the top over a wash of its two hands' colours (--wl from the top left,
+     --wr from the top right, js/roll-gl.js washOf); the composer under the card */
   function cardItem(b, title, under) {
     const item = make('div', 'card-item');
     b.appendChild(make('span', 'shade'));
@@ -316,6 +317,8 @@
     cv._r = r;
     b.appendChild(cv);
     L.thumbs.push([cv, r]);
+    const wash = FB.rollGL && FB.rollGL.washOf(r.id, css);
+    if (wash) { b.style.setProperty('--wr', wash[0]); b.style.setProperty('--wl', wash[1]); }
     return cardItem(b, r.title, r.composer);
   }
   /* the first card: your own MusicXML file */
@@ -344,7 +347,7 @@
     let lo = 127, hi = 0;
     for (let i = 0; i < t.length; i += 4) { lo = Math.min(lo, t[i + 2]); hi = Math.max(hi, t[i + 2]); }
     lo -= 2; hi += 2;
-    const keyW = w / (hi - lo + 1), floor = h * ROLL_FLOOR, top = 10;
+    const keyW = w / (hi - lo + 1), floor = h * ROLL_FLOOR, top = h * 0.38;   // above: the card's name (no blur here)
     const yOf = (cs) => floor - (cs / roll.end) * (floor - top);
     c.fillStyle = css.grid;
     for (const b of roll.bars) c.fillRect(0, Math.round(yOf(b)), w, 1);

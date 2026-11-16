@@ -26,9 +26,9 @@
 
    The keys: a white keyboard, neutral, below a black line, each white key a rounded rectangle, so
    black dents show between them at the top and bottom, with hairline seams between. A struck
-   white key takes its hand's colour at full saturation, darkened as an overlay darkens it (gold,
-   not olive), laid over the key and fading out down it; a struck black key becomes a cap of that
-   colour, its sides a deeper shade. Keys light
+   white key takes its hand's colour, as vivid as it can be at a middle lightness, laid over the
+   key and fading out down it; a struck black key becomes a cap of that colour, its sides a deeper
+   shade. Keys light
    fully the moment a note starts and go dark within 60 ms of its end. The hands' icons
    (--hand-r, --hand-l) take the hands' colours. */
 (function () {
@@ -93,21 +93,18 @@
   }
   function handColours(rgb) {
     const [, C, h] = toLch(rgb);
-    /* on the keys: the hue at full saturation (its strongest channel full, its weakest none),
-       darkened as an overlay of grey 0.3 darkens it: the full and the empty channels stay and the
-       middle one falls, so a yellow turns gold where darkening it any other way turns it olive.
-       Then no lighter than 0.75 (yellows and greens are light even at full saturation); the rim,
-       where the note lands, is the full hue; a black key's sides are deeper */
-    const p = srgb(rgb), hi = Math.max(...p), lo = Math.min(...p);
-    const pure = p.map((v) => (hi - lo > 1e-4 ? (v - lo) / (hi - lo) : 1));
-    const overlay = (b) => pure.map((a) => lin(a < 0.5 ? 2 * a * b : 1 - 2 * (1 - a) * (1 - b)));
-    const cap = (c, most) => { const L = toLab(c)[0]; return L <= most ? c : c.map((v) => v * Math.pow(most / L, 3)); };
-    const key = cap(overlay(0.3), 0.75);
+    /* on the keys: the hue as vivid as the screen can show it at a middle lightness: where the hue
+       is most vivid (yellow light, blue dark), held within 0.5..0.62, since a colour that strong
+       reads best neither light nor dark */
+    const vivid = (L) => lch(clamp(L, 0.05, 0.97), 0.4, h);
+    let cusp = 0.6, best = -1;
+    for (let L = 0.3; L <= 0.97; L += 0.01) { const c = toLch(vivid(L))[1]; if (c > best) { best = c; cusp = L; } }
+    const kL = clamp(cusp, 0.5, 0.62);
     return {
       lin: rgb,                                         // the bloom's colour
       note: srgb(rgb), rim: srgb(lift(rgb, 0.55)),      // a glass note's tint and its rim light
       lab: toLab(lch(0.5, Math.min(0.22, C * 1.5), h)), // the field's colour, at lightness 0.5
-      key, keyRim: cap(pure.map(lin), 0.83), keyDeep: cap(key, toLab(key)[0] * 0.62),
+      key: vivid(kL), keyRim: vivid(kL + 0.08), keyDeep: vivid(kL * 0.62),
     };
   }
 
@@ -482,15 +479,27 @@
      Its opening bars (r.roll: start and length in hundredths of a second, pitch and hand, the bar
      starts and the end; js/app.js rollOf) as the player shows them as it begins: on the player's
      keys, the first notes landing on the card's bottom edge, where the keyboard would be, the rest
-     rising above, lit in the piece's hands' colours, with the grid's lanes and bar lines. Still:
+     rising to 0.2 of its height from the top, under the card's name and its wash, blurred more and
+     more toward the top (blurTop), lit in the piece's hands' colours, with the grid's lanes and bar lines. Still:
      a card's noise does not move. Drawn into the card's 2D canvas; false without WebGL 2. */
+  /* a card's wash (index.html .card .shade): each hand's colour deepened to lightness 0.42, so white
+     type reads over it, a yellow turned toward amber as it deepens (a deep yellow is olive);
+     [right, left] as css */
+  function washOf(id, theme) {
+    return handsOf(id, failed || lost, theme).map((hc) => {
+      const [, C, h] = toLch(hc.lin);
+      let deg = (h * 180) / Math.PI;
+      deg -= 25 * Math.max(0, 1 - Math.abs(deg - 95) / 25);
+      return css(lch(0.42, clamp(C, 0.09, 0.16), (deg * Math.PI) / 180));
+    });
+  }
   let whiteAt = null;   // how many white keys lie below each key, from A0
   function thumb(cv, r, theme) {
     if (!r.roll || !r.roll.notes.length || !ready()) return false;
     const w = cv.clientWidth, H = cv.clientHeight;
     if (!w || !H) return true;
     if (!whiteAt) { whiteAt = new Int16Array(128); for (let m = 21, n = 0; m < 128; m++) { whiteAt[m] = n; if (!FB.isBlack(m)) n++; } }
-    const dpr = Math.min(2, window.devicePixelRatio || 1), h = H, top = 10, roll = r.roll, t = roll.notes;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), h = H, top = Math.round(H * 0.2), roll = r.roll, t = roll.notes;
     let lo = 127, hi = 0;
     for (let i = 0; i < t.length; i += 4) { lo = Math.min(lo, t[i + 2]); hi = Math.max(hi, t[i + 2]); }
     const left = whiteAt[clamp(lo, 21, 108)] - 1.5, W = w / (whiteAt[clamp(hi, 21, 108)] + 2.5 - left), bw = W * 0.58;
@@ -509,12 +518,55 @@
     }
     heatPx.fill(0);
     draw({ cw: Math.round(w * dpr), ch: Math.round(h * dpr), w, h, dpr, T: 12, hands, inst, fieldNotes, bars: roll.bars.map((b) => Math.round(yOf(b))).slice(0, 64), beats: [], W, left, bw, theme });
+    blurTop(Math.round(w * dpr), Math.round(h * dpr), Math.round(H * 0.55 * dpr), 12 * dpr);
     cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr);
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.fillStyle = '#000'; c.fillRect(0, 0, w, H);
     c.drawImage(glc, 0, 0, w, h);
     return true;
+  }
+  /* A progressive blur over a card's top, where its name is (a card is drawn once, so it can
+     afford one): a Gaussian, across and then down, its radius growing smoothly from nothing at
+     `reach` device px from the top to `most` at the top, averaged in linear light so the glow
+     blurs as light does. What draw() left on the canvas is copied to a texture, blurred across
+     into a second, then down onto the canvas. */
+  const BLUR_FS = `#version 300 es
+    precision highp float;
+    uniform sampler2D uTex; uniform vec2 uSize; uniform vec2 uDir; uniform float uMost, uReach;
+    out vec4 o;
+    void main() {
+      vec2 fc = gl_FragCoord.xy;
+      float k = clamp(1.0 - (uSize.y - fc.y) / uReach, 0.0, 1.0);
+      float sigma = uMost * k * k * (3.0 - 2.0 * k);
+      if (sigma < 0.35) { o = vec4(texture(uTex, fc / uSize).rgb, 1.0); return; }
+      vec3 acc = vec3(0.0); float sum = 0.0;
+      for (int i = -12; i <= 12; i++) {
+        float x = float(i) * sigma * 0.25, wgt = exp(-0.5 * float(i * i) / 16.0);
+        acc += pow(texture(uTex, (fc + uDir * x) / uSize).rgb, vec3(2.2)) * wgt; sum += wgt;
+      }
+      o = vec4(pow(acc / sum, vec3(1.0 / 2.2)), 1.0);
+    }`;
+  let blurP = null, UBl = null, sceneTex = null, blurTex = null, blurFbo = null;
+  function blurTop(cw, ch, reach, most) {
+    if (!blurP) {
+      blurP = compile(QUAD_VS, BLUR_FS);
+      UBl = uni(blurP, ['uTex', 'uSize', 'uDir', 'uMost', 'uReach']);
+      sceneTex = texture(1, 1, null); blurTex = texture(1, 1, null); blurFbo = gl.createFramebuffer();
+    }
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, sceneTex);
+    gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGB, 0, 0, cw, ch, 0);
+    gl.bindTexture(gl.TEXTURE_2D, blurTex);
+    if (blurTex.w !== cw || blurTex.h !== ch) { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, cw, ch, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); blurTex.w = cw; blurTex.h = ch; }
+    gl.useProgram(blurP); gl.disable(gl.BLEND); gl.bindVertexArray(quadVao); gl.viewport(0, 0, cw, ch);
+    gl.uniform1i(UBl.uTex, 0); gl.uniform2f(UBl.uSize, cw, ch); gl.uniform1f(UBl.uMost, most); gl.uniform1f(UBl.uReach, reach);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, blurFbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, blurTex, 0);
+    gl.bindTexture(gl.TEXTURE_2D, sceneTex); gl.uniform2f(UBl.uDir, 1, 0); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, blurTex); gl.uniform2f(UBl.uDir, 0, 1); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.bindVertexArray(null);
   }
 
   /* ------------------------------------------------------------------ the keys
@@ -633,7 +685,7 @@
   }
 
   FB.rollGL = {
-    roll, keys, thumb,
+    roll, keys, thumb, washOf,
     /* the field moves on its own (the noise), so the roll wants frames while it shows */
     get moving() { return !STILL && !failed && !lost && !!gl; },
   };
