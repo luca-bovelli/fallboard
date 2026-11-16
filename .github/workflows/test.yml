@@ -1,0 +1,48 @@
+# On every push and pull request: the checks, here rather than on a local machine. Every script
+# must parse, the browser's search must match its sources, the search queries must find their
+# pieces, and the app must run in a real browser without errors (tools/smoke.js), whose
+# screenshots are kept with the run (Actions > the run > Artifacts > screenshots).
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Every script parses
+        run: |
+          for f in dist/js/*.js dev-server.js $(git ls-files 'tools/*.js' 'tools/**/*.js'); do
+            node --check "$f" || { echo "does not parse: $f"; exit 1; }
+          done
+
+      - name: The browser's search matches its sources
+        run: node tools/catalog/build-search.js --check
+
+      - name: Search queries find their pieces
+        run: npm run catalog:test
+
+      - name: Install a headless browser
+        run: |
+          npm install --no-save playwright@1.49.1
+          npx playwright install --with-deps chromium
+
+      - name: The app runs in a browser without errors
+        run: node tools/smoke.js
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: .data/smoke
+          if-no-files-found: ignore

@@ -114,10 +114,9 @@ fs.mkdirSync(OUT, { recursive: true });
 fs.writeFileSync(path.join(OUT, 'catalog.json'), JSON.stringify({ built: catalog.built, composers, entries }));
 fs.writeFileSync(path.join(OUT, 'henle.json'), JSON.stringify(HENLE.editions || {}));
 
-/* ---------- the search, for the browser: vocab.js as a global, then search.js ---------- */
-const vocab = fs.readFileSync(path.join(__dirname, 'vocab.js'), 'utf8').replace(/^'use strict';\s*$/m, '').replace(/module\.exports\s*=\s*/, 'self.CatalogVocab = ');
-const search = fs.readFileSync(path.join(__dirname, 'search.js'), 'utf8');
-fs.writeFileSync(path.join(DIST, 'js', 'catalog.js'), '/* Built by tools/catalog/publish.js from tools/catalog/vocab.js and search.js: do not edit. */\n(function () {\n\'use strict\';\n' + vocab + '\n})();\n' + search);
+/* ---------- the search, for the browser (build-search.js) ---------- */
+const searchBuild = require('./build-search');
+fs.writeFileSync(searchBuild.OUT, searchBuild.build());
 
 const playable = new Set();
 const byId = new Map(entries.map((e) => [e.id, e]));
