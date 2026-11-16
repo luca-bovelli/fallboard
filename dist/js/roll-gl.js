@@ -65,33 +65,30 @@
   const lift = (rgb, t) => { const [L, C, h] = toLch(rgb); return lch(L + (0.97 - L) * t, C, h); };
 
   /* ------------------------------------------------------------------ the piece's colours */
-  let look = null, lookFor = null;
-  function colours(env) {
-    const id = env.S.meta && env.S.meta.id ? String(env.S.meta.id).replace(/^cat:/, '') : '';
-    /* while the flat roll stands in (no WebGL 2), the keys keep to its colours */
-    const flat = failed || lost;
+  /* a piece's hands: its cover palette's two hand colours (the palette's fifth entry, in
+     js/library.js), or the player's --rh and --lh without a cover, or while the flat roll stands in */
+  const handsMade = new Map();
+  function handsOf(id, flat, theme) {
+    id = id ? String(id).replace(/^cat:/, '') : '';
     const pal = !flat && id && FB.coverPalette ? FB.coverPalette(id) : null;
     const key = flat + '|' + id + '|' + !!pal;
-    if (look && lookFor === key) return look;
-    lookFor = key;
-    let rh = hexLin(env.theme.rh || '#d2a94f'), lh = hexLin(env.theme.lh || '#4f8fe6');
-    if (pal) {
-      /* the cover's two colours furthest apart in hue (weighted by how colourful), the lighter to the right hand */
-      const cand = [...new Set([...pal[1], pal[2]])].map((hex) => toLch(hexLin(hex))).filter((c) => c[1] > 0.045);
-      let pair = null, far = -1;
-      for (const a of cand) for (const b of cand) { let d = Math.abs(a[2] - b[2]); if (d > Math.PI) d = 2 * Math.PI - d; d *= Math.min(a[1], b[1], 0.12); if (d > far) { far = d; pair = [a, b]; } }
-      if (pair) {
-        pair.sort((a, b) => b[0] - a[0]);
-        rh = lch(0.84, clamp(pair[0][1], 0.08, 0.15), pair[0][2]);
-        lh = lch(0.62, clamp(pair[1][1], 0.11, 0.2), pair[1][2]);
-      }
+    if (!handsMade.has(key)) {
+      const hex = pal ? pal[4] : [theme.rh || '#d2a94f', theme.lh || '#4f8fe6'];
+      handsMade.set(key, hex.map((x) => handColours(hexLin(x))));
+      if (handsMade.size > 40) handsMade.delete(handsMade.keys().next().value);
     }
-    look = { hand: [rh, lh].map(handColours) };
-    keyCache = null;
-    /* the hands' icons take the same colours */
-    const root = document.documentElement.style;
-    root.setProperty('--hand-r', css(rh)); root.setProperty('--hand-l', css(lh));
-    return look;
+    return handsMade.get(key);
+  }
+  /* the player's: the hands' icons take the same colours */
+  let shown = null;
+  function colours(env) {
+    const hands = handsOf(env.S.meta && env.S.meta.id, failed || lost, env.theme);
+    if (hands !== shown) {
+      shown = hands; keyCache = null;
+      const root = document.documentElement.style;
+      root.setProperty('--hand-r', css(hands[0].lin)); root.setProperty('--hand-l', css(hands[1].lin));
+    }
+    return hands;
   }
   function handColours(rgb) {
     const [, C, h] = toLch(rgb);
@@ -309,21 +306,90 @@
   const gridColour = (hex) => { if (!gridLin.has(hex)) gridLin.set(hex, new Float32Array(hexLin(hex))); return gridLin.get(hex); };
   const clock = () => (STILL ? 12 : performance.now() / 1000);
 
+  /* WebGL 2 made on first use; false while it cannot be had (the flat roll stands in) */
+  function ready() {
+    if (failed || lost) return false;
+    if (gl) return true;
+    try { init(); return true; } catch (e) {
+      failed = true;
+      if (e.message !== 'no WebGL 2') console.error('roll-gl:', e);   // a browser without it simply keeps the flat roll
+      return false;
+    }
+  }
+  /* the heat strip into its texture rows. Row 0: the strip, barely softened; row r: as wide as the
+     bloom is r * 40 px above the keys, so the shader reads the bloom in one sample (spaced taps
+     striped it at key width) */
+  function blurHeat(heat, w) {
+    for (let row = 0; row < HEAT_ROWS; row++) {
+      const sigma = row === 0 ? 0.7 : ((3.8 + 0.23 * row * HEAT_STEP) * HEAT_N) / w;
+      const r = Math.max(1, Math.round((Math.sqrt(4 * sigma * sigma + 1) - 1) / 2));
+      for (let hand = 0; hand < 2; hand++) {
+        boxPass(heat[hand], blurA, r); boxPass(blurA, blurB, r); boxPass(blurB, blurA, r);
+        for (let k = 0; k < HEAT_N; k++) heatPx[(row * HEAT_N + k) * 4 + hand] = Math.round(Math.min(1, blurA[k]) * 255);
+      }
+      for (let k = 0; k < HEAT_N; k++) heatPx[(row * HEAT_N + k) * 4 + 3] = 255;
+    }
+  }
+  /* The three passes into glc, sized cw x ch device pixels for a stage w x h css pixels: o.inst the
+     notes (14 numbers each), o.fieldNotes [x, y, w, h, hand, foot y], o.bars and o.beats the grid's
+     time lines, o.W, o.left, o.bw the key geometry, o.T the noise's time, o.hands, o.theme */
+  function draw(o) {
+    const { cw, ch, w, h, dpr, hands, theme } = o;
+    if (glc.width !== cw || glc.height !== ch) { glc.width = cw; glc.height = ch; }
+    /* 1. the field */
+    const fw = Math.max(1, Math.round(cw * FIELD_RES)), fh = Math.max(1, Math.round(ch * FIELD_RES));
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fieldTex);
+    if (fieldTex.w !== fw || fieldTex.h !== fh) { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, fw, fh, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); fieldTex.w = fw; fieldTex.h = fh; }
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, heatTex);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, HEAT_N, HEAT_ROWS, gl.RGBA, gl.UNSIGNED_BYTE, heatPx);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fieldTex, 0);
+    gl.viewport(0, 0, fw, fh); gl.disable(gl.BLEND);
+    gl.useProgram(fieldP);
+    o.fieldNotes.sort((p, q) => q[5] - p[5]);   // the notes nearest the keys: further up the field is too faint to matter
+    const fn = o.fieldNotes.slice(0, NOTES), rects = new Float32Array(NOTES * 4), handOf = new Float32Array(NOTES);
+    fn.forEach((r, i) => { rects.set(r.slice(0, 4), i * 4); handOf[i] = r[4]; });
+    gl.uniform2f(UF.uRes, w, h); gl.uniform2f(UF.uScale, fw / w, fh / h);
+    gl.uniform1f(UF.uT, o.T); gl.uniform1f(UF.uDrift, STILL ? 0 : o.T * 40);   // 40 px a second, up
+    gl.uniform1i(UF.uN, fn.length); gl.uniform4fv(UF.uNote, rects); gl.uniform1fv(UF.uHand, handOf);
+    gl.uniform3fv(UF.uLabR, hands[0].lab); gl.uniform3fv(UF.uLabL, hands[1].lab);
+    gl.uniform3fv(UF.uToneR, hands[0].lin); gl.uniform3fv(UF.uToneL, hands[1].lin);
+    gl.uniform1i(UF.uHeat, 1);
+    gl.bindVertexArray(quadVao); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    /* 2. onto the screen, with the grid */
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, cw, ch);
+    gl.useProgram(screenP);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fieldTex);
+    gl.uniform1i(US.uTex, 0); gl.uniform2f(US.uSize, cw, ch); gl.uniform1f(US.uDpr, dpr);
+    gl.uniform1f(US.uW, o.W); gl.uniform1f(US.uLeft, o.left); gl.uniform1f(US.uBW, o.bw);
+    gl.uniform3fv(US.uLane, gridColour(theme.lane)); gl.uniform3fv(US.uGrid, gridColour(theme.grid)); gl.uniform3fv(US.uGrid2, gridColour(theme['grid-2']));
+    gl.uniform1i(US.uNBar, o.bars.length); gl.uniform1i(US.uNBeat, o.beats.length);
+    if (o.bars.length) gl.uniform1fv(US.uBar, new Float32Array(o.bars));
+    if (o.beats.length) gl.uniform1fv(US.uBeat, new Float32Array(o.beats));
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    /* 3. the notes */
+    if (o.inst.length) {
+      gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.useProgram(noteP);
+      gl.uniform2f(UN.uRes, w, h); gl.uniform1f(UN.uDpr, dpr); gl.uniform1i(UN.uBg, 0); gl.uniform2f(UN.uSize, cw, ch);
+      gl.bindVertexArray(noteVao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, instBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(o.inst), gl.DYNAMIC_DRAW);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, o.inst.length / 14);
+    }
+    gl.bindVertexArray(null);
+  }
+  /* a note's 14 numbers for the notes pass */
+  const noteOf = (x, y, w, h, black, hc, hot) => [x, y, w, h, hc.note[0], hc.note[1], hc.note[2], black ? 0.88 : 1, hc.rim[0], hc.rim[1], hc.rim[2], 0, Math.min(6, w * 0.32), hot ? 1 : 0];
+
   /* ------------------------------------------------------------------ the roll */
   function roll(env, disp, live) {
-    if (failed || lost) return false;
-    if (!gl) {
-      try { init(); } catch (e) {
-        failed = true;
-        if (e.message !== 'no WebGL 2') console.error('roll-gl:', e);   // a browser without it simply keeps the flat roll
-        return false;
-      }
-    }
+    if (!ready()) return false;
     const { S, G, R, rc: c, theme, BLACK_W, EPS, keyX, el } = env;
     const w = R.w, h = R.h, pps = S.pps, sc = S.score, W = G.W, left = G.left, bw = W * BLACK_W;
     const cw = el.roll.width, chh = el.roll.height, dpr = cw / w;
-    const hands = colours(env).hand, T = clock();
-    if (glc.width !== cw || glc.height !== chh) { glc.width = cw; glc.height = chh; }
+    const hands = colours(env), T = clock();
 
     const inst = [], fieldNotes = [], names = [], labels = [], bars = [], beats = [];
     const heat = [new Float32Array(HEAT_N), new Float32Array(HEAT_N)];
@@ -357,7 +423,7 @@
           if (!barObscured && y1 > bar.top && y1 - bh < bar.bottom && x < bar.right && x + bwid > bar.left) barObscured = true;
           if (!clockObscured && y1 > clk.top && y1 - bh < clk.bottom && x < clk.right && x + bwid > clk.left) clockObscured = true;
           const hot = n.t0 <= live + EPS && n.t1 > live + EPS, hc = hands[n.hand];
-          inst.push(x, y1 - bh, bwid, bh, hc.note[0], hc.note[1], hc.note[2], black ? 0.88 : 1, hc.rim[0], hc.rim[1], hc.rim[2], 0, Math.min(6, bwid * 0.32), hot ? 1 : 0);
+          inst.push(...noteOf(x, y1 - bh, bwid, bh, black, hc, hot));
           if (y1 - bh < h) fieldNotes.push([x, y1 - bh, bwid, Math.min(bh, h - (y1 - bh)), n.hand, y1]);
           if (bwid >= 14 && bh >= 22) names.push([n.name, x + bwid / 2, Math.min(y1, hot ? h : y1) - 8]);
         }
@@ -376,63 +442,8 @@
         for (let k = a; k <= b; k++) heat[n.hand][k] = Math.max(heat[n.hand][k], v);
       }
     }
-    /* row 0: the strip, barely softened; row r: as wide as the bloom is r * 40 px above the keys,
-       so the shader reads the bloom in one sample (spaced taps striped it at key width) */
-    for (let row = 0; row < HEAT_ROWS; row++) {
-      const sigma = row === 0 ? 0.7 : ((3.8 + 0.23 * row * HEAT_STEP) * HEAT_N) / w;
-      const r = Math.max(1, Math.round((Math.sqrt(4 * sigma * sigma + 1) - 1) / 2));
-      for (let hand = 0; hand < 2; hand++) {
-        boxPass(heat[hand], blurA, r); boxPass(blurA, blurB, r); boxPass(blurB, blurA, r);
-        for (let k = 0; k < HEAT_N; k++) heatPx[(row * HEAT_N + k) * 4 + hand] = Math.round(Math.min(1, blurA[k]) * 255);
-      }
-      for (let k = 0; k < HEAT_N; k++) heatPx[(row * HEAT_N + k) * 4 + 3] = 255;
-    }
-
-    /* 1. the field */
-    const fw = Math.max(1, Math.round(cw * FIELD_RES)), fh = Math.max(1, Math.round(chh * FIELD_RES));
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fieldTex);
-    if (fieldTex.w !== fw || fieldTex.h !== fh) { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, fw, fh, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); fieldTex.w = fw; fieldTex.h = fh; }
-    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, heatTex);
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, HEAT_N, HEAT_ROWS, gl.RGBA, gl.UNSIGNED_BYTE, heatPx);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fieldTex, 0);
-    gl.viewport(0, 0, fw, fh); gl.disable(gl.BLEND);
-    gl.useProgram(fieldP);
-    fieldNotes.sort((p, q) => q[5] - p[5]);   // the notes nearest the keys: further up the field is too faint to matter
-    const fn = fieldNotes.slice(0, NOTES), rects = new Float32Array(NOTES * 4), handOf = new Float32Array(NOTES);
-    fn.forEach((r, i) => { rects.set(r.slice(0, 4), i * 4); handOf[i] = r[4]; });
-    gl.uniform2f(UF.uRes, w, h); gl.uniform2f(UF.uScale, fw / w, fh / h);
-    gl.uniform1f(UF.uT, T); gl.uniform1f(UF.uDrift, T * 40);   // 40 px a second, up
-    gl.uniform1i(UF.uN, fn.length); gl.uniform4fv(UF.uNote, rects); gl.uniform1fv(UF.uHand, handOf);
-    gl.uniform3fv(UF.uLabR, hands[0].lab); gl.uniform3fv(UF.uLabL, hands[1].lab);
-    gl.uniform3fv(UF.uToneR, hands[0].lin); gl.uniform3fv(UF.uToneL, hands[1].lin);
-    gl.uniform1i(UF.uHeat, 1);
-    gl.bindVertexArray(quadVao); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-    /* 2. onto the screen, with the grid */
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, cw, chh);
-    gl.useProgram(screenP);
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fieldTex);
-    gl.uniform1i(US.uTex, 0); gl.uniform2f(US.uSize, cw, chh); gl.uniform1f(US.uDpr, dpr);
-    gl.uniform1f(US.uW, W); gl.uniform1f(US.uLeft, left); gl.uniform1f(US.uBW, bw);
-    gl.uniform3fv(US.uLane, gridColour(theme.lane)); gl.uniform3fv(US.uGrid, gridColour(theme.grid)); gl.uniform3fv(US.uGrid2, gridColour(theme['grid-2']));
-    gl.uniform1i(US.uNBar, bars.length); gl.uniform1i(US.uNBeat, beats.length);
-    if (bars.length) gl.uniform1fv(US.uBar, new Float32Array(bars));
-    if (beats.length) gl.uniform1fv(US.uBeat, new Float32Array(beats));
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-    /* 3. the notes */
-    if (inst.length) {
-      gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      gl.useProgram(noteP);
-      gl.uniform2f(UN.uRes, w, h); gl.uniform1f(UN.uDpr, dpr); gl.uniform1i(UN.uBg, 0); gl.uniform2f(UN.uSize, cw, chh);
-      gl.bindVertexArray(noteVao);
-      gl.bindBuffer(gl.ARRAY_BUFFER, instBuf);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(inst), gl.DYNAMIC_DRAW);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, inst.length / 14);
-    }
-    gl.bindVertexArray(null);
+    blurHeat(heat, w);
+    draw({ cw, ch: chh, w, h, dpr, T, hands, inst, fieldNotes, bars, beats, W, left, bw, theme });
 
     /* onto the roll canvas (the glass reads it), then the lettering, as the player has it */
     c.drawImage(glc, 0, 0, w, h);
@@ -460,6 +471,45 @@
         c.beginPath(); c.moveTo(0, y - 6); c.lineTo(8, y); c.lineTo(0, y + 6); c.closePath(); c.fill();
       }
     }
+    return true;
+  }
+
+  /* ------------------------------------------------------------------ a recent piece's card
+     Its opening bars (r.roll: start and length in hundredths of a second, pitch and hand, the bar
+     starts and the end; js/app.js rollOf) as the player shows them as it begins: on the player's
+     keys, the first notes landing where the keyboard would be, at 0.66 of the card's height, the
+     rest rising above, lit in the piece's hands' colours, with the grid's lanes and bar lines. Still:
+     a card's noise does not move. Drawn into the card's 2D canvas; false without WebGL 2. */
+  let whiteAt = null;   // how many white keys lie below each key, from A0
+  function thumb(cv, r, theme) {
+    if (!r.roll || !r.roll.notes.length || !ready()) return false;
+    const w = cv.clientWidth, H = cv.clientHeight;
+    if (!w || !H) return true;
+    if (!whiteAt) { whiteAt = new Int16Array(128); for (let m = 21, n = 0; m < 128; m++) { whiteAt[m] = n; if (!FB.isBlack(m)) n++; } }
+    const dpr = Math.min(2, window.devicePixelRatio || 1), h = Math.round(H * 0.66), top = 10, roll = r.roll, t = roll.notes;
+    let lo = 127, hi = 0;
+    for (let i = 0; i < t.length; i += 4) { lo = Math.min(lo, t[i + 2]); hi = Math.max(hi, t[i + 2]); }
+    const left = whiteAt[clamp(lo, 21, 108)] - 1.5, W = w / (whiteAt[clamp(hi, 21, 108)] + 2.5 - left), bw = W * 0.58;
+    const keyX = (m) => (FB.isBlack(m) ? (whiteAt[m] - left) * W - bw / 2 : (whiteAt[m] - left) * W);
+    const yOf = (cs) => h - (cs / roll.end) * (h - top), inset = Math.min(1.5, W * 0.07);
+    const hands = handsOf(r.id, false, theme), inst = [], fieldNotes = [];
+    for (let pass = 0; pass < 2; pass++) {
+      for (let i = 0; i < t.length; i += 4) {
+        const m = t[i + 2], black = FB.isBlack(m);
+        if (black !== (pass === 1)) continue;
+        const x = keyX(m) + (black ? 0 : inset), bwid = black ? bw : W - inset * 2;
+        const y1 = yOf(t[i]), bh = Math.max(3, y1 - yOf(t[i] + t[i + 1]) - 1);
+        inst.push(...noteOf(x, y1 - bh, bwid, bh, black, hands[t[i + 3]], t[i] === 0));
+        fieldNotes.push([x, y1 - bh, bwid, bh, t[i + 3], y1]);
+      }
+    }
+    heatPx.fill(0);
+    draw({ cw: Math.round(w * dpr), ch: Math.round(h * dpr), w, h, dpr, T: 12, hands, inst, fieldNotes, bars: roll.bars.map((b) => Math.round(yOf(b))).slice(0, 64), beats: [], W, left, bw, theme });
+    cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr);
+    const c = cv.getContext('2d');
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.fillStyle = '#000'; c.fillRect(0, 0, w, H);
+    c.drawImage(glc, 0, 0, w, h);
     return true;
   }
 
@@ -491,7 +541,7 @@
   function keys(env, held) {
     const { S, G, kc: c, WHITE_MIDI, N_WHITE, BLACK_H, BLACK_W, keyX, pressed, rr, UI_FONT, EPS } = env;
     const w = G.width, h = G.height, W = G.W, left = G.left, bw = W * BLACK_W;
-    const hands = colours(env).hand, hair = w > 0 ? w / c.canvas.width : 1;
+    const hands = colours(env), hair = w > 0 ? w / c.canvas.width : 1;
     const bh = Math.round(h * BLACK_H);
     if (!keyCache || keyCache.h !== h || keyCache.bh !== bh) {
       keyCache = { h, bh, white: [], body: [], face: [] };
@@ -516,13 +566,14 @@
     c.clearRect(0, 0, w, h);
     const i0 = clamp(Math.floor(left), 0, N_WHITE - 1), i1 = clamp(Math.ceil(left + w / W), 0, N_WHITE - 1);
     /* each white key a rounded rectangle: black behind them shows as a small dent where two keys'
-       corners meet, at the top and the bottom; between, a hairline seam of grey */
-    const rad = Math.min(3.5, W * 0.22);
+       corners meet, at the top and the bottom; between, a hairline seam of grey. The keys start
+       below a black line (TOP px) that parts them from the roll */
+    const TOP = 2, rad = Math.min(3.5, W * 0.22);
     c.fillStyle = '#000'; c.fillRect(0, 0, w, h);
-    c.fillStyle = '#bcbcbc'; c.fillRect(0, rad, w, h - 2 * rad);
+    c.fillStyle = '#bcbcbc'; c.fillRect(0, TOP + rad, w, h - TOP - 2 * rad);
     const grad = (a, b, cc) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, a); g.addColorStop(0.88, b); g.addColorStop(1, cc); return g; };
     const ivory = grad('#fdfdfd', '#f4f4f4', '#e6e6e6'), ivoryDown = grad('#f1f1f1', '#e7e7e7', '#dadada');
-    const whitePath = (x) => rr(c, x + hair, 0, W - hair, h, rad, rad);
+    const whitePath = (x) => rr(c, x + hair, TOP, W - hair, h - TOP, rad, rad);
     c.textAlign = 'center'; c.textBaseline = 'alphabetic';
     for (let i = i0; i <= i1; i++) {
       const m = WHITE_MIDI[i], x = (i - left) * W;
@@ -536,9 +587,9 @@
       }
     }
     /* the fallboard's shadow, then the light on the struck white keys over it */
-    const sh = c.createLinearGradient(0, 0, 0, 9);
+    const sh = c.createLinearGradient(0, TOP, 0, TOP + 9);
     sh.addColorStop(0, 'rgba(0,0,0,0.16)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
-    c.fillStyle = sh; c.fillRect(0, 0, w, 9);
+    c.fillStyle = sh; c.fillRect(0, TOP, w, 9);
     for (let i = i0; i <= i1; i++) {
       const k = lit.get(WHITE_MIDI[i]);
       if (!k) continue;
@@ -572,11 +623,13 @@
         c.globalAlpha = 1;
       }
     }
+    /* the line between the roll and the keys, over the black keys' tops too */
+    c.fillStyle = '#000'; c.fillRect(0, 0, w, TOP);
     return true;
   }
 
   FB.rollGL = {
-    roll, keys,
+    roll, keys, thumb,
     /* the field moves on its own (the noise), so the roll wants frames while it shows */
     get moving() { return !STILL && !failed && !lost && !!gl; },
   };

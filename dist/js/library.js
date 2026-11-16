@@ -334,6 +334,7 @@
      keyboard's edge sits above the card's text, so the opening is never under it */
   const ROLL_FLOOR = 0.66;   // where the first notes land, as a share of the card's height
   function drawThumb(cv, r) {
+    if (FB.rollGL && FB.rollGL.thumb(cv, r, css)) return;   // lit, as the player draws it; below, the flat roll without WebGL 2
     const w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
     if (!w || !h) return;
     cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
@@ -368,20 +369,21 @@
      number, which go underneath. The cover is one picture at every size (index.html .cover).
      Composers will have photographs instead. */
   const PALETTES = [
-    /* base, four colour fields, ink, lines */
-    ['#3424e8', ['#3a2bf0', '#3f8cf2', '#7fe6a8', '#3fe3cf'], '#f7f6ff', 'rgb(255 255 255 / 0.55)'],   // electric
-    ['#ff1d1d', ['#ff4a2a', '#ff8b3a', '#ffcf86', '#ff2b1f'], '#ffe8b5', 'rgb(255 232 181 / 0.6)'],    // ember
-    ['#1d1450', ['#5b3fe0', '#ef6aa6', '#ffb489', '#2a1a6e'], '#fff0f5', 'rgb(255 240 245 / 0.5)'],    // dusk
-    ['#05396b', ['#0a6bd8', '#1fd3c3', '#bafff0', '#063e7a'], '#f0fffb', 'rgb(240 255 251 / 0.55)'],   // lagoon
-    ['#4d1499', ['#9b38f2', '#ff6fb2', '#ffd0ea', '#5a1aa8'], '#fff2fb', 'rgb(255 242 251 / 0.55)'],   // orchid
-    ['#ff5f3a', ['#ff356c', '#ffb54a', '#fff0c4', '#ff7a2e'], '#2b0c13', 'rgb(43 12 19 / 0.45)'],      // sunrise
-    ['#d9e6ff', ['#9fbfff', '#f1d6ff', '#ffffff', '#b9f0ff'], '#18204a', 'rgb(24 32 74 / 0.45)'],      // glacier
-    ['#ffcf3a', ['#ff9a1f', '#fff2a8', '#f458b0', '#ffd84d'], '#3b0f2c', 'rgb(59 15 44 / 0.5)'],       // citrus
+    /* base, four colour fields, ink, lines, and the hands' colours in the player (right, left:
+       two of the cover's own colours, the right always the lighter, js/roll-gl.js) */
+    ['#3424e8', ['#3a2bf0', '#3f8cf2', '#7fe6a8', '#3fe3cf'], '#f7f6ff', 'rgb(255 255 255 / 0.55)', ['#7fe6a8', '#5b6cff']],   // electric
+    ['#ff1d1d', ['#ff4a2a', '#ff8b3a', '#ffcf86', '#ff2b1f'], '#ffe8b5', 'rgb(255 232 181 / 0.6)', ['#ffc46b', '#ff4b3e']],    // ember
+    ['#1d1450', ['#5b3fe0', '#ef6aa6', '#ffb489', '#2a1a6e'], '#fff0f5', 'rgb(255 240 245 / 0.5)', ['#ffb489', '#8f63ff']],    // dusk
+    ['#05396b', ['#0a6bd8', '#1fd3c3', '#bafff0', '#063e7a'], '#f0fffb', 'rgb(240 255 251 / 0.55)', ['#6ff0dc', '#3a86ff']],   // lagoon
+    ['#4d1499', ['#9b38f2', '#ff6fb2', '#ffd0ea', '#5a1aa8'], '#fff2fb', 'rgb(255 242 251 / 0.55)', ['#ff9ad0', '#a557ff']],   // orchid
+    ['#ff5f3a', ['#ff356c', '#ffb54a', '#fff0c4', '#ff7a2e'], '#2b0c13', 'rgb(43 12 19 / 0.45)', ['#ffc85c', '#ff4f86']],      // sunrise
+    ['#d9e6ff', ['#9fbfff', '#f1d6ff', '#ffffff', '#b9f0ff'], '#18204a', 'rgb(24 32 74 / 0.45)', ['#a6ecff', '#b28cff']],      // glacier
+    ['#ffcf3a', ['#ff9a1f', '#fff2a8', '#f458b0', '#ffd84d'], '#3b0f2c', 'rgb(59 15 44 / 0.5)', ['#ffd84a', '#f45cb2']],       // citrus
     /* the classic editions: gilt on navy, green on cream, cream on claret, pale on moss */
-    ['#0e1c3c', ['#1d3672', '#13265a', '#28468a', '#0b1530'], '#e9c97c', 'rgb(233 201 124 / 0.8)'],   // gilt
-    ['#f2e9d4', ['#e9dcbc', '#f7f0de', '#e3d4ae', '#efe4c8'], '#1f4b35', 'rgb(31 75 53 / 0.75)'],      // folio
-    ['#470b1a', ['#8e1c36', '#d9504e', '#f6b388', '#5a0f22'], '#ffe9d8', 'rgb(255 233 216 / 0.55)'],   // claret
-    ['#0c3527', ['#1d7656', '#97df86', '#eef7bf', '#0f4a35'], '#f3ffe8', 'rgb(243 255 232 / 0.5)'],    // moss
+    ['#0e1c3c', ['#1d3672', '#13265a', '#28468a', '#0b1530'], '#e9c97c', 'rgb(233 201 124 / 0.8)', ['#e9c97c', '#5a8cf0']],   // gilt
+    ['#f2e9d4', ['#e9dcbc', '#f7f0de', '#e3d4ae', '#efe4c8'], '#1f4b35', 'rgb(31 75 53 / 0.75)', ['#efd58e', '#3fb07a']],      // folio
+    ['#470b1a', ['#8e1c36', '#d9504e', '#f6b388', '#5a0f22'], '#ffe9d8', 'rgb(255 233 216 / 0.55)', ['#f7b48a', '#e0435f']],   // claret
+    ['#0c3527', ['#1d7656', '#97df86', '#eef7bf', '#0f4a35'], '#f3ffe8', 'rgb(243 255 232 / 0.5)', ['#c8f08e', '#2fb08a']],    // moss
   ];
   const CLASSIC = [8, 9, 10, 11];
   /* the faces: family, roughly how wide a letter is (in ems), style, weight. Boska bold italic,
@@ -595,8 +597,8 @@
     if (coversMade.size > 400) coversMade.delete(coversMade.keys().next().value);
     return c;
   }
-  /* the palette a piece's cover is drawn from, for the player, which lights its roll in two of its
-     colours (js/roll-gl.js): the same choices as makeCover, made in the same order */
+  /* the palette a piece's cover is drawn from, for the player, which lights its roll in the
+     palette's hand colours (js/roll-gl.js): the same choices as makeCover, made in the same order */
   FB.coverPalette = (id) => {
     const e = L.data && L.data.byId.get(id);
     if (!e) return null;
@@ -1474,7 +1476,7 @@
   const css = {};
   function readTheme() {
     const cs = getComputedStyle(document.documentElement);
-    for (const k of ['bg', 'stage', 'lane', 'grid', 'rh', 'lh', 'now']) css[k] = cs.getPropertyValue('--' + k).trim();
+    for (const k of ['bg', 'stage', 'lane', 'grid', 'grid-2', 'rh', 'lh', 'now']) css[k] = cs.getPropertyValue('--' + k).trim();
   }
   function rr(c, x, y, w, h, r) {
     r = Math.max(0, Math.min(r, w / 2, h / 2));
