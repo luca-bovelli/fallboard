@@ -527,8 +527,8 @@
     return true;
   }
   /* A progressive blur over a card's top, where its name is (a card is drawn once, so it can
-     afford one): a Gaussian, across and then down, its radius growing smoothly from nothing at
-     `reach` device px from the top to `most` at the top, averaged in linear light so the glow
+     afford one): a Gaussian, across and then down, its radius growing as the square of the way
+     into the blurred band, from nothing at `reach` device px from the top to `most` at the top, averaged in linear light so the glow
      blurs as light does. What draw() left on the canvas is copied to a texture, blurred across
      into a second, then down onto the canvas. */
   const BLUR_FS = `#version 300 es
@@ -538,7 +538,7 @@
     void main() {
       vec2 fc = gl_FragCoord.xy;
       float k = clamp(1.0 - (uSize.y - fc.y) / uReach, 0.0, 1.0);
-      float sigma = uMost * k * k * (3.0 - 2.0 * k);
+      float sigma = uMost * k * k;
       if (sigma < 0.35) { o = vec4(texture(uTex, fc / uSize).rgb, 1.0); return; }
       vec3 acc = vec3(0.0); float sum = 0.0;
       for (int i = -12; i <= 12; i++) {
