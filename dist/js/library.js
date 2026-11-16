@@ -1358,6 +1358,37 @@
     glass.update(el.lib.clientWidth, el.lib.clientHeight, ms, paint, String(sceneV));
     if (ms < busyUntil) kick();
   }
+  /* What the scene can draw, measured once per layout rather than on every frame (on Explore that
+     was hundreds of nodes, each measured and its style read sixty times a second while the page
+     scrolled): each node's box where it sits in the scrolling page (and in a sideways shelf or
+     strip, which it moves with), and what it takes to draw it. Measured again once anything
+     changes the layout (a view, a resize, nodes or text added or removed, the page's entrance
+     ending); scrolling only shifts it */
+  let paintables = null;
+  const unmeasure = () => { paintables = null; };
+  function measurePaintables(scope, root) {
+    const vy = scope === el.page ? el.scroll.scrollTop : 0;
+    const list = [];
+    for (const n of scope.querySelectorAll('[data-paint]')) {
+      const r = n.getBoundingClientRect();
+      if (!r.width) continue;
+      const side = n.closest('.shelf, .pages, .viewer-pages');
+      const it = { n, side, sx: side ? side.scrollLeft : 0, x: r.left - root.left, y: r.top - root.top + vy, w: r.width, h: r.height };
+      it.kind = n.tagName === 'CANVAS' ? 'canvas' : n.tagName === 'IMG' ? 'img' : n.dataset.paint;
+      if (it.kind !== 'canvas' && it.kind !== 'img') {
+        const cs = getComputedStyle(n);
+        it.radius = parseFloat(cs.borderTopLeftRadius) || 0;
+        if (it.kind === 'cover') { it.field = n.dataset.field; it.base = n.dataset.base; }
+        else if (it.kind === 'box') it.bg = cs.backgroundColor;
+        else { it.size = parseFloat(cs.fontSize); it.font = cs.fontWeight + ' ' + it.size + 'px ' + cs.fontFamily; it.color = cs.color; it.text = n.textContent; }
+      }
+      list.push(it);
+    }
+    return { scope, list };
+  }
+  new MutationObserver(unmeasure).observe(el.lib, { childList: true, subtree: true, characterData: true });
+  el.page.addEventListener('animationend', unmeasure);
+  new ResizeObserver(unmeasure).observe(el.lib);
   /* the scene under the glass: the page, every box, miniature and line of text near a glass
      control, drawn where it sits, then the same fade to black as the content above the search */
   function paint(ctx) {
@@ -1371,38 +1402,37 @@
     }
     /* the full-screen sheet music, when open, is all there is under its glass */
     const scope = L.viewer ? L.viewer.el : el.page;
-    for (const n of scope.querySelectorAll('[data-paint]')) {
-      const r = n.getBoundingClientRect();
-      if (!r.width || !bands.some((b) => r.right > b[0] && r.bottom > b[1] && r.left < b[2] && r.top < b[3])) continue;
-      const x = r.left - root.left, y = r.top - root.top;
-      if (n.tagName === 'CANVAS') { if (n.width) ctx.drawImage(n, x, y, r.width, r.height); continue; }
+    if (!paintables || paintables.scope !== scope) paintables = measurePaintables(scope, root);
+    const vy = scope === el.page ? el.scroll.scrollTop : 0;
+    for (const it of paintables.list) {
+      const x = it.x - (it.side ? it.side.scrollLeft - it.sx : 0), y = it.y - vy, w = it.w, h = it.h;
+      if (!bands.some((band) => x + w > band[0] && y + h > band[1] && x < band[2] && y < band[3])) continue;
+      if (it.kind === 'canvas') { if (it.n.width) ctx.drawImage(it.n, x, y, w, h); continue; }
       /* a page of sheet music is drawn as the paper it shows: drawing the SVG itself could lock
          the canvas, and the glass could no longer read it */
-      if (n.tagName === 'IMG') { ctx.fillStyle = '#fff'; ctx.fillRect(x, y, r.width, r.height); continue; }
-      const cs = getComputedStyle(n);
-      if (n.dataset.paint === 'cover') {
+      if (it.kind === 'img') { ctx.fillStyle = '#fff'; ctx.fillRect(x, y, w, h); continue; }
+      if (it.kind === 'cover') {
         /* the cover's palette, as a plain two-colour wash: enough for the glass to refract */
-        const g = ctx.createLinearGradient(x, y, x + r.width, y + r.height);
-        g.addColorStop(0, n.dataset.field || css.lane);
-        g.addColorStop(1, n.dataset.base || css.lane);
+        const g = ctx.createLinearGradient(x, y, x + w, y + h);
+        g.addColorStop(0, it.field || css.lane);
+        g.addColorStop(1, it.base || css.lane);
         ctx.fillStyle = g;
-        rr(ctx, x, y, r.width, r.height, parseFloat(cs.borderTopLeftRadius) || 0);
+        rr(ctx, x, y, w, h, it.radius);
         ctx.fill();
         continue;
       }
-      if (n.dataset.paint === 'box') {
-        ctx.fillStyle = cs.backgroundColor;
-        rr(ctx, x, y, r.width, r.height, parseFloat(cs.borderTopLeftRadius) || 0);
+      if (it.kind === 'box') {
+        ctx.fillStyle = it.bg;
+        rr(ctx, x, y, w, h, it.radius);
         ctx.fill();
         continue;
       }
-      const size = parseFloat(cs.fontSize);
-      ctx.font = cs.fontWeight + ' ' + size + 'px ' + cs.fontFamily;
-      ctx.fillStyle = cs.color;
+      ctx.font = it.font;
+      ctx.fillStyle = it.color;
       ctx.textBaseline = 'alphabetic';
       ctx.save();
-      ctx.beginPath(); ctx.rect(x, y, r.width, r.height); ctx.clip();
-      ctx.fillText(n.textContent, x, y + (Math.min(r.height, size * 1.5) + size * 0.7) / 2);
+      ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+      ctx.fillText(it.text, x, y + (Math.min(h, it.size * 1.5) + it.size * 0.7) / 2);
       ctx.restore();
     }
     /* black from `black` to `clear`, through the given stops ([position 0-1, how much shows]), as
