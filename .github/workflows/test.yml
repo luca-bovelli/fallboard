@@ -12,7 +12,8 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # a named release: ubuntu-latest moves to 26.04, which this Playwright doesn't know
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -33,16 +34,22 @@ jobs:
       - name: Search queries find their pieces
         run: npm run catalog:test
 
-      - name: Install headless browsers
+      - name: Install a headless browser
         run: |
           npm install --no-save playwright@1.49.1
-          npx playwright install --with-deps chromium webkit
+          npx playwright install --with-deps chromium
 
       - name: The app runs in a browser without errors
         run: node tools/smoke.js
 
-      - name: And in Safari's engine, at a phone's size
+      # Safari's engine apart, so that trouble installing it never hides the test above
+      - name: Install WebKit
+        id: webkit
         if: always()
+        run: npx playwright install --with-deps webkit
+
+      - name: And in Safari's engine, at a phone's size
+        if: always() && steps.webkit.outcome == 'success'
         run: node tools/smoke.js webkit
 
       - uses: actions/upload-artifact@v4
