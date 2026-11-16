@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
+<!-- no icon yet: an empty one, so the browser doesn't ask for /favicon.ico and log a 404 -->
+<link rel="icon" href="data:,">
 <meta name="theme-color" content="#000000">
 <title>Fallboard Piano</title>
 <link rel="license" href="credits.html">
@@ -705,6 +707,7 @@
     font-synthesis: none; line-height: 1; -webkit-font-smoothing: antialiased;
   }
   .cover > * { position: absolute; margin: 0; }
+  .cover.is-later { background: var(--lane); }   /* a row's cover not made yet (library.js lazyCover) */
   .cover .who { font: 400 4.4cqw/1 Switzer, var(--font); letter-spacing: 0.24em; text-transform: uppercase; }
   .cover .cat { font: 400 4.4cqw/1 Switzer, var(--font); letter-spacing: 0.06em; }
   .cover .main { font: var(--face-style, italic) var(--face-weight, 900) var(--ts) / 0.92 var(--face); letter-spacing: -0.01em; text-wrap: balance; }
@@ -1032,7 +1035,7 @@
 <!-- the library: flat content in .lib-scroll; the glass layer (.lib-top, .lib-bottom) over it -->
 <div class="library" id="library" role="dialog" aria-modal="true" aria-label="Library" hidden>
   <div class="lib-scroll" id="libScroll"><div class="lib-page" id="libPage"></div></div>
-  <div class="lib-fade top" aria-hidden="true"></div>
+  <div class="lib-fade top" id="libFadeTop" aria-hidden="true"></div>
   <div class="lib-fade bottom" aria-hidden="true"></div>
   <input type="search" class="lib-proxy" id="libProxy" tabindex="-1" aria-hidden="true" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
 

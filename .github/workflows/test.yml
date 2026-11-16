@@ -1,7 +1,8 @@
 # On every push and pull request: the checks, here rather than on a local machine. Every script
 # must parse, the browser's search must match its sources, the search queries must find their
-# pieces, and the app must run in a real browser without errors (tools/smoke.js), whose
-# screenshots are kept with the run (Actions > the run > Artifacts > screenshots).
+# pieces, and the app must run in a real browser without errors (tools/smoke.js: Chromium, then
+# WebKit at a phone's size), whose screenshots are kept with the run (Actions > the run >
+# Artifacts > screenshots).
 name: Tests
 
 on:
@@ -32,13 +33,17 @@ jobs:
       - name: Search queries find their pieces
         run: npm run catalog:test
 
-      - name: Install a headless browser
+      - name: Install headless browsers
         run: |
           npm install --no-save playwright@1.49.1
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
 
       - name: The app runs in a browser without errors
         run: node tools/smoke.js
+
+      - name: And in Safari's engine, at a phone's size
+        if: always()
+        run: node tools/smoke.js webkit
 
       - uses: actions/upload-artifact@v4
         if: always()

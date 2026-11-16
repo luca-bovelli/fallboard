@@ -654,13 +654,16 @@
   }
 
   /* ------------------------------------------------------------------ frame */
-  let lastMs = 0, lastUi = '';
+  let lastMs = 0, lastUi = '', underLibrary = false;
   function frame(ms) {
     frameQueued = false;
     const dt = Math.min(64, lastMs ? ms - lastMs : 16);
     lastMs = ms;
     let busy = S.playing;
     if (S.playing) schedule();
+    /* under the library none of this shows: the music goes on, nothing is drawn (the roll, the
+       keys and the glass cost every frame, and the library's own frames need the time) */
+    if (underLibrary) { if (S.playing) kick(); return; }
     const t = now();
 
     if (S.viewT === null && S.offset !== 0) {
@@ -1144,9 +1147,11 @@
     document.addEventListener('pointercancel', end, true);
   }, true);
 
-  /* audio may only start inside a tap: every tap and key press makes sure it is running */
+  /* audio may only start inside a tap: every tap and key press makes sure it is running. Not
+     the library's taps: nothing there plays, and starting the sound (the context, the reverb)
+     cost the first of them a fifth of a second; the player's own first tap starts it */
   const unlockAudio = () => {
-    if (!pageActive) return;
+    if (!pageActive || underLibrary) return;
     const c = piano.ctx;
     if (!c || c.state !== 'running' || !piano.primed || (FB.Piano.IOS && (!piano.keeper || piano.keeper.paused))) piano.unlock();
   };
@@ -1436,7 +1441,7 @@
     open: (open, meta) => openWhat(open, meta || {}),
     upload: () => el.file.click(),
     // the player goes quiet behind the library and wakes when it closes
-    covered(on) { if (on) persist(); else { sceneV++; footTicks = 20; resize(); glassKick(); } },
+    covered(on) { underLibrary = on; if (on) persist(); else { sceneV++; footTicks = 20; resize(); glassKick(); kick(); } },
   };
 
   /* ------------------------------------------------------------------ boot */

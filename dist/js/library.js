@@ -31,7 +31,7 @@
     back: $('libBack'), scopes: $('libScopes'), profile: $('libProfile'),
     more: $('libMore'), menu: $('libMenu'), share: $('libShare'), shareNote: $('libShareNote'),
     bottom: $('libBottom'), search: $('libSearch'), query: $('libQuery'), clear: $('libClear'),
-    menuBtn: $('menuBtn'), file: $('fileInput'), title: $('libTitle'),
+    menuBtn: $('menuBtn'), file: $('fileInput'), title: $('libTitle'), fadeTop: $('libFadeTop'),
   };
 
   const L = { open: false, data: null, stack: [{ view: 'home' }], query: '', tab: 'pieces', thumbs: [], prints: new Map() };
@@ -228,7 +228,7 @@
     const d = L.data, group = d.kids.has(e.id);
     const b = button('row' + (style === 'num' ? ' num one' : style === 'two' ? ' has-cover' : ' one has-cover'), undefined, () => go(e));
     if (style === 'num') b.appendChild(make('span', 'n', n != null ? String(n) : '', 'text'));
-    else b.appendChild(cover(e));
+    else b.appendChild(lazyCover(e));
     const main = make('span', 'main');
     const title = make('b', '', undefined, 'text');
     if (style === 'work' && catOf(e)) title.appendChild(make('span', 'cat', catOf(e)));
@@ -244,7 +244,30 @@
     b.appendChild(aside);
     return b;
   }
+  /* A row's cover, made when the row comes within a screen or two of view: Chopin's works are
+     227 rows, and making all their covers at once held the page up for half a second (more on
+     a phone). The first rows of a list get theirs at once (lazyNow), so a page opens complete;
+     the rest hold a blank square of the same size until they are near */
+  let lazyNow = 0;
+  const coverSoon = new IntersectionObserver((seen) => {
+    for (const s of seen) {
+      if (!s.isIntersecting) continue;
+      coverSoon.unobserve(s.target);
+      const real = cover(s.target._entry);
+      s.target.replaceWith(real);
+    }
+    sceneV++; kick();
+  }, { root: el.scroll, rootMargin: '1200px 0px' });
+  function lazyCover(e) {
+    if (lazyNow > 0) { lazyNow--; return cover(e); }
+    const hold = make('span', 'cover is-later');
+    hold.setAttribute('aria-hidden', 'true');
+    hold._entry = e;
+    coverSoon.observe(hold);
+    return hold;
+  }
   function rows(list, style, cols = true) {
+    lazyNow = 30;
     const box = make('div', 'rows' + (cols ? ' cols' : ''));
     list.forEach((e, i) => box.appendChild(row(e, style, style === 'num' ? e.number || i + 1 : null)));
     return box;
@@ -545,14 +568,17 @@
     const art = (svg) => c.insertAdjacentHTML('beforeend', svg);
     /* a word drawn in SVG, in the cover's 100-unit square: filled in ink, or as an outline that
        lies outside the letters only (a stroke twice as wide, the letters masked out of it), so
-       the outline never eats into the letter's own shape */
+       the outline never eats into the letter's own shape. The mask goes on a group holding an
+       empty square as large as the mask: Safari clips a masked text to its advance box, which
+       cut off an italic's slant (the top right of a big outlined H) */
     const word = (text, x, y, size, fam, style, weight, outline, anchor = 'start', fade = 1) => {
       const font = `font-family="${fam.replace(/"/g, "'")}" font-style="${style}" font-weight="${weight}" font-size="${size}" text-anchor="${anchor}" letter-spacing="${(-0.01 * size).toFixed(2)}"`;
       const glyphs = `<text x="${x}" y="${y}" ${font}>${esc(text)}</text>`;
       if (!outline) return glyphs.replace('<text ', '<text style="fill: var(--ink)" ');
       const id = 'cvm' + (++maskSeq);
       return `<mask id="${id}" maskUnits="userSpaceOnUse" x="-60" y="-60" width="220" height="220"><rect x="-60" y="-60" width="220" height="220" fill="#fff"/>${glyphs.replace('<text ', '<text fill="#000" ')}</mask>` +
-        glyphs.replace('<text ', `<text fill="none" stroke="currentColor" stroke-width="${outline * 2}" stroke-opacity="${fade}" stroke-linejoin="round" mask="url(#${id})" `);
+        `<g mask="url(#${id})"><rect x="-60" y="-60" width="220" height="220" fill="#000" fill-opacity="0"/>` +
+        glyphs.replace('<text ', `<text fill="none" stroke="currentColor" stroke-width="${outline * 2}" stroke-opacity="${fade}" stroke-linejoin="round" `) + '</g>';
     };
     const [fam, fstyle, fweight] = [FACE[face][0], FACE[face][2], FACE[face][3]];
     const [ofam, ostyle, oweight] = [FACE.outline[0], FACE.outline[2], FACE.outline[3]];
@@ -668,7 +694,7 @@
       L.tab = v;
       for (const b of el.lib.querySelectorAll('.seg.fit button')) b.setAttribute('aria-pressed', String(b.dataset.tab === v));
     }
-    syncPills();
+    syncPills(true);
     if (L.query.trim()) render(false);
     else if (L.exploreList && L.exploreList.isConnected) {
       L.exploreList.replaceChildren(exploreContent());
@@ -1213,13 +1239,18 @@
     for (const b of el.scopes.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.tab === L.tab));
     syncPills();
   }
-  /* the tab bars' pills, on the chosen tab (their parts can change width with the screen). A bar
-     just built, or just shown, gets its pill in place at once; after that the pill slides */
-  function syncPills() {
+  /* The tab bars' pills, on the chosen tab. The pill slides only when the tab changes (slide: a
+     tab chosen, or a press let go); when its tab merely changes size or place (the fonts arriving
+     after a reload, the screen turning, a bar built or shown) it is set there at once. Sliding on
+     those too made it wander for seconds after a reload as the tabs' widths settled. Each tab is
+     watched for size changes, which the library's own resize does not see */
+  const pillSizes = new ResizeObserver(() => { if (L.open) syncPills(false); });
+  function syncPills(slide = false) {
     const i = TABS.indexOf(L.tab);
     for (const seg of el.lib.querySelectorAll('.seg.fit')) {
+      if (!seg._watched) { seg._watched = true; for (const b of seg.querySelectorAll('button')) pillSizes.observe(b); }
       if (!seg.offsetWidth) { seg._placed = false; continue; }
-      if (seg._placed) { FB.placePill(seg, i); continue; }
+      if (seg._placed && slide) { FB.placePill(seg, i); continue; }
       seg.classList.add('is-placing');
       FB.placePill(seg, i);
       void getComputedStyle(seg, '::after').left;
@@ -1380,7 +1411,10 @@
      changes the layout (a view, a resize, nodes or text added or removed, the page's entrance
      ending); scrolling only shifts it */
   let paintables = null;
-  const unmeasure = () => { paintables = null; };
+  /* geo: the layout's numbers that each frame of a scroll reads (where the tabs pin, the headings
+     the small title follows, the top bar's bottom, the fade's top), measured once per layout */
+  let geo = {};
+  const unmeasure = () => { paintables = null; geo = {}; depthNow = null; };
   function measurePaintables(scope, root) {
     const vy = scope === el.page ? el.scroll.scrollTop : 0;
     const list = [];
@@ -1390,18 +1424,22 @@
       const side = n.closest('.shelf, .pages, .viewer-pages');
       const it = { n, side, sx: side ? side.scrollLeft : 0, x: r.left - root.left, y: r.top - root.top + vy, w: r.width, h: r.height };
       it.kind = n.tagName === 'CANVAS' ? 'canvas' : n.tagName === 'IMG' ? 'img' : n.dataset.paint;
-      if (it.kind !== 'canvas' && it.kind !== 'img') {
-        const cs = getComputedStyle(n);
-        it.radius = parseFloat(cs.borderTopLeftRadius) || 0;
-        if (it.kind === 'cover') { it.field = n.dataset.field; it.base = n.dataset.base; }
-        else if (it.kind === 'box') it.bg = cs.backgroundColor;
-        else { it.size = parseFloat(cs.fontSize); it.font = cs.fontWeight + ' ' + it.size + 'px ' + cs.fontFamily; it.color = cs.color; it.text = n.textContent; }
-      }
       list.push(it);
     }
     return { scope, list };
   }
-  new MutationObserver(unmeasure).observe(el.lib, { childList: true, subtree: true, characterData: true });
+  /* what it takes to draw a node, read the first time it is drawn: most never come near the glass */
+  function styleOf(it) {
+    it.styled = true;
+    if (it.kind === 'canvas' || it.kind === 'img') return;
+    const n = it.n, cs = getComputedStyle(n);
+    it.radius = parseFloat(cs.borderTopLeftRadius) || 0;
+    if (it.kind === 'cover') { it.field = n.dataset.field; it.base = n.dataset.base; }
+    else if (it.kind === 'box') it.bg = cs.backgroundColor;
+    else { it.size = parseFloat(cs.fontSize); it.font = cs.fontWeight + ' ' + it.size + 'px ' + cs.fontFamily; it.color = cs.color; it.text = n.textContent; }
+  }
+  /* changes in the top bar (the small title) move nothing the scene draws */
+  new MutationObserver((list) => { if (list.some((m) => !el.title.contains(m.target))) unmeasure(); }).observe(el.lib, { childList: true, subtree: true, characterData: true });
   el.page.addEventListener('animationend', unmeasure);
   new ResizeObserver(unmeasure).observe(el.lib);
   /* the scene under the glass: the page, every box, miniature and line of text near a glass
@@ -1422,6 +1460,7 @@
     for (const it of paintables.list) {
       const x = it.x - (it.side ? it.side.scrollLeft - it.sx : 0), y = it.y - vy, w = it.w, h = it.h;
       if (!bands.some((band) => x + w > band[0] && y + h > band[1] && x < band[2] && y < band[3])) continue;
+      if (!it.styled) styleOf(it);
       if (it.kind === 'canvas') { if (it.n.width) ctx.drawImage(it.n, x, y, w, h); continue; }
       /* a page of sheet music is drawn as the paper it shows: drawing the SVG itself could lock
          the canvas, and the glass could no longer read it */
@@ -1466,9 +1505,9 @@
     if (L.viewer) return;
     /* the same smooth S as the CSS mask (index.html .lib-scroll), read from it as it changes */
     const S_CURVE = [[0.25, 0.156], [0.5, 0.5], [0.75, 0.844]];
-    const sc = getComputedStyle(el.lib);
-    const tb = parseFloat(sc.getPropertyValue('--top-black')), ts = parseFloat(sc.getPropertyValue('--top-span'));
-    if (ts > 0) fade(tb, tb + ts, true, S_CURVE, parseFloat(sc.getPropertyValue('--top-floor')) || 0);
+    /* the fade as applyFade last set it; where it reaches black (the top edge) is read once per layout */
+    if (geo.topBlack === undefined) geo.topBlack = parseFloat(getComputedStyle(el.fadeTop).getPropertyValue('--top-black')) || 0;
+    if (fadeShown.span > 0) fade(geo.topBlack, geo.topBlack + fadeShown.span, true, S_CURVE, fadeShown.floor);
     const bar = el.bottom.getBoundingClientRect();
     if (bar.height) fade(bar.bottom - root.top, bar.top - 64 - root.top, false, S_CURVE);
   }
@@ -1489,7 +1528,8 @@
   function pinCheck() {
     const tabs = el.page.querySelector('.explore-tabs'), mark = el.page.querySelector('.explore-mark');
     if (tabs && mark) {
-      const at = layoutTop(mark) - parseFloat(getComputedStyle(tabs).top);
+      if (geo.pinAt === undefined || geo.tabs !== tabs) { geo.tabs = tabs; geo.pinAt = layoutTop(mark) - parseFloat(getComputedStyle(tabs).top); }
+      const at = geo.pinAt;
       const range = Math.round(at - EASE) + 'px ' + Math.round(at + EASE) + 'px';
       if (tabs.dataset.range !== range) { tabs.dataset.range = range; tabs.style.setProperty('--settle', range); }
       const pinned = el.scroll.scrollTop >= at - 0.5;
@@ -1512,8 +1552,12 @@
   function titleCheck() {
     let on = null;
     if (!L.viewer && !L.query.trim()) {
-      const line = el.back.getBoundingClientRect().bottom - el.scroll.getBoundingClientRect().top + el.scroll.scrollTop;
-      for (const h of el.page.querySelectorAll('[data-title]')) if (layoutTop(h) + h.offsetHeight < line) on = h;
+      if (!geo.heads) {
+        geo.bar = el.back.getBoundingClientRect().bottom - el.scroll.getBoundingClientRect().top;
+        geo.heads = [...el.page.querySelectorAll('[data-title]')].map((h) => [h, layoutTop(h) + h.offsetHeight]);
+      }
+      const line = geo.bar + el.scroll.scrollTop;
+      for (const [h, bottom] of geo.heads) if (bottom < line) on = h;
     }
     const key = on ? on.dataset.title + '|' + (on.dataset.sub || '') : '';
     if (key === L.titled) return;
@@ -1534,9 +1578,11 @@
   const FADE_MS = 280;
   let fadeNow = null, fadeFrom = null, fadeTo = null, fadeAt = 0;
   /* the top bar's depth (a button and an edge): the top fade's height at rest */
+  let depthNow = null;
   const barDepth = () => {
+    if (depthNow) return depthNow;
     const cs = getComputedStyle(document.documentElement);
-    return { control: parseFloat(cs.getPropertyValue('--control')) || 44, edge: parseFloat(cs.getPropertyValue('--edge')) || 16 };
+    return (depthNow = { control: parseFloat(cs.getPropertyValue('--control')) || 44, edge: parseFloat(cs.getPropertyValue('--edge')) || 16 });
   };
   /* what is eased: the floor, and how much further the fade reaches while the tabs are pinned */
   function fadeTarget() {
@@ -1549,11 +1595,17 @@
     fadeNow = v;
     const { control, edge } = barDepth(), depth = control + edge;
     const grow = Math.min(Math.max(el.scroll.scrollTop / depth, 0), 1);
-    el.lib.style.setProperty('--top-floor', v.floor.toFixed(3));
-    el.lib.style.setProperty('--top-span', (depth * (1 + grow) + v.extra).toFixed(1) + 'px');
+    /* on the fade's own layer, and only when they change: set on the library they changed the
+       style of everything in it, on every frame of a scroll */
+    const floor = Math.round(v.floor * 1000) / 1000, span = Math.round((depth * (1 + grow) + v.extra) * 10) / 10;
+    if (floor === fadeShown.floor && span === fadeShown.span) return;
+    fadeShown = { floor, span };
+    el.fadeTop.style.setProperty('--top-floor', String(floor));
+    el.fadeTop.style.setProperty('--top-span', span + 'px');
     sceneV++;
     kick();
   }
+  let fadeShown = { floor: 0, span: 0 };
   function setFade(animate) {
     const to = fadeTarget();
     if (fadeTo && to.floor === fadeTo.floor && to.extra === fadeTo.extra) { if (!fadeAt && fadeNow) applyFade(fadeNow); return; }
@@ -1575,7 +1627,7 @@
   el.lib.addEventListener('pointerdown', () => kick(500), true);
   el.lib.addEventListener('pointerup', () => kick(500), true);
   /* a press that slid off a tab without choosing it puts the pill back */
-  for (const type of ['pointerup', 'pointercancel']) el.lib.addEventListener(type, () => setTimeout(syncPills, 200), true);
+  for (const type of ['pointerup', 'pointercancel']) el.lib.addEventListener(type, () => setTimeout(() => syncPills(true), 200), true);
   new ResizeObserver(() => {
     if (!L.open) return;
     fitShelves();

@@ -3,20 +3,25 @@
    phone's size and a desktop's, and fails on any script error. Screenshots of each go to
    .data/smoke/, which the test workflow (.github/workflows/test.yml) keeps for viewing.
 
+   With "webkit" it runs in WebKit, Safari's engine, at a phone's size only: the iPhone is where
+   this is used most, and Safari draws some things its own way (SVG masks, backdrop layers).
+
      npm install --no-save playwright && npx playwright install chromium
-     node tools/smoke.js */
+     node tools/smoke.js [webkit] */
 'use strict';
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { chromium } = require('playwright');
+const playwright = require('playwright');
 
+const ENGINE = process.argv[2] === 'webkit' ? 'webkit' : 'chromium';
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, '.data', 'smoke');
-const PORT = 5199;
+const PORT = ENGINE === 'webkit' ? 5198 : 5199;
 const BASE = 'http://localhost:' + PORT + '/';
 
-const SIZES = { phone: { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true }, desktop: { width: 1280, height: 800 } };
+const PHONE = { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
+const SIZES = ENGINE === 'webkit' ? { 'safari-phone': PHONE } : { phone: PHONE, desktop: { width: 1280, height: 800 } };
 /* each step: where to go, what must appear, and how long it may take (ms) */
 const STEPS = [
   { name: 'player', url: '', wait: '#roll canvas, canvas', timeout: 20000 },
@@ -24,13 +29,15 @@ const STEPS = [
   { name: 'search', url: '#library/~search/chopin%20fm', wait: '#libPage .row', timeout: 30000 },
   { name: 'piece', url: '#library/chopin/op-28/4', wait: '.sheet-page img', timeout: 90000 },
   { name: 'work', url: '#library/chopin/op-10', wait: '#libPage .row .lvl', timeout: 20000 },
+  /* a cover whose outlined title runs wide: the letters must not be cut at the sides */
+  { name: 'cover', url: '#library/chopin/op-53', wait: '#libPage .cover svg', timeout: 20000 },
 ];
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const server = spawn(process.execPath, [path.join(ROOT, 'dev-server.js')], { env: { ...process.env, PORT: String(PORT) }, stdio: 'ignore' });
   await new Promise((r) => setTimeout(r, 800));
-  const browser = await chromium.launch();
+  const browser = await playwright[ENGINE].launch();
   const failures = [];
   try {
     for (const [size, viewport] of Object.entries(SIZES)) {
