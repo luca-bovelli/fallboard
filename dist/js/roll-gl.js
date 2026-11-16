@@ -524,6 +524,11 @@
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.fillStyle = '#000'; c.fillRect(0, 0, w, H);
     c.drawImage(glc, 0, 0, w, h);
+    /* and darkened toward the top as it blurs, quadratically too, so the card's wash lies on a
+       deep ground rather than on the blurred notes' haze */
+    const reach = H * 0.78, fade = c.createLinearGradient(0, 0, 0, reach);
+    for (let i = 0; i <= 10; i++) { const u = i / 10; fade.addColorStop(u, `rgba(0,0,0,${Math.min(1, 1.15 * (1 - u) * (1 - u)).toFixed(3)})`); }
+    c.fillStyle = fade; c.fillRect(0, 0, w, reach);
     return true;
   }
   /* A progressive blur over a card's top, where its name is (a card is drawn once, so it can

@@ -321,13 +321,21 @@
     if (wash) { b.style.setProperty('--wr', wash[0]); b.style.setProperty('--wl', wash[1]); }
     return cardItem(b, r.title, r.composer);
   }
-  /* the first card: your own MusicXML file */
+  /* the first card: your own MusicXML file. Not a piece, so not a piece's card: everything in it
+     centred, a round button over a soft light from above, what it does and what it takes */
   function uploadCard() {
     const b = button('card upload', undefined, () => FB.app.upload(), 'box');
-    const art = make('span', 'art');
-    art.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
-    b.appendChild(art);
-    return cardItem(b, 'Upload a score', 'MusicXML or .mxl');
+    b.setAttribute('aria-label', 'Upload a score, MusicXML or .mxl');
+    const up = make('span', 'up');
+    const disc = make('span', 'disc', undefined, 'box');
+    disc.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>';
+    up.appendChild(disc);
+    up.appendChild(make('b', '', 'Upload a score', 'text'));
+    up.appendChild(make('small', '', 'MusicXML or .mxl', 'text'));
+    b.appendChild(up);
+    const item = make('div', 'card-item');
+    item.appendChild(b);
+    return item;
   }
   /* the opening bars as the player's roll draws them: pitch across, time rising from the
      keyboard's edge at the bottom of the card (the first notes lowest), each hand in its colour,

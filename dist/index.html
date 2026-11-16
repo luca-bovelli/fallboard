@@ -653,9 +653,7 @@
     border-radius: var(--r-card); overflow: hidden; background: #000; color: inherit; text-align: left; cursor: pointer;
   }
   .card::before { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07); pointer-events: none; }
-  .card .roll, .card .art { position: absolute; inset: 0; z-index: -2; display: block; width: 100%; height: 100%; }
-  .card .art { display: grid; place-items: center; }
-  .card .art svg { width: 28px; height: 28px; fill: none; stroke: var(--t1); stroke-width: 1.8; stroke-linecap: round; opacity: var(--o-inactive); }
+  .card .roll { position: absolute; inset: 0; z-index: -2; display: block; width: 100%; height: 100%; }
   .card .shade {
     position: absolute; inset: 0; z-index: -1; pointer-events: none;
     background:
@@ -663,8 +661,18 @@
       radial-gradient(100% 72% at 104% -4%, var(--wr) 0%, color-mix(in oklab, var(--wr) 52%, transparent) 34%, color-mix(in oklab, var(--wr) 14%, transparent) 58%, transparent 74%);
   }
   /* the upload card: a plain square of dark grey */
-  .card.upload { background: #1c1c20; }
-  .card.upload .shade { display: none; }
+  /* the upload card: dark grey, lit softly from above, everything centred: a round button, then
+     what it does and what it takes. It has no line under it; the pieces' cards do */
+  .card.upload { background: radial-gradient(120% 85% at 50% 0%, #26262c, #18181c 68%), #18181c; }
+  .card .up { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px; text-align: center; }
+  .card .disc {
+    display: grid; place-items: center; width: clamp(44px, 30%, 60px); aspect-ratio: 1; margin-bottom: 10px; border-radius: 50%;
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.13), rgb(255 255 255 / 0.06)); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.12);
+  }
+  .card .disc svg { width: 42%; height: 42%; fill: none; stroke: var(--t1); stroke-width: 2; stroke-linecap: round; }
+  .card .up b { max-width: 100%; font-size: var(--fs-m); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .up small { max-width: 100%; font-size: var(--fs-s); color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (hover: hover) { .card.upload:hover .disc { background: linear-gradient(to bottom, rgb(255 255 255 / 0.18), rgb(255 255 255 / 0.09)); } }
   .card .title {
     position: absolute; top: 0; left: 0; right: 0; padding: 12px 12px 0; font-size: var(--fs-m); font-weight: 600; line-height: 1.25;
     text-shadow: 0 1px 10px rgb(0 0 0 / 0.25);
