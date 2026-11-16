@@ -24,10 +24,12 @@
    furthest apart in hue, the lighter to the right hand; the player's --rh and --lh when there is
    no cover, or when the flat roll stands in.
 
-   The keys: a white keyboard, neutral, with hairline seams. A struck white key takes its hand's
-   colour at its most vivid, laid over the key and fading out down it; a struck black key becomes a
-   cap of that colour, its sides a deeper shade. Keys light fully the moment a note starts and go
-   dark within 60 ms of its end. */
+   The keys: a white keyboard, neutral, each white key a rounded rectangle, so black dents show
+   between them at the top and bottom, with hairline seams between. A struck white key takes its
+   hand's colour, as vivid as it can be at a middle lightness, laid over the key and fading out
+   down it; a struck black key becomes a cap of that colour, its sides a deeper shade. Keys light
+   fully the moment a note starts and go dark within 60 ms of its end. The hands' icons
+   (--hand-r, --hand-l) take the hands' colours. */
 (function () {
   'use strict';
   const FB = (window.FB = window.FB || {});
@@ -86,21 +88,25 @@
     }
     look = { hand: [rh, lh].map(handColours) };
     keyCache = null;
+    /* the hands' icons take the same colours */
+    const root = document.documentElement.style;
+    root.setProperty('--hand-r', css(rh)); root.setProperty('--hand-l', css(lh));
     return look;
   }
   function handColours(rgb) {
     const [, C, h] = toLch(rgb);
-    /* on the keys: the hue at its most vivid, at the lightness where it is most vivid (yellow light,
-       blue dark), kept within 0.55..0.85 */
+    /* on the keys: the hue as vivid as the screen can show it at a middle lightness: where the hue
+       is most vivid (yellow light, blue dark), held within 0.5..0.62, since a colour that strong
+       reads best neither light nor dark */
     const vivid = (L) => lch(clamp(L, 0.05, 0.97), 0.4, h);
     let cusp = 0.6, best = -1;
     for (let L = 0.3; L <= 0.97; L += 0.01) { const c = toLch(vivid(L))[1]; if (c > best) { best = c; cusp = L; } }
-    const kL = clamp(cusp, 0.55, 0.85);
+    const kL = clamp(cusp, 0.5, 0.62);
     return {
       lin: rgb,                                         // the bloom's colour
       note: srgb(rgb), rim: srgb(lift(rgb, 0.55)),      // a glass note's tint and its rim light
       lab: toLab(lch(0.5, Math.min(0.22, C * 1.5), h)), // the field's colour, at lightness 0.5
-      key: vivid(kL), keyRim: vivid(kL + 0.12), keyDeep: vivid(kL * 0.62),
+      key: vivid(kL), keyRim: vivid(kL + 0.08), keyDeep: vivid(kL * 0.62),
     };
   }
 
@@ -509,12 +515,14 @@
     }
     c.clearRect(0, 0, w, h);
     const i0 = clamp(Math.floor(left), 0, N_WHITE - 1), i1 = clamp(Math.ceil(left + w / W), 0, N_WHITE - 1);
-    /* the seams between the keys */
-    c.fillStyle = '#d4d4d4'; c.fillRect(0, 0, w, h);
+    /* each white key a rounded rectangle: black behind them shows as a small dent where two keys'
+       corners meet, at the top and the bottom; between, a hairline seam of grey */
+    const rad = Math.min(3.5, W * 0.22);
+    c.fillStyle = '#000'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#bcbcbc'; c.fillRect(0, rad, w, h - 2 * rad);
     const grad = (a, b, cc) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, a); g.addColorStop(0.88, b); g.addColorStop(1, cc); return g; };
     const ivory = grad('#fdfdfd', '#f4f4f4', '#e6e6e6'), ivoryDown = grad('#f1f1f1', '#e7e7e7', '#dadada');
-    const rad = Math.min(3, W * 0.18);
-    const whitePath = (x) => rr(c, x + hair, -4, W - hair, h + 4 - hair, 0, rad);
+    const whitePath = (x) => rr(c, x + hair, 0, W - hair, h, rad, rad);
     c.textAlign = 'center'; c.textBaseline = 'alphabetic';
     for (let i = i0; i <= i1; i++) {
       const m = WHITE_MIDI[i], x = (i - left) * W;
