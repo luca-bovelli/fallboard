@@ -595,6 +595,15 @@
     if (coversMade.size > 400) coversMade.delete(coversMade.keys().next().value);
     return c;
   }
+  /* the palette a piece's cover is drawn from, for the player, which lights its roll in two of its
+     colours (js/roll-gl.js): the same choices as makeCover, made in the same order */
+  FB.coverPalette = (id) => {
+    const e = L.data && L.data.byId.get(id);
+    if (!e) return null;
+    const album = albumOf(e), pick = chooser(album.id);
+    const layout = layoutOf(album, ['echo', 'frame', 'num', 'staff'][pick(4)]);
+    return layout === 'frame' ? PALETTES[CLASSIC[pick(CLASSIC.length)]] : PALETTES[pick(8)];
+  };
   function makeCover(e) {
     const album = albumOf(e);
     const pick = chooser(album.id);

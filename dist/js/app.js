@@ -401,17 +401,11 @@
 
   /* ------------------------------------------------------------------ drawing */
   const TOKENS = ['stage', 'lane', 'grid', 'grid-2', 'grid-ink', 'rh', 'rh-key', 'rh-hot', 'lh', 'lh-key', 'lh-hot', 'bar-ink',
-    'now', 'brass', 'brass-lo', 'blue', 'blue-lo', 'paper', 'score-ink',
-    'key-a', 'key-b', 'key-c', 'key-ink', 'ebony-a', 'ebony-b', 'ebony-c'];
+    'now', 'paper', 'score-ink'];
   function readTheme() {
     const cs = getComputedStyle(document.documentElement);
     for (const k of TOKENS) theme[k] = cs.getPropertyValue('--' + k).trim();
     sceneV++;
-  }
-  /* '#rrggbb' -> 'rgba(r,g,b,a)' */
-  function alpha(hex, a) {
-    const n = parseInt(hex.slice(1), 16);
-    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
   }
 
   function sizeCanvas(canvas, ctx, box) {
@@ -457,7 +451,11 @@
     scoreObscured = null;
   }
 
+  /* what js/roll-gl.js draws the lit roll and keys from; it returns false (no WebGL 2) and the
+     flat roll below is drawn instead */
+  const ROLL_ENV = { S, G, R, rc, kc, el, theme, BLACK_W, BLACK_H, EPS, WHITE_MIDI, N_WHITE, keyX, handOK, lowerT0, now, pressed, rr, beatUnit, UI_FONT, get progressBounds() { return progressBounds; } };
   function drawRoll(disp, live) {
+    if (FB.rollGL && FB.rollGL.roll(ROLL_ENV, disp, live)) return;
     const c = rc, w = R.w, h = R.h, pps = S.pps, sc = S.score;
     c.fillStyle = theme.stage;
     c.fillRect(0, 0, w, h);
@@ -582,75 +580,9 @@
     }
   }
 
+  /* the keys, lit by the notes sounding (js/roll-gl.js) */
   function drawKbd(held) {
-    const c = kc, w = G.width, h = G.height, W = G.W, left = G.left, bw = W * BLACK_W;
-    c.clearRect(0, 0, w, h);
-    const i0 = clamp(Math.floor(left), 0, N_WHITE - 1), i1 = clamp(Math.ceil(left + w / W), 0, N_WHITE - 1);
-    const lip = clamp(h * 0.05, 3, 7);
-    const grad = (a, b, cc) => {
-      const g = c.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, a); g.addColorStop(0.82, b); g.addColorStop(1, cc);
-      return g;
-    };
-    const ivory = grad(theme['key-a'], theme['key-b'], theme['key-c']);
-    const ivoryDown = grad(theme['key-b'], theme['key-c'], theme['key-c']);
-    // a sounding key keeps its shape and takes its hand's colour as a flat wash
-    const lit = [alpha(theme.brass, 0.9), alpha(theme.blue, 0.9)];
-
-    c.textAlign = 'center';
-    c.textBaseline = 'alphabetic';
-    for (let i = i0; i <= i1; i++) {
-      const m = WHITE_MIDI[i], x = (i - left) * W;
-      const hand = held.get(m);
-      c.fillStyle = hand !== undefined || pressed.has(m) ? ivoryDown : ivory;
-      rr(c, x + 0.5, -4, W - 1, h + 4 - 0.5, 0, Math.min(4, W * 0.2));
-      c.fill();
-      if (hand !== undefined) { c.fillStyle = lit[hand]; c.fill(); }
-      // the front lip catches the light
-      c.fillStyle = 'rgba(255,255,255,0.35)';
-      c.fillRect(x + 1.5, h - lip - 1, W - 3, 1);
-      if (m % 12 === 0 && W >= 11) {
-        const oct = FB.midiOctave(m);
-        c.font = `${oct === 4 ? 700 : 600} ${W < 16 ? 8.5 : 10}px ${UI_FONT}`;
-        c.fillStyle = hand === undefined ? theme['key-ink'] : 'rgba(20,16,4,0.7)';
-        c.globalAlpha = oct === 4 || hand !== undefined ? 1 : 0.7;
-        c.fillText((W < 15 ? '' : 'C') + oct, x + W / 2, h - lip - 5);
-        c.globalAlpha = 1;
-      }
-    }
-
-    const bh = Math.round(h * BLACK_H);
-    const mLo = WHITE_MIDI[i0], mHi = WHITE_MIDI[i1];
-    for (let m = Math.max(22, mLo - 1); m <= Math.min(106, mHi + 1); m++) {
-      if (!FB.isBlack(m)) continue;
-      const x = keyX(m);
-      const hand = held.get(m);
-      const down = hand !== undefined || pressed.has(m);
-      // cast shadow on the ivory
-      c.fillStyle = 'rgba(0,0,0,0.26)';
-      rr(c, x - 0.5, -4, bw + 3, bh + (down ? 5 : 7), 3);
-      c.fill();
-      // body
-      const body = c.createLinearGradient(x, 0, x + bw, 0);
-      body.addColorStop(0, theme['ebony-b']); body.addColorStop(0.5, theme['ebony-c']); body.addColorStop(1, theme['ebony-b']);
-      c.fillStyle = hand === undefined ? body : theme[hand === 0 ? 'brass-lo' : 'blue-lo'];
-      rr(c, x, -4, bw, bh + 4, 0, 3);
-      c.fill();
-      // top face, with the slope at the front
-      const slope = clamp(bh * 0.1, 4, 9) * (down ? 0.55 : 1);
-      const side = Math.min(2.2, bw * 0.14);
-      const face = c.createLinearGradient(0, 0, 0, bh - slope);
-      face.addColorStop(0, theme['ebony-b']); face.addColorStop(0.85, pressed.has(m) ? theme['ebony-a'] : '#2a2a2e'); face.addColorStop(1, theme['ebony-a']);
-      c.fillStyle = hand === undefined ? face : theme[hand === 0 ? 'brass' : 'blue'];
-      rr(c, x + side, -4, bw - side * 2, bh - slope + 4, 0, 2);
-      c.fill();
-    }
-
-    /* shadow cast by the felt and the fallboard above */
-    const sh = c.createLinearGradient(0, 0, 0, 16);
-    sh.addColorStop(0, 'rgba(0,0,0,0.5)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
-    c.fillStyle = sh;
-    c.fillRect(0, 0, w, 16);
+    FB.rollGL.keys(ROLL_ENV, held);
   }
 
   /* ------------------------------------------------------------------ frame */
@@ -702,6 +634,7 @@
     if (!progressBounds) measureProgress();
     if (S.view === 'roll') {
       drawRoll(dispTime(), t);
+      if (FB.rollGL && FB.rollGL.moving) busy = true;   // the light's noise moves even while paused
     } else {
       notation.update(t, S.playing);
       if (!scoreObscured) {

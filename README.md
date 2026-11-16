@@ -20,6 +20,10 @@ Open <http://localhost:8000>. The site is static and requires no build step. Sco
 
 Every push to `main` runs `.github/workflows/pages.yml`: it engraves any new or changed scores, commits those engravings back to `main`, and publishes `dist/` to GitHub Pages. Pages caches files for 10 minutes, so the deploy copy (never the repository) has its script and score URLs stamped with the commit by `tools/stamp.js`.
 
+## The roll
+
+`dist/js/roll-gl.js` draws the roll and the keys (from `drawRoll` and `drawKbd` in `app.js`). The roll is WebGL 2, in three passes: a light field rendered at 0.6 of the screen's resolution, where each hand's light is `v = 1 / (dk^¼ + dn + 0.1)^4` (`dk` the height above the keys, 1 at half the roll; `dn` the distance to the hand's nearest note, 1 at 8 px), squeezed to `g = smootherstep(v / (v + 2))`, coloured black → the hand's colour → white (both falloffs the fourth root), its lightness then raised to a power between 1 and 1.5 by one octave of 3D simplex noise drifting up 40 px a second, so the noise breaks up the dim light and leaves the bright light alone; that field on the screen with the player's grid (black-key lanes, C and F lines, bar and beat lines) added under it in linear light at full resolution; and the notes as tinted glass, lit through their edges, bending the field behind them. A heat strip along the keys (how long each has sounded, on a logarithm, cooling in a third of a second) lifts the field above warm keys and adds a low bloom; it is never drawn. The hands' colours are the piece's cover's two colours furthest apart in hue (`FB.coverPalette` in `library.js`). The keys are a neutral white keyboard: a sounding key takes its hand's colour at its most vivid, fading down a white key or filling a black key's cap, fully from the note's start and gone within 60 ms of its end. Without WebGL 2 the flat roll is drawn, and the keys take its colours. The values were tuned on a page of sliders; `roll-gl.js` keeps only the terms they use.
+
 ## Adding a piece
 
 1. Put the MusicXML in `dist/scores/<name>.musicxml`.

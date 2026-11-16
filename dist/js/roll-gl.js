@@ -1,0 +1,575 @@
+/* The roll and the keys, lit (js/roll-gl.js). Called from drawRoll and drawKbd in js/app.js;
+   where WebGL 2 is missing or its context is lost, roll() returns false and the player draws its
+   flat roll instead.
+
+   The roll is three passes:
+     1. the light field, into a texture at 0.6 of the screen's resolution (it is smooth, so this
+        costs nothing visible). At each point, for each hand,
+          v = 1 / (dk^(1/4) + dn + 0.1)^4
+        dk: the height above the keys, 1 at half the roll's height; dn: the distance to the hand's
+        nearest note, 1 at 8 px (the 48 notes nearest the keys). Both hands' v are added, with the
+        heat strip's (below), and
+          g = smootherstep(v / (v + 2))
+        is coloured from black through the hand's colour (lightness 0.5) to white, both falloffs
+        the fourth root; its lightness is then g^p, p from 1 to 1.5 with animated 3D simplex noise
+        (one octave, drifting up 40 px a second), so the noise breaks the dim light up and leaves the
+        bright light alone.
+     2. that texture onto the screen, with the player's grid (lanes under the black keys, lines at
+        C and F, bar and beat lines) added under the light at full resolution, in linear light.
+     3. the notes, as tinted glass lit through their edges, bending the field behind them.
+   The heat strip: along the keys, how long each has sounded, on a logarithm, cooling in a third of
+   a second; it lifts the field above warm keys and adds a low bloom. It is never drawn.
+
+   Colours come from the piece's cover (FB.coverPalette in js/library.js): its two colours
+   furthest apart in hue, the lighter to the right hand; the player's --rh and --lh when there is
+   no cover, or when the flat roll stands in.
+
+   The keys: a white keyboard, neutral, with hairline seams. A struck white key takes its hand's
+   colour at its most vivid, laid over the key and fading out down it; a struck black key becomes a
+   cap of that colour, its sides a deeper shade. Keys light fully the moment a note starts and go
+   dark within 60 ms of its end. */
+(function () {
+  'use strict';
+  const FB = (window.FB = window.FB || {});
+  const NOTES = 48, HEAT_N = 256, HEAT_ROWS = 16, HEAT_STEP = 40, FIELD_RES = 0.6, RELEASE = 0.06;
+  const STILL = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+  /* ------------------------------------------------------------------ colour (OKLab) */
+  const lin = (v) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+  const enc = (v) => (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+  const hexLin = (hex) => { const n = parseInt(hex.slice(1), 16); return [lin(((n >> 16) & 255) / 255), lin(((n >> 8) & 255) / 255), lin((n & 255) / 255)]; };
+  function toLab([r, g, b]) {
+    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s];
+  }
+  function fromLab([L, a, b]) {
+    const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3, m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3, s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+    return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s];
+  }
+  const toLch = (rgb) => { const [L, a, b] = toLab(rgb); return [L, Math.hypot(a, b), Math.atan2(b, a)]; };
+  /* linear rgb of an OKLCH colour, its chroma brought down until the screen can show it */
+  function lch(L, C, h) {
+    let lo = 0, hi = C, out = fromLab([L, 0, 0]);
+    for (let i = 0; i < 14; i++) {
+      const c = (lo + hi) / 2, rgb = fromLab([L, c * Math.cos(h), c * Math.sin(h)]);
+      if (rgb.every((v) => v >= -1e-4 && v <= 1 + 1e-4)) { lo = c; out = rgb; } else hi = c;
+    }
+    return out.map((v) => clamp(v, 0, 1));
+  }
+  const srgb = (rgb) => rgb.map((v) => enc(clamp(v, 0, 1)));
+  const css = (rgb, a = 1) => `rgba(${srgb(rgb).map((v) => Math.round(v * 255)).join(',')},${a})`;
+  const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  const lift = (rgb, t) => { const [L, C, h] = toLch(rgb); return lch(L + (0.97 - L) * t, C, h); };
+
+  /* ------------------------------------------------------------------ the piece's colours */
+  let look = null, lookFor = null;
+  function colours(env) {
+    const id = env.S.meta && env.S.meta.id ? String(env.S.meta.id).replace(/^cat:/, '') : '';
+    /* while the flat roll stands in (no WebGL 2), the keys keep to its colours */
+    const flat = failed || lost;
+    const pal = !flat && id && FB.coverPalette ? FB.coverPalette(id) : null;
+    const key = flat + '|' + id + '|' + !!pal;
+    if (look && lookFor === key) return look;
+    lookFor = key;
+    let rh = hexLin(env.theme.rh || '#d2a94f'), lh = hexLin(env.theme.lh || '#4f8fe6');
+    if (pal) {
+      /* the cover's two colours furthest apart in hue (weighted by how colourful), the lighter to the right hand */
+      const cand = [...new Set([...pal[1], pal[2]])].map((hex) => toLch(hexLin(hex))).filter((c) => c[1] > 0.045);
+      let pair = null, far = -1;
+      for (const a of cand) for (const b of cand) { let d = Math.abs(a[2] - b[2]); if (d > Math.PI) d = 2 * Math.PI - d; d *= Math.min(a[1], b[1], 0.12); if (d > far) { far = d; pair = [a, b]; } }
+      if (pair) {
+        pair.sort((a, b) => b[0] - a[0]);
+        rh = lch(0.84, clamp(pair[0][1], 0.08, 0.15), pair[0][2]);
+        lh = lch(0.62, clamp(pair[1][1], 0.11, 0.2), pair[1][2]);
+      }
+    }
+    look = { hand: [rh, lh].map(handColours) };
+    keyCache = null;
+    return look;
+  }
+  function handColours(rgb) {
+    const [, C, h] = toLch(rgb);
+    /* on the keys: the hue at its most vivid, at the lightness where it is most vivid (yellow light,
+       blue dark), kept within 0.55..0.85 */
+    const vivid = (L) => lch(clamp(L, 0.05, 0.97), 0.4, h);
+    let cusp = 0.6, best = -1;
+    for (let L = 0.3; L <= 0.97; L += 0.01) { const c = toLch(vivid(L))[1]; if (c > best) { best = c; cusp = L; } }
+    const kL = clamp(cusp, 0.55, 0.85);
+    return {
+      lin: rgb,                                         // the bloom's colour
+      note: srgb(rgb), rim: srgb(lift(rgb, 0.55)),      // a glass note's tint and its rim light
+      lab: toLab(lch(0.5, Math.min(0.22, C * 1.5), h)), // the field's colour, at lightness 0.5
+      key: vivid(kL), keyRim: vivid(kL + 0.12), keyDeep: vivid(kL * 0.62),
+    };
+  }
+
+  /* ------------------------------------------------------------------ shaders */
+  const QUAD_VS = `#version 300 es
+    layout(location = 0) in vec2 aPos; void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
+  const COMMON = `
+    vec3 enc(vec3 c) { return mix(c * 12.92, 1.055 * pow(max(c, 0.0), vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
+    float hash(vec2 p) { vec3 q = fract(vec3(p.xyx) * 0.1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }`;
+  const FIELD_FS = `#version 300 es
+    precision highp float;
+    uniform vec2 uRes; uniform vec2 uScale; uniform float uT; uniform float uDrift;
+    uniform int uN; uniform vec4 uNote[${NOTES}]; uniform float uHand[${NOTES}];
+    uniform vec3 uLabR; uniform vec3 uLabL; uniform vec3 uToneR; uniform vec3 uToneL; uniform sampler2D uHeat;
+    out vec4 o;
+    ${COMMON}
+    /* simplex noise in three dimensions (Ashima Arts / Stefan Gustavson, MIT) */
+    vec4 perm(vec4 x) { return mod(((x * 34.0) + 1.0) * x, 289.0); }
+    float snoise(vec3 v) {
+      const vec2 C = vec2(1.0 / 6.0, 1.0 / 3.0); const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+      vec3 i = floor(v + dot(v, C.yyy)); vec3 x0 = v - i + dot(i, C.xxx);
+      vec3 g = step(x0.yzx, x0.xyz); vec3 l = 1.0 - g; vec3 i1 = min(g.xyz, l.zxy); vec3 i2 = max(g.xyz, l.zxy);
+      vec3 x1 = x0 - i1 + C.xxx; vec3 x2 = x0 - i2 + 2.0 * C.xxx; vec3 x3 = x0 - 1.0 + 3.0 * C.xxx;
+      i = mod(i, 289.0);
+      vec4 p = perm(perm(perm(i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+      float n_ = 1.0 / 7.0; vec3 ns = n_ * D.wyz - D.xzx;
+      vec4 j = p - 49.0 * floor(p * ns.z * ns.z); vec4 x_ = floor(j * ns.z); vec4 y_ = floor(j - 7.0 * x_);
+      vec4 x = x_ * ns.x + ns.yyyy; vec4 y = y_ * ns.x + ns.yyyy; vec4 h = 1.0 - abs(x) - abs(y);
+      vec4 b0 = vec4(x.xy, y.xy); vec4 b1 = vec4(x.zw, y.zw);
+      vec4 s0 = floor(b0) * 2.0 + 1.0; vec4 s1 = floor(b1) * 2.0 + 1.0; vec4 sh = -step(h, vec4(0.0));
+      vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy; vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+      vec3 p0 = vec3(a0.xy, h.x); vec3 p1 = vec3(a0.zw, h.y); vec3 p2 = vec3(a1.xy, h.z); vec3 p3 = vec3(a1.zw, h.w);
+      vec4 norm = 1.79284291400159 - 0.85373472095314 * vec4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3));
+      p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+      vec4 m = max(0.6 - vec4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0); m = m * m;
+      return 42.0 * dot(m * m, vec4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3)));
+    }
+    float box(vec2 p, vec4 r) { vec2 q = abs(p - r.xy - r.zw * 0.5) - r.zw * 0.5 + 3.0; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 3.0; }
+    vec3 labLin(vec3 c) {
+      float l = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z, m = c.x - 0.1055613458 * c.y - 0.0638541728 * c.z, s = c.x - 0.0894841775 * c.y - 1.291485548 * c.z;
+      l = l * l * l; m = m * m * m; s = s * s * s;
+      return vec3(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s);
+    }
+    float root4(float x) { return sqrt(sqrt(max(x, 0.0))); }
+    /* black, through the hand's colour t (its lightness 0.5), to white; lightness g. Below the
+       colour, lightness and colour fall together as the fourth root; above it the colour thins so */
+    vec3 ramp(float g, vec3 t) { return g < 0.5 ? t * root4(2.0 * g) : vec3(g, t.yz * root4(2.0 - 2.0 * g)); }
+    float rampL(float g) { return g < 0.5 ? 0.5 * root4(2.0 * g) : g; }
+    void main() {
+      vec2 px = vec2(gl_FragCoord.x / uScale.x, uRes.y - gl_FragCoord.y / uScale.y);
+      float up = max(uRes.y - px.y, 0.0);
+      float dR = 1e4, dL = 1e4;
+      for (int i = 0; i < ${NOTES}; i++) {
+        if (i >= uN) break;
+        float d = max(box(px, uNote[i]), 0.0);
+        if (uHand[i] < 0.5) dR = min(dR, d); else dL = min(dL, d);
+      }
+      float n = 0.5 + 0.5 * snoise(vec3(vec2(px.x, px.y + uDrift) * 0.03, uT * 0.35 + 7.0));
+      float xs = px.x / uRes.x;
+      vec2 heatUp = texture(uHeat, vec2(xs, (clamp(up / 80.0, 0.0, 15.0) + 0.5) / 16.0)).rg;
+      vec2 wide = texture(uHeat, vec2(xs, (clamp(up / 40.0, 0.0, 15.0) + 0.5) / 16.0)).rg;
+      float dk = up / (uRes.y * 0.5), kp = root4(dk), qH = dk * 1.5 + 0.7;
+      float qR = kp + dR / 8.0 + 0.1, qL = kp + dL / 8.0 + 0.1;
+      qR *= qR; qL *= qL;
+      float vR = 1.0 / (qR * qR) + heatUp.r / (qH * qH);
+      float vL = 1.0 / (qL * qL) + heatUp.g / (qH * qH);
+      float v = vR + vL, share = vR / max(v, 1e-6);
+      float g = clamp(v / (v + 2.0), 0.0, 1.0);
+      g = g * g * g * (g * (g * 6.0 - 15.0) + 10.0);
+      float L = pow(g, mix(1.0, 1.5, smoothstep(0.25, 0.75, n)));
+      /* the colour from the clean g, both hands' hues blended without going grey; the lightness
+         the ramp's own at the noisy L */
+      vec3 a = ramp(g, uLabL), b = ramp(g, uLabR);
+      vec3 lab = mix(a, b, share);
+      float ch = mix(length(a.yz), length(b.yz), share);
+      if (length(lab.yz) > 1e-4) lab.yz = normalize(lab.yz) * ch;
+      lab *= rampL(L) / max(lab.x, 1e-5);
+      vec3 col = max(labLin(lab), 0.0) + (uToneR * wide.r + uToneL * wide.g) * 0.08 / (1.0 + pow(up / 70.0, 2.0));
+      o = vec4(enc(min(col, vec3(1.0))) + (hash(gl_FragCoord.xy) - 0.5) / 255.0, 1.0);
+    }`;
+  /* the field onto the screen, with the player's grid under its light */
+  const SCREEN_FS = `#version 300 es
+    precision highp float;
+    uniform sampler2D uTex; uniform vec2 uSize; uniform float uDpr;
+    uniform float uW, uLeft, uBW; uniform vec3 uLane, uGrid, uGrid2;
+    uniform int uNBar, uNBeat; uniform float uBar[64]; uniform float uBeat[64];
+    out vec4 o;
+    vec3 dec(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
+    vec3 enc(vec3 c) { return mix(c * 12.92, 1.055 * pow(max(c, 0.0), vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
+    void main() {
+      vec3 col = dec(texture(uTex, gl_FragCoord.xy / uSize).rgb);
+      vec2 px = vec2(gl_FragCoord.x, uSize.y - gl_FragCoord.y) / uDpr;
+      /* u: position in white keys, which run A B C D E F G from index 0; b: the nearest boundary
+         between two; only B and E have no black key after them */
+      float u = px.x / uW + uLeft, b = floor(u + 0.5), j = mod(b - 1.0, 7.0), jb = mod(b, 7.0);
+      vec3 g = vec3(0.0);
+      if (abs(j - 1.0) > 0.5 && abs(j - 4.0) > 0.5 && abs(u - b) * uW < uBW * 0.5) g = uLane;
+      float lx = floor((b - uLeft) * uW + 0.5);
+      if (px.x >= lx && px.x < lx + 1.0) { if (abs(jb - 2.0) < 0.5) g = max(g, uGrid2); else if (abs(jb - 5.0) < 0.5) g = max(g, uGrid); }
+      for (int i = 0; i < 64; i++) { if (i >= uNBeat) break; if (px.y >= uBeat[i] && px.y < uBeat[i] + 1.0) g = max(g, uGrid); }
+      for (int i = 0; i < 64; i++) { if (i >= uNBar) break; if (px.y >= uBar[i] && px.y < uBar[i] + 1.0) g = max(g, uGrid2); }
+      o = vec4(enc(col + g), 1.0);
+    }`;
+  const NOTE_VS = `#version 300 es
+    layout(location = 0) in vec2 aCorner; layout(location = 1) in vec4 iRect; layout(location = 2) in vec4 iA; layout(location = 3) in vec4 iB; layout(location = 4) in vec2 iParm;
+    uniform vec2 uRes;
+    out vec2 vP; out vec2 vHalf; out vec4 vA; out vec4 vB; out vec2 vParm;
+    void main() {
+      vec2 size = iRect.zw + 2.0, px = iRect.xy - 1.0 + aCorner * size;
+      vP = (aCorner - 0.5) * size; vHalf = iRect.zw * 0.5; vA = iA; vB = iB; vParm = iParm;
+      gl_Position = vec4(px.x / uRes.x * 2.0 - 1.0, 1.0 - px.y / uRes.y * 2.0, 0.0, 1.0);
+    }`;
+  /* a note: a tinted slab of glass lit through its edges. What lies behind shows through, bent toward
+     the middle near the edges as a thick pane bends it; the tint is deep, so the slab is its hand's
+     colour even over black; the light is in the rim, a hairline fading inward within a few pixels,
+     and at the foot where the note begins. vA: tint, and how deep (notes on black keys sit a little
+     deeper); vB: rim colour; vParm: corner radius, sounding now */
+  const NOTE_FS = `#version 300 es
+    precision highp float;
+    in vec2 vP; in vec2 vHalf; in vec4 vA; in vec4 vB; in vec2 vParm;
+    uniform float uDpr; uniform sampler2D uBg; uniform vec2 uSize;
+    out vec4 o;
+    ${COMMON}
+    float box(vec2 p, vec2 b, float r) { vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
+    void main() {
+      float d = box(vP, vHalf, min(vParm.x, min(vHalf.x, vHalf.y)));
+      float cov = clamp(0.5 - d * uDpr, 0.0, 1.0), hot = vParm.y, inner = max(-d, 0.0), fromFoot = vHalf.y - vP.y;
+      vec2 gr = vec2(dFdx(d), dFdy(d));
+      vec2 nrm = length(gr) > 1e-5 ? normalize(gr) : vec2(0.0);
+      vec3 behind = pow(texture(uBg, (gl_FragCoord.xy - nrm * 11.0 * exp(-inner / 3.5) * uDpr) / uSize).rgb, vec3(2.2));
+      vec3 tone = pow(vA.rgb, vec3(2.2)), lite = pow(vB.rgb, vec3(2.2));
+      vec3 col = tone * (0.24 + 0.26 * hot) * vA.a;
+      col += behind * mix(vec3(1.0), tone * 1.6, 0.5) * 1.5;
+      col += lite * (exp(-inner / 0.8) * 0.85 + exp(-inner / 4.0) * (0.2 + 0.2 * hot));
+      col += lite * exp(-fromFoot / 4.0) * (0.35 + 0.3 * hot);
+      o = vec4((enc(col) + (hash(gl_FragCoord.xy) - 0.5) * 0.012) * cov, cov);
+    }`;
+
+  /* ------------------------------------------------------------------ WebGL */
+  let gl = null, glc = null, failed = false, lost = false;
+  let fieldP, screenP, noteP, UF, US, UN, quadVao, noteVao, instBuf, fbo, fieldTex, heatTex;
+  const heatPx = new Uint8Array(HEAT_N * HEAT_ROWS * 4);
+  function compile(vs, fs) {
+    const p = gl.createProgram();
+    for (const [type, src] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]]) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      gl.attachShader(p, s);
+    }
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    return p;
+  }
+  const uni = (p, names) => Object.fromEntries(names.map((n) => [n, gl.getUniformLocation(p, n)]));
+  function texture(w, h, data) {
+    const t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+    return t;
+  }
+  function init() {
+    glc = document.createElement('canvas');
+    /* a lost context draws the flat roll until it is given back; then everything is made again */
+    glc.addEventListener('webglcontextlost', (e) => { e.preventDefault(); gl = null; lost = true; });
+    glc.addEventListener('webglcontextrestored', () => { lost = false; });
+    gl = glc.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: true });
+    if (!gl) throw new Error('no WebGL 2');
+    fieldP = compile(QUAD_VS, FIELD_FS); screenP = compile(QUAD_VS, SCREEN_FS); noteP = compile(NOTE_VS, NOTE_FS);
+    UF = uni(fieldP, ['uRes', 'uScale', 'uT', 'uDrift', 'uN', 'uNote', 'uHand', 'uLabR', 'uLabL', 'uToneR', 'uToneL', 'uHeat']);
+    US = uni(screenP, ['uTex', 'uSize', 'uDpr', 'uW', 'uLeft', 'uBW', 'uLane', 'uGrid', 'uGrid2', 'uNBar', 'uNBeat', 'uBar', 'uBeat']);
+    UN = uni(noteP, ['uRes', 'uDpr', 'uBg', 'uSize']);
+    quadVao = gl.createVertexArray(); gl.bindVertexArray(quadVao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    /* a note instance: rect (4), tint and depth (4), rim colour (3, and a spare), radius and hot (2) */
+    noteVao = gl.createVertexArray(); gl.bindVertexArray(noteVao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    instBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, instBuf);
+    [[1, 4, 0], [2, 4, 16], [3, 4, 32], [4, 2, 48]].forEach(([loc, size, off]) => { gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 56, off); gl.vertexAttribDivisor(loc, 1); });
+    gl.bindVertexArray(null);
+    heatTex = texture(HEAT_N, HEAT_ROWS, heatPx);
+    fieldTex = texture(1, 1, null);
+    fbo = gl.createFramebuffer();
+  }
+
+  /* one pass of a running box blur; three in a row come close to a Gaussian */
+  const blurA = new Float32Array(HEAT_N), blurB = new Float32Array(HEAT_N);
+  function boxPass(src, dst, r) {
+    const n = src.length;
+    let acc = 0;
+    for (let k = -r; k <= r; k++) acc += src[clamp(k, 0, n - 1)];
+    for (let i = 0; i < n; i++) { dst[i] = acc / (2 * r + 1); acc += src[Math.min(n - 1, i + r + 1)] - src[Math.max(0, i - r)]; }
+  }
+  const gridLin = new Map();
+  const gridColour = (hex) => { if (!gridLin.has(hex)) gridLin.set(hex, new Float32Array(hexLin(hex))); return gridLin.get(hex); };
+  const clock = () => (STILL ? 12 : performance.now() / 1000);
+
+  /* ------------------------------------------------------------------ the roll */
+  function roll(env, disp, live) {
+    if (failed || lost) return false;
+    if (!gl) {
+      try { init(); } catch (e) {
+        failed = true;
+        if (e.message !== 'no WebGL 2') console.error('roll-gl:', e);   // a browser without it simply keeps the flat roll
+        return false;
+      }
+    }
+    const { S, G, R, rc: c, theme, BLACK_W, EPS, keyX, el } = env;
+    const w = R.w, h = R.h, pps = S.pps, sc = S.score, W = G.W, left = G.left, bw = W * BLACK_W;
+    const cw = el.roll.width, chh = el.roll.height, dpr = cw / w;
+    const hands = colours(env).hand, T = clock();
+    if (glc.width !== cw || glc.height !== chh) { glc.width = cw; glc.height = chh; }
+
+    const inst = [], fieldNotes = [], names = [], labels = [], bars = [], beats = [];
+    const heat = [new Float32Array(HEAT_N), new Float32Array(HEAT_N)];
+    let barObscured = false, clockObscured = false;
+    if (sc) {
+      const Y = (t) => h - (t - disp) * pps, tTop = disp + h / pps;
+      /* the time grid: bar lines with their numbers, beat lines when they are 14 px apart */
+      for (let oi = sc.measureAt(Math.max(0, disp)); oi < sc.measures.length; oi++) {
+        const o = sc.measures[oi];
+        if (o.t > tTop) break;
+        const tEnd = oi + 1 < sc.measures.length ? sc.measures[oi + 1].t : sc.duration;
+        const unit = env.beatUnit(o.time), nb = Math.max(1, Math.round(o.lenQ / unit));
+        if (((tEnd - o.t) / nb) * pps >= 14) {
+          for (let k = 1; k < nb; k++) { const y = Math.round(Y(sc.beatToSec(o.beat + k * unit))); if (y >= 0 && y <= h && beats.length < 64) beats.push(y); }
+        }
+        const y = Math.round(Y(o.t));
+        if (y >= 0 && y <= h && bars.length < 64) { bars.push(y); labels.push([o.number, y]); }
+      }
+      /* the notes: white-key notes first, black-key notes over them */
+      const notes = sc.notes, inset = Math.min(1.5, W * 0.07);
+      const [bar, clk] = env.progressBounds.roll;
+      for (let pass = 0; pass < 2; pass++) {
+        for (let i = env.lowerT0(disp - sc.maxDur - EPS); i < notes.length && notes[i].t0 < tTop; i++) {
+          const n = notes[i];
+          if (n.t1 < disp || !env.handOK(n)) continue;
+          const black = FB.isBlack(n.midi);
+          if (black !== (pass === 1)) continue;
+          const x = keyX(n.midi) + (black ? 0 : inset), bwid = black ? bw : W - inset * 2;
+          if (x > w || x + bwid < 0) continue;
+          const y1 = Y(n.t0), bh = Math.max(4, y1 - Y(n.t1) - 1.5);
+          if (!barObscured && y1 > bar.top && y1 - bh < bar.bottom && x < bar.right && x + bwid > bar.left) barObscured = true;
+          if (!clockObscured && y1 > clk.top && y1 - bh < clk.bottom && x < clk.right && x + bwid > clk.left) clockObscured = true;
+          const hot = n.t0 <= live + EPS && n.t1 > live + EPS, hc = hands[n.hand];
+          inst.push(x, y1 - bh, bwid, bh, hc.note[0], hc.note[1], hc.note[2], black ? 0.88 : 1, hc.rim[0], hc.rim[1], hc.rim[2], 0, Math.min(6, bwid * 0.32), hot ? 1 : 0);
+          if (y1 - bh < h) fieldNotes.push([x, y1 - bh, bwid, Math.min(bh, h - (y1 - bh)), n.hand, y1]);
+          if (bwid >= 14 && bh >= 22) names.push([n.name, x + bwid / 2, Math.min(y1, hot ? h : y1) - 8]);
+        }
+      }
+      /* the heat strip: how long each key has sounded, on a logarithm so it never grows without end,
+         cooling in a third of a second; worked out from the score's times, so it is the same at any
+         frame rate */
+      const full = Math.log1p(18);
+      for (let i = env.lowerT0(live - sc.maxDur - 2); i < notes.length && notes[i].t0 <= live + EPS; i++) {
+        const n = notes[i];
+        if (!env.handOK(n) || n.t1 < live - 1.5) continue;
+        const sounding = n.t1 > live;
+        const v = Math.min(1, Math.log1p(6 * ((sounding ? live : n.t1) - n.t0)) / full) * (sounding ? 1 : Math.exp(-(live - n.t1) / 0.33));
+        const x = keyX(n.midi), kw = FB.isBlack(n.midi) ? bw : W;
+        const a = Math.max(0, Math.floor((x / w) * HEAT_N)), b = Math.min(HEAT_N - 1, Math.ceil(((x + kw) / w) * HEAT_N));
+        for (let k = a; k <= b; k++) heat[n.hand][k] = Math.max(heat[n.hand][k], v);
+      }
+    }
+    /* row 0: the strip, barely softened; row r: as wide as the bloom is r * 40 px above the keys,
+       so the shader reads the bloom in one sample (spaced taps striped it at key width) */
+    for (let row = 0; row < HEAT_ROWS; row++) {
+      const sigma = row === 0 ? 0.7 : ((3.8 + 0.23 * row * HEAT_STEP) * HEAT_N) / w;
+      const r = Math.max(1, Math.round((Math.sqrt(4 * sigma * sigma + 1) - 1) / 2));
+      for (let hand = 0; hand < 2; hand++) {
+        boxPass(heat[hand], blurA, r); boxPass(blurA, blurB, r); boxPass(blurB, blurA, r);
+        for (let k = 0; k < HEAT_N; k++) heatPx[(row * HEAT_N + k) * 4 + hand] = Math.round(Math.min(1, blurA[k]) * 255);
+      }
+      for (let k = 0; k < HEAT_N; k++) heatPx[(row * HEAT_N + k) * 4 + 3] = 255;
+    }
+
+    /* 1. the field */
+    const fw = Math.max(1, Math.round(cw * FIELD_RES)), fh = Math.max(1, Math.round(chh * FIELD_RES));
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fieldTex);
+    if (fieldTex.w !== fw || fieldTex.h !== fh) { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, fw, fh, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); fieldTex.w = fw; fieldTex.h = fh; }
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, heatTex);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, HEAT_N, HEAT_ROWS, gl.RGBA, gl.UNSIGNED_BYTE, heatPx);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fieldTex, 0);
+    gl.viewport(0, 0, fw, fh); gl.disable(gl.BLEND);
+    gl.useProgram(fieldP);
+    fieldNotes.sort((p, q) => q[5] - p[5]);   // the notes nearest the keys: further up the field is too faint to matter
+    const fn = fieldNotes.slice(0, NOTES), rects = new Float32Array(NOTES * 4), handOf = new Float32Array(NOTES);
+    fn.forEach((r, i) => { rects.set(r.slice(0, 4), i * 4); handOf[i] = r[4]; });
+    gl.uniform2f(UF.uRes, w, h); gl.uniform2f(UF.uScale, fw / w, fh / h);
+    gl.uniform1f(UF.uT, T); gl.uniform1f(UF.uDrift, T * 40);   // 40 px a second, up
+    gl.uniform1i(UF.uN, fn.length); gl.uniform4fv(UF.uNote, rects); gl.uniform1fv(UF.uHand, handOf);
+    gl.uniform3fv(UF.uLabR, hands[0].lab); gl.uniform3fv(UF.uLabL, hands[1].lab);
+    gl.uniform3fv(UF.uToneR, hands[0].lin); gl.uniform3fv(UF.uToneL, hands[1].lin);
+    gl.uniform1i(UF.uHeat, 1);
+    gl.bindVertexArray(quadVao); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    /* 2. onto the screen, with the grid */
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, cw, chh);
+    gl.useProgram(screenP);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fieldTex);
+    gl.uniform1i(US.uTex, 0); gl.uniform2f(US.uSize, cw, chh); gl.uniform1f(US.uDpr, dpr);
+    gl.uniform1f(US.uW, W); gl.uniform1f(US.uLeft, left); gl.uniform1f(US.uBW, bw);
+    gl.uniform3fv(US.uLane, gridColour(theme.lane)); gl.uniform3fv(US.uGrid, gridColour(theme.grid)); gl.uniform3fv(US.uGrid2, gridColour(theme['grid-2']));
+    gl.uniform1i(US.uNBar, bars.length); gl.uniform1i(US.uNBeat, beats.length);
+    if (bars.length) gl.uniform1fv(US.uBar, new Float32Array(bars));
+    if (beats.length) gl.uniform1fv(US.uBeat, new Float32Array(beats));
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    /* 3. the notes */
+    if (inst.length) {
+      gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.useProgram(noteP);
+      gl.uniform2f(UN.uRes, w, h); gl.uniform1f(UN.uDpr, dpr); gl.uniform1i(UN.uBg, 0); gl.uniform2f(UN.uSize, cw, chh);
+      gl.bindVertexArray(noteVao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, instBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(inst), gl.DYNAMIC_DRAW);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, inst.length / 14);
+    }
+    gl.bindVertexArray(null);
+
+    /* onto the roll canvas (the glass reads it), then the lettering, as the player has it */
+    c.drawImage(glc, 0, 0, w, h);
+    const { UI_FONT } = env;
+    c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    c.font = `700 ${clamp(W * 0.46, 8.5, 11.5)}px ${UI_FONT}`;
+    c.fillStyle = 'rgba(255,255,255,0.86)';
+    for (const [name, x, y] of names) c.fillText(name, x, y);
+    el.barReadout.classList.toggle('is-obscured', barObscured);
+    el.clock.classList.toggle('is-obscured', clockObscured);
+    c.font = `600 11px ${UI_FONT}`; c.textAlign = 'left'; c.textBaseline = 'bottom';
+    c.fillStyle = theme['grid-ink'];
+    for (const [num, y] of labels) {
+      if (y <= 16) continue;
+      c.globalAlpha = clamp((h - y - 26) / 42, 0, 1);   // fade before the playback readouts
+      if (c.globalAlpha > 0) c.fillText(num, 7, y - 3);
+    }
+    c.globalAlpha = 1;
+    /* the playback line, shown when the view has been scrolled away from it */
+    if (S.viewT !== null && sc) {
+      const y = Math.round(h - (live - disp) * pps);
+      if (y >= -2 && y <= h + 2) {
+        c.fillStyle = theme.now;
+        c.fillRect(0, y - 1, w, 2);
+        c.beginPath(); c.moveTo(0, y - 6); c.lineTo(8, y); c.lineTo(0, y + 6); c.closePath(); c.fill();
+      }
+    }
+    return true;
+  }
+
+  /* ------------------------------------------------------------------ the keys
+     A struck key's colour down its length follows the roll's own formula with the note's distance
+     measured from where it lands (1 at the key's full length): g = smootherstep(v / (v + 2)),
+     v = 1 / (y / length + 0.1)^4. On a white key it is laid over the key, turning toward the rim
+     colour where g passes 0.5 and fading out through its alpha (g^(1/4)); on a black key it is
+     opaque, deepening below 0.5. The gradients depend only on the key's length and hand, so they
+     are made once and reused. */
+  let keyCache = null;
+  /* the colour at g on a struck key: [linear rgb, alpha] */
+  function keyColour(g, black, hc) {
+    const toRim = 1 - Math.pow(1 - clamp(2 * g - 1, 0, 1), 0.25);
+    if (!black) return [mix(hc.key, hc.keyRim, toRim), Math.pow(g, 0.25)];
+    return [g >= 0.5 ? mix(hc.key, hc.keyRim, toRim) : mix(hc.keyDeep, hc.key, Math.pow(2 * g, 0.25)), 1];
+  }
+  function keyGradient(c, len, keyLen, black, hc, deepen) {
+    const grad = c.createLinearGradient(0, 0, 0, len);
+    for (let i = 0; i <= 12; i++) {
+      const s = black ? i / 12 : (i / 12) ** 2, v = 1 / Math.pow((s * len) / keyLen + 0.1, 4);
+      let g = clamp(v / (v + 2), 0, 1);
+      g = g * g * g * (g * (g * 6 - 15) + 10);
+      const [rgb, a] = keyColour(g, black, hc);
+      grad.addColorStop(s, css(deepen ? mix(rgb, [0, 0, 0], deepen) : rgb, a));
+    }
+    return grad;
+  }
+  function keys(env, held) {
+    const { S, G, kc: c, WHITE_MIDI, N_WHITE, BLACK_H, BLACK_W, keyX, pressed, rr, UI_FONT, EPS } = env;
+    const w = G.width, h = G.height, W = G.W, left = G.left, bw = W * BLACK_W;
+    const hands = colours(env).hand, hair = w > 0 ? w / c.canvas.width : 1;
+    const bh = Math.round(h * BLACK_H);
+    if (!keyCache || keyCache.h !== h || keyCache.bh !== bh) {
+      keyCache = { h, bh, white: [], body: [], face: [] };
+      hands.forEach((hc, i) => {
+        keyCache.white[i] = keyGradient(c, h, h, false, hc, 0);
+        keyCache.body[i] = keyGradient(c, bh, h, true, hc, 0.42);
+        keyCache.face[i] = keyGradient(c, bh, h, true, hc, 0);
+      });
+    }
+    /* which keys give light: those sounding, fully, and those whose note ended within the release */
+    const lit = new Map();
+    for (const [m, hand] of held) lit.set(m, [hand, 1]);
+    if (S.score && RELEASE > 0) {
+      const t = env.now(), notes = S.score.notes;
+      for (let i = env.lowerT0(t - S.score.maxDur - RELEASE - EPS); i < notes.length && notes[i].t0 <= t + EPS; i++) {
+        const n = notes[i];
+        if (lit.has(n.midi) || !env.handOK(n)) continue;
+        const end = S.playing ? n.t1 - Math.min(0.035, (n.t1 - n.t0) * 0.25) : n.t1 - EPS;
+        if (end <= t && t < end + RELEASE) lit.set(n.midi, [n.hand, 1 - (t - end) / RELEASE]);
+      }
+    }
+    c.clearRect(0, 0, w, h);
+    const i0 = clamp(Math.floor(left), 0, N_WHITE - 1), i1 = clamp(Math.ceil(left + w / W), 0, N_WHITE - 1);
+    /* the seams between the keys */
+    c.fillStyle = '#d4d4d4'; c.fillRect(0, 0, w, h);
+    const grad = (a, b, cc) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, a); g.addColorStop(0.88, b); g.addColorStop(1, cc); return g; };
+    const ivory = grad('#fdfdfd', '#f4f4f4', '#e6e6e6'), ivoryDown = grad('#f1f1f1', '#e7e7e7', '#dadada');
+    const rad = Math.min(3, W * 0.18);
+    const whitePath = (x) => rr(c, x + hair, -4, W - hair, h + 4 - hair, 0, rad);
+    c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    for (let i = i0; i <= i1; i++) {
+      const m = WHITE_MIDI[i], x = (i - left) * W;
+      c.fillStyle = pressed.has(m) && !lit.has(m) ? ivoryDown : ivory;
+      whitePath(x); c.fill();
+      if (m % 12 === 0 && W >= 11) {
+        const oct = FB.midiOctave(m);
+        c.font = `${oct === 4 ? 650 : 550} ${W < 16 ? 8 : 9.5}px ${UI_FONT}`;
+        c.fillStyle = oct === 4 ? '#8a8a8a' : '#a8a8a8';
+        c.fillText((W < 15 ? '' : 'C') + oct, x + W / 2, h - 6);
+      }
+    }
+    /* the fallboard's shadow, then the light on the struck white keys over it */
+    const sh = c.createLinearGradient(0, 0, 0, 9);
+    sh.addColorStop(0, 'rgba(0,0,0,0.16)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = sh; c.fillRect(0, 0, w, 9);
+    for (let i = i0; i <= i1; i++) {
+      const k = lit.get(WHITE_MIDI[i]);
+      if (!k) continue;
+      c.globalAlpha = k[1]; c.fillStyle = keyCache.white[k[0]];
+      whitePath((i - left) * W); c.fill();
+    }
+    c.globalAlpha = 1;
+    /* the black keys: a soft shadow on the white keys, a dark top face lifting a little toward the
+       front, a hairline where it meets the front slope */
+    const side = Math.min(1.4, bw * 0.12), dpr = c.canvas.width / Math.max(1, w);
+    const body = c.createLinearGradient(0, 0, 0, bh); body.addColorStop(0, '#1d1d1d'); body.addColorStop(1, '#101010');
+    const mLo = WHITE_MIDI[i0], mHi = WHITE_MIDI[i1];
+    for (let m = Math.max(22, mLo - 1); m <= Math.min(106, mHi + 1); m++) {
+      if (!FB.isBlack(m)) continue;
+      const x = keyX(m), k = lit.get(m), down = !!k || pressed.has(m);
+      const slope = clamp(bh * 0.09, 3, 6) * (down ? 0.6 : 1);
+      c.save();
+      c.shadowColor = 'rgba(0,0,0,0.32)'; c.shadowBlur = 3.5 * dpr; c.shadowOffsetY = 1.2 * dpr;
+      c.fillStyle = body; rr(c, x, -4, bw, bh + 4, 0, 2); c.fill();
+      c.restore();
+      const face = c.createLinearGradient(0, 0, 0, bh - slope);
+      face.addColorStop(0, '#202020'); face.addColorStop(0.75, pressed.has(m) ? '#2e2e2e' : '#262626'); face.addColorStop(1, '#303030');
+      c.fillStyle = face; rr(c, x + side, -4, bw - side * 2, bh - slope + 4, 0, 1.5); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.10)'; c.fillRect(x + side, bh - slope - hair, bw - side * 2, hair);
+      if (k) {
+        /* struck: a cap of the hand's colour, its sides a deeper shade; going dark through its
+           opacity after release */
+        c.globalAlpha = k[1] * k[1];
+        c.fillStyle = keyCache.body[k[0]]; rr(c, x, -4, bw, bh + 4, 0, 2); c.fill();
+        c.fillStyle = keyCache.face[k[0]]; rr(c, x + side, -4, bw - side * 2, bh - slope + 4, 0, 1.5); c.fill();
+        c.globalAlpha = 1;
+      }
+    }
+    return true;
+  }
+
+  FB.rollGL = {
+    roll, keys,
+    /* the field moves on its own (the noise), so the roll wants frames while it shows */
+    get moving() { return !STILL && !failed && !lost && !!gl; },
+  };
+})();
