@@ -92,11 +92,12 @@
     --press-grow: 2px; /* how much a pressed control grows on its longer side */
     --seg-margin: 12px; /* the least room either side of a tab bar's label */
 
-    /* the library: large titles and section headings, text fields (16 px: iOS zooms into
-       anything smaller), the radius of its flat surfaces (cards, composer tiles), the width of its
-       content, and a card on a shelf */
+    /* the library: large titles and section headings, a piece's name on its card, text fields
+       (16 px: iOS zooms into anything smaller), the radius of its flat surfaces (cards, composer
+       tiles), the width of its content, and a card on a shelf */
     --fs-title: 32px;
     --fs-h: 20px;
+    --fs-card: 18px;
     --fs-field: 16px;
     --r-card: 18px;
     --content-max: 720px;    /* the library's column stops growing here (see .library) */
@@ -647,7 +648,7 @@
   .card .roll { position: absolute; inset: 0; z-index: -1; display: block; width: 100%; height: 100%; mix-blend-mode: screen; mix-blend-mode: plus-lighter; }
   .card .roll.whole { mix-blend-mode: normal; }   /* drawn with its cover (js/roll-gl.js thumb) */
   .card .title {
-    position: absolute; top: 0; left: 0; right: 0; padding: 12px 12px 0; font-size: var(--fs-m); font-weight: 600; line-height: 1.25;
+    position: absolute; top: 0; left: 0; right: 0; padding: 14px 14px 0; font-size: var(--fs-card); font-weight: 650; line-height: 1.2; letter-spacing: -0.01em;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
   .card-item .by { padding-inline: 2px; font-size: var(--fs-s); color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
