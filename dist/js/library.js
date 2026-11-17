@@ -1918,10 +1918,12 @@
     requestAnimationFrame(pinCheck);
     kick(600);
   }
-  /* open where it was left (home shows the latest recents each time), one history entry per step */
+  /* open on the library's home, whatever page it was left on: one history entry, so back from it
+     returns to the player */
   function open() {
     if (L.open) return;
-    L.stack.forEach((s, i) => history.pushState(entry(L.stack.slice(0, i + 1)), '', urlOf(s)));
+    L.stack = [{ view: 'home' }];
+    history.pushState(entry(L.stack), '', urlOf(L.stack[0]));
     present();
     show(true);
   }
