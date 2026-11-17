@@ -1433,7 +1433,10 @@
   function dimShelf(shelf) {
     const cs = getComputedStyle(shelf), padL = parseFloat(cs.paddingLeft) || 0, padR = parseFloat(cs.paddingRight) || 0;
     const wide = padL > 40, c = parseFloat(cs.getPropertyValue('--card-w')) || 1;
-    shelf._dim = { padL, c, lo: wide ? padL : 0, hi: shelf.clientWidth - (wide ? padR : 0), half: wide ? c + CARD_GAP : c * 0.75 };
+    /* the edges' fade: over the margins once the column has stopped growing, else over where a
+       quarter card shows at a side */
+    const spanL = wide ? padL : c / 4 + CARD_GAP, spanR = wide ? padR : c / 4 + CARD_GAP;
+    shelf._dim = { padL, c, lo: wide ? padL : 0, hi: shelf.clientWidth - (wide ? padR : 0), half: wide ? c + CARD_GAP : c * 0.75, spanL, spanR, kl: 0, kr: 0 };
     if (!shelf._dimming) {
       shelf._dimming = true;
       let queued = false;
@@ -1449,6 +1452,19 @@
       const o = Math.max(0, 1 - (0.5 * out) / d.half);
       item.style.opacity = o > 0.999 ? '' : o.toFixed(3);
     });
+    /* And over that, each edge fades: how much shows falls as the square of the way to the
+       screen's edge, to half there. A side fades as far as there is more to scroll that way,
+       fully once that is its whole span, so at rest the first card is left as it is, and the
+       last at the end */
+    const more = Math.max(0, shelf.scrollWidth - shelf.clientWidth - sx);
+    d.kl = Math.min(1, sx / d.spanL);
+    d.kr = Math.min(1, more / d.spanR);
+    const stops = [];
+    for (let i = 0; i <= 8; i++) { const t = i / 8, e = 1 - t; stops.push(`rgb(0 0 0 / ${(1 - d.kl * 0.5 * e * e).toFixed(3)}) ${(t * d.spanL).toFixed(1)}px`); }
+    for (let i = 0; i <= 8; i++) { const t = i / 8; stops.push(`rgb(0 0 0 / ${(1 - d.kr * 0.5 * t * t).toFixed(3)}) calc(100% - ${((1 - t) * d.spanR).toFixed(1)}px)`); }
+    const mask = d.kl || d.kr ? `linear-gradient(to right, ${stops.join(', ')})` : '';
+    shelf.style.webkitMaskImage = mask;
+    shelf.style.maskImage = mask;
   }
   TOUCH.addEventListener('change', () => { if (L.open && L.data) render(false); });
   for (const b of el.scopes.querySelectorAll('button')) b.addEventListener('click', () => setTab(b.dataset.tab));
@@ -1617,7 +1633,8 @@
       it.dim = n.closest('.shelf .card-item');                          // dimmed as it leaves view (dimShelf)
       list.push(it);
     }
-    return { scope, list };
+    const shelves = [...scope.querySelectorAll('.shelf:not(.fitted)')].map((sh) => { const r = sh.getBoundingClientRect(); return { sh, y: r.top - root.top + vy, h: r.height }; });
+    return { scope, list, shelves };
   }
   /* what it takes to draw a node, read the first time it is drawn: most never come near the glass */
   function styleOf(it) {
@@ -1688,6 +1705,18 @@
       ctx.restore();
     }
     ctx.globalAlpha = 1;
+    /* a shelf's edges fade (dimShelf): on the black page, black over them */
+    for (const sf of paintables.shelves) {
+      const d = sf.sh._dim, y = sf.y - vy;
+      if (!d || (!d.kl && !d.kr) || y > root.height || y + sf.h < 0) continue;
+      for (const [x0, x1, k] of [[0, d.spanL, d.kl], [root.width, root.width - d.spanR, d.kr]]) {
+        if (!k) continue;
+        const g = ctx.createLinearGradient(x0, 0, x1, 0);
+        for (let i = 0; i <= 8; i++) { const e = 1 - i / 8; g.addColorStop(i / 8, 'rgba(0,0,0,' + (k * 0.5 * e * e).toFixed(3) + ')'); }
+        ctx.fillStyle = g;
+        ctx.fillRect(Math.min(x0, x1), y, Math.abs(x1 - x0), sf.h);
+      }
+    }
     /* black from `black` to `clear`, through the given stops ([position 0-1, how much shows]), as
        the CSS masks and covers do */
     const fade = (black, clear, fromTop, stops = [], floor = 0) => {

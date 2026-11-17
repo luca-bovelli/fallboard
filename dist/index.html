@@ -625,8 +625,8 @@
      the left (--snap-l, library.js fitShelves), and the cards are sized so a quarter of a card
      then shows at each side: whole cards between two quarters, so you can see there is more
      either way. Once the column stops growing, whole cards fill it and the shelf runs on across
-     the margins to the screen's edges. A card dims as it leaves view, by how far it has gone
-     (library.js dimShelf) */
+     the margins to the screen's edges. A card dims as it leaves view, by how far it has gone,
+     and the edges fade over that, to half at the screen's edge (library.js dimShelf) */
   .shelf {
     display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory;
     margin-inline: calc(-1 * var(--bleed-l)) calc(-1 * var(--bleed-r)); padding-inline: var(--bleed-l) var(--bleed-r);
