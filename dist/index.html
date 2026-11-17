@@ -626,13 +626,22 @@
      then shows at each side: whole cards between two quarters, so you can see there is more
      either way. Once the column stops growing, whole cards fill it and the shelf runs on across
      the margins to the screen's edges. A card dims as it leaves view, by how far it has gone,
-     and the edges fade over that, to half at the screen's edge (library.js dimShelf) */
+     and the edges fade over that, to half at the screen's edge (below; library.js dimShelf) */
   .shelf {
     display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory;
     margin-inline: calc(-1 * var(--bleed-l)) calc(-1 * var(--bleed-r)); padding-inline: var(--bleed-l) var(--bleed-r);
     scroll-padding-inline: var(--snap-l, var(--bleed-l)) var(--bleed-r); scrollbar-width: none; touch-action: pan-x pan-y;
   }
   .shelf::-webkit-scrollbar { display: none; }
+  /* the shelf's dimming and edges (library.js dimShelf): each card's opacity an animation on its
+     place in the shelf (a view timeline), and two black layers beside the shelf, how dark falling
+     as the square of the way in from the screen's edge, to half there */
+  .shelf .card-item { will-change: opacity; }
+  .shelf.timed .card-item { animation: var(--dim) linear both; animation-timeline: view(x 0px); }
+  .shelf-wrap { position: relative; }
+  .shelf-edge { position: absolute; z-index: 1; opacity: 0; pointer-events: none; will-change: opacity; }
+  .shelf-edge.l { background: linear-gradient(to right, rgb(0 0 0 / 0.5000) 0.0%, rgb(0 0 0 / 0.3828) 12.5%, rgb(0 0 0 / 0.2813) 25.0%, rgb(0 0 0 / 0.1953) 37.5%, rgb(0 0 0 / 0.1250) 50.0%, rgb(0 0 0 / 0.0703) 62.5%, rgb(0 0 0 / 0.0313) 75.0%, rgb(0 0 0 / 0.0078) 87.5%, rgb(0 0 0 / 0.0000) 100.0%); }
+  .shelf-edge.r { background: linear-gradient(to left, rgb(0 0 0 / 0.5000) 0.0%, rgb(0 0 0 / 0.3828) 12.5%, rgb(0 0 0 / 0.2813) 25.0%, rgb(0 0 0 / 0.1953) 37.5%, rgb(0 0 0 / 0.1250) 50.0%, rgb(0 0 0 / 0.0703) 62.5%, rgb(0 0 0 / 0.0313) 75.0%, rgb(0 0 0 / 0.0078) 87.5%, rgb(0 0 0 / 0.0000) 100.0%); }
   .shelf .card-item { scroll-snap-align: start; }
   .shelf .card-item:last-child { scroll-snap-align: end; }
   @media (min-width: 872px) {

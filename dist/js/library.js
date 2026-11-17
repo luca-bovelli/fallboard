@@ -801,7 +801,11 @@
            column (fitShelves sizes both) */
         const shelf = make('div', TOUCH.matches ? 'shelf' : 'shelf fitted');
         for (const r of recent.slice(0, HOME_RECENTS)) shelf.appendChild(card(r));
-        s.appendChild(shelf);
+        /* a swiping shelf's edges fade under two black layers that stay put beside it (dimShelf) */
+        const wrap = make('div', 'shelf-wrap');
+        wrap.appendChild(shelf);
+        if (TOUCH.matches) for (const side of ['l', 'r']) { const e = make('i', 'shelf-edge ' + side); e.setAttribute('aria-hidden', 'true'); wrap.appendChild(e); }
+        s.appendChild(wrap);
       }
       /* Explore's heading scrolls up under the top bar, where it becomes the small title; its
          tabs pin beneath the bar, and the list runs on under them. The mark holds the tabs'
@@ -1429,15 +1433,54 @@
      quarters of a card (a card stopped at the side shows a quarter); once the column has stopped
      growing, past the column's edge, half one card and a gap out (the first stop in the margin).
      It dims as the square of that distance, so slowly as it starts to leave and faster as it
-     goes, on past half to nothing. A card in full view is not dimmed at all. Positions come from the scroll alone: the
-     cards are all one width, a gap apart */
+     goes, on past half to nothing. A card in full view is not dimmed at all.
+
+     The browser runs it, as an animation whose time is the card's place in the shelf (CSS
+     scroll-driven animations: a view timeline), so it moves with the scroll itself, on the same
+     thread and in the same frame; set from a scroll handler it lagged the scroll by a frame or
+     more, unevenly, and stuttered. Its keyframes are this function sampled every 3 px of travel,
+     made once per layout. Where the browser has no view timelines the handler sets it instead.
+
+     Over that the edges fade: two black layers beside the shelf, still while it scrolls (on the
+     black page the same as fading it out, and nothing in the scrolling shelf to paint again),
+     how dark falling as the square of the way in from the screen's edge, to half there. A side
+     shows as far as there is more to scroll that way, fully once that is its whole span, so at
+     rest the first card is left as it is, and the last at the end. Over the margins once the
+     column has stopped growing, else over where a quarter card shows at a side */
+  const TIMED = !!(window.CSS && CSS.supports('animation-timeline: view(x 0px)'));
+  const dimAt = (d, x) => { const out = Math.max(0, d.lo - x, x + d.c - d.hi), u = out / d.half; return Math.max(0, 1 - 0.5 * u * u); };
+  const dimSheet = document.head.appendChild(document.createElement('style'));
+  const dimMade = new Map();
+  /* the keyframes for a layout: over the view timeline's cover range, from the card's left edge at
+     the shelf's right edge (x = P) to its right edge at the left (x = -c) */
+  function dimKeyframes(d, P) {
+    const key = [P, d.c, d.lo, d.hi, d.half].map((v) => Math.round(v * 10)).join('-');
+    if (!dimMade.has(key)) {
+      const name = 'shelf-dim-' + key, total = P + d.c, n = Math.ceil(total / 3);
+      const at = (k) => dimAt(d, P - (k / n) * total), frames = [];
+      for (let k = 0; k <= n; k++) {
+        const o = at(k);
+        if (k === 0 || k === n || o !== at(k - 1) || o !== at(k + 1)) frames.push(`${((k / n) * 100).toFixed(3)}% { opacity: ${o.toFixed(4)} }`);
+      }
+      dimSheet.textContent += `@keyframes ${name} { ${frames.join(' ')} }\n`;
+      dimMade.set(key, name);
+    }
+    return dimMade.get(key);
+  }
   function dimShelf(shelf) {
     const cs = getComputedStyle(shelf), padL = parseFloat(cs.paddingLeft) || 0, padR = parseFloat(cs.paddingRight) || 0;
     const wide = padL > 40, c = parseFloat(cs.getPropertyValue('--card-w')) || 1;
-    /* the edges' fade: over the margins once the column has stopped growing, else over where a
-       quarter card shows at a side */
     const spanL = wide ? padL : c / 4 + CARD_GAP, spanR = wide ? padR : c / 4 + CARD_GAP;
-    shelf._dim = { padL, c, lo: wide ? padL : 0, hi: shelf.clientWidth - (wide ? padR : 0), half: wide ? c + CARD_GAP : c * 0.75, spanL, spanR, kl: 0, kr: 0 };
+    const d = shelf._dim = { padL, c, lo: wide ? padL : 0, hi: shelf.clientWidth - (wide ? padR : 0), half: wide ? c + CARD_GAP : c * 0.75, spanL, spanR, kl: 0, kr: 0 };
+    if (TIMED) { shelf.classList.add('timed'); shelf.style.setProperty('--dim', dimKeyframes(d, shelf.clientWidth)); }
+    /* the edges' layers, over the shelf's own box */
+    const [el0, el1] = shelf.parentNode.querySelectorAll(':scope > .shelf-edge');
+    if (el0 && el1) {
+      for (const [e, left, w] of [[el0, shelf.offsetLeft, spanL], [el1, shelf.offsetLeft + shelf.offsetWidth - spanR, spanR]]) {
+        Object.assign(e.style, { left: left + 'px', top: shelf.offsetTop + 'px', width: w + 'px', height: shelf.offsetHeight + 'px' });
+      }
+      d.edges = [el0, el1];
+    }
     if (!shelf._dimming) {
       shelf._dimming = true;
       let queued = false;
@@ -1445,27 +1488,19 @@
     }
     dimNow(shelf);
   }
+  /* on a scroll: the edges' layers, each card's dimming for the glass scene, and the dimming
+     itself where the browser does not run it */
   function dimNow(shelf) {
     const d = shelf._dim, sx = shelf.scrollLeft;
-    [...shelf.children].forEach((item, i) => {
-      const x = d.padL + i * (d.c + CARD_GAP) - sx;
-      const out = Math.max(0, d.lo - x, x + d.c - d.hi);   // how far past the edge, in px
-      const u = out / d.half, o = Math.max(0, 1 - 0.5 * u * u);   // as the square of the distance
-      item.style.opacity = o > 0.999 ? '' : o.toFixed(3);
+    shelf.querySelectorAll(':scope > .card-item').forEach((item, i) => {
+      const o = dimAt(d, d.padL + i * (d.c + CARD_GAP) - sx);
+      item._o = o;
+      if (!TIMED) item.style.opacity = o > 0.999 ? '' : o.toFixed(3);
     });
-    /* And over that, each edge fades: how much shows falls as the square of the way to the
-       screen's edge, to half there. A side fades as far as there is more to scroll that way,
-       fully once that is its whole span, so at rest the first card is left as it is, and the
-       last at the end */
     const more = Math.max(0, shelf.scrollWidth - shelf.clientWidth - sx);
     d.kl = Math.min(1, sx / d.spanL);
     d.kr = Math.min(1, more / d.spanR);
-    const stops = [];
-    for (let i = 0; i <= 8; i++) { const t = i / 8, e = 1 - t; stops.push(`rgb(0 0 0 / ${(1 - d.kl * 0.5 * e * e).toFixed(3)}) ${(t * d.spanL).toFixed(1)}px`); }
-    for (let i = 0; i <= 8; i++) { const t = i / 8; stops.push(`rgb(0 0 0 / ${(1 - d.kr * 0.5 * t * t).toFixed(3)}) calc(100% - ${((1 - t) * d.spanR).toFixed(1)}px)`); }
-    const mask = d.kl || d.kr ? `linear-gradient(to right, ${stops.join(', ')})` : '';
-    shelf.style.webkitMaskImage = mask;
-    shelf.style.maskImage = mask;
+    if (d.edges) { d.edges[0].style.opacity = d.kl.toFixed(3); d.edges[1].style.opacity = d.kr.toFixed(3); }
   }
   TOUCH.addEventListener('change', () => { if (L.open && L.data) render(false); });
   for (const b of el.scopes.querySelectorAll('button')) b.addEventListener('click', () => setTab(b.dataset.tab));
@@ -1670,7 +1705,7 @@
       const x = it.x - (it.side ? it.side.scrollLeft - it.sx : 0), y = it.y - vy, w = it.w, h = it.h;
       if (!bands.some((band) => x + w > band[0] && y + h > band[1] && x < band[2] && y < band[3])) continue;
       if (!it.styled) styleOf(it);
-      ctx.globalAlpha = it.dim ? +(it.dim.style.opacity || 1) : 1;
+      ctx.globalAlpha = it.dim && it.dim._o !== undefined ? it.dim._o : 1;
       if (it.kind === 'canvas') {
         if (!it.n.width) continue;
         if (it.add && !it.n.classList.contains('whole')) ctx.globalCompositeOperation = 'lighter';
