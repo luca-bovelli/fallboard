@@ -298,14 +298,12 @@
     rowsLeft = [];
   }
 
-  /* a recent piece: a square card on its cover's colour fields, deepening toward the bottom to a
-     deep, vivid shade of the cover, its opening rising from the bottom edge as in the player, as
-     light added to the cover and fading out toward the top (all drawn by js/roll-gl.js thumb; the
-     CSS --mesh and --deep stand in until it has, or without WebGL 2); its name at the top in the
-     cover's ink; the composer under the card */
+  /* a recent piece: a square card on its cover's colour fields, its opening rising from the
+     bottom edge as in the player, as light added to the cover and fading out toward the top (both
+     drawn by js/roll-gl.js thumb; the CSS --mesh stands in until it has, or without WebGL 2); its
+     name at the top in the cover's ink; the composer under the card */
   function cardItem(b, title, under) {
     const item = make('div', 'card-item');
-    b.appendChild(make('span', 'shade'));
     b.appendChild(make('b', 'title', title, 'text'));
     b.setAttribute('aria-label', under ? title + ', ' + under : title);
     item.appendChild(b);
@@ -315,13 +313,11 @@
   function card(r) {
     const b = button('card', undefined, () => { FB.app.open(r.open, r); close(); }, 'cover');
     const look = FB.pieceLook(r) || FB.pieceLook(r, true);
-    const deep = FB.rollGL && FB.rollGL.deepOf(look);
-    /* the cover's hands, as the player takes them once the catalogue is in; its fields and the
-       shade it deepens to, for the card to draw */
-    r = { ...r, hands: look.hands, cover: deep && { fields: look.fields, base: look.base, deep: deep.lab } };
+    /* the cover's hands, as the player takes them once the catalogue is in; its fields, for the
+       card to draw */
+    r = { ...r, hands: look.hands, cover: { fields: look.fields, base: look.base, ink: look.ink } };
     b.style.setProperty('--mesh', look.mesh);
     b.style.setProperty('--ink', look.ink);
-    if (deep) b.style.setProperty('--deep', deep.css);
     b.dataset.base = look.base;
     b.dataset.field = look.field;
     const cv = make('canvas', 'roll', undefined, 'img');
