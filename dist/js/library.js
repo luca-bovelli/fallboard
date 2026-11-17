@@ -1384,10 +1384,10 @@
   }
 
   /* ------------------------------------------------------------------ Continue's cards
-     On a touch screen the shelf swipes, and its cards are sized so the last one in view is cut
-     exactly in half at the screen's edge: whole cards and a half, as near the usual card width as
-     that allows. Once the column stops growing, whole cards fill it and the others run on into
-     the margins, fading out. With a mouse there is no swiping: one row of as many cards as fit at the usual width,
+     On a touch screen the shelf swipes, and its cards are sized so that, stopped in the middle,
+     whole cards show between a quarter of a card at each side (index.html .shelf), as near the
+     usual card width as that allows. Once the column stops growing, whole cards fill it and the
+     others run on into the margins, dimming as they go. With a mouse there is no swiping: one row of as many cards as fit at the usual width,
      stretched to fill the column. */
   const TOUCH = window.matchMedia('(hover: none) and (pointer: coarse)');
   const CARD_GAP = 12;
@@ -1404,17 +1404,51 @@
         const cs = getComputedStyle(shelf), padL = parseFloat(cs.paddingLeft) || 0, padR = parseFloat(cs.paddingRight) || 0;
         if (padL > 40) {
           /* a wide screen: whole cards fill the column exactly; the rest run on into the margins,
-             fading out (index.html .shelf) */
+             dimming (dimShelf) */
           const col = shelf.clientWidth - padL - padR;
           const whole = Math.max(1, Math.round((col + CARD_GAP) / (target + CARD_GAP)));
           shelf.style.setProperty('--card-w', ((col - (whole - 1) * CARD_GAP) / whole).toFixed(2) + 'px');
         } else {
-          const view = shelf.clientWidth - padL;
-          const whole = Math.max(1, Math.round(view / (target + CARD_GAP) - 0.5));
-          shelf.style.setProperty('--card-w', ((view - whole * CARD_GAP) / (whole + 0.5)).toFixed(2) + 'px');
+          /* out to the screen's edges: whole cards with a quarter of a card at each side, as
+             many whole ones as come nearest the usual width */
+          const view = shelf.clientWidth;
+          let best = 0, c = target;
+          for (let n = 1; n <= 8; n++) {
+            const w = (view - (n + 1) * CARD_GAP) / (n + 0.5);
+            if (!best || Math.abs(w - target) < Math.abs(c - target)) { best = n; c = w; }
+          }
+          shelf.style.setProperty('--card-w', c.toFixed(2) + 'px');
+          shelf.style.setProperty('--snap-l', (c / 4 + CARD_GAP).toFixed(2) + 'px');
         }
+        dimShelf(shelf);
       }
     }
+  }
+  /* A card dims as it leaves view, as one layer with its composer, by how far it has gone: to
+     half where the next card out stops. On a phone, past the screen's edge, half at three
+     quarters of a card (a card stopped at the side shows a quarter); once the column has stopped
+     growing, past the column's edge, half one card and a gap out (the first stop in the margin).
+     It goes on dimming at that rate as it goes further, to nothing. A card in full view is not dimmed at all. Positions come from the scroll alone: the
+     cards are all one width, a gap apart */
+  function dimShelf(shelf) {
+    const cs = getComputedStyle(shelf), padL = parseFloat(cs.paddingLeft) || 0, padR = parseFloat(cs.paddingRight) || 0;
+    const wide = padL > 40, c = parseFloat(cs.getPropertyValue('--card-w')) || 1;
+    shelf._dim = { padL, c, lo: wide ? padL : 0, hi: shelf.clientWidth - (wide ? padR : 0), half: wide ? c + CARD_GAP : c * 0.75 };
+    if (!shelf._dimming) {
+      shelf._dimming = true;
+      let queued = false;
+      shelf.addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; dimNow(shelf); }); } }, { passive: true });
+    }
+    dimNow(shelf);
+  }
+  function dimNow(shelf) {
+    const d = shelf._dim, sx = shelf.scrollLeft;
+    [...shelf.children].forEach((item, i) => {
+      const x = d.padL + i * (d.c + CARD_GAP) - sx;
+      const out = Math.max(0, d.lo - x, x + d.c - d.hi);   // how far past the edge, in px
+      const o = Math.max(0, 1 - (0.5 * out) / d.half);
+      item.style.opacity = o > 0.999 ? '' : o.toFixed(3);
+    });
   }
   TOUCH.addEventListener('change', () => { if (L.open && L.data) render(false); });
   for (const b of el.scopes.querySelectorAll('button')) b.addEventListener('click', () => setTab(b.dataset.tab));
@@ -1580,15 +1614,10 @@
       const it = { n, side, sx: side ? side.scrollLeft : 0, x: r.left - root.left, y: r.top - root.top + vy, w: r.width, h: r.height };
       it.kind = n.tagName === 'CANVAS' ? 'canvas' : n.tagName === 'IMG' ? 'img' : n.dataset.paint;
       if (it.kind === 'canvas' && n.closest('.card')) it.add = true;   // a card's roll: light added to its cover
+      it.dim = n.closest('.shelf .card-item');                          // dimmed as it leaves view (dimShelf)
       list.push(it);
     }
-    /* a shelf running into the margins fades out over them (index.html .shelf) */
-    const fades = [];
-    for (const sh of scope.querySelectorAll('.shelf:not(.fitted)')) {
-      const cs = getComputedStyle(sh), l = parseFloat(cs.paddingLeft) || 0, rgt = parseFloat(cs.paddingRight) || 0, r = sh.getBoundingClientRect();
-      if (l > 40 && r.height) fades.push({ y: r.top - root.top + vy, h: r.height, l, r: rgt });
-    }
-    return { scope, list, fades };
+    return { scope, list };
   }
   /* what it takes to draw a node, read the first time it is drawn: most never come near the glass */
   function styleOf(it) {
@@ -1623,6 +1652,7 @@
       const x = it.x - (it.side ? it.side.scrollLeft - it.sx : 0), y = it.y - vy, w = it.w, h = it.h;
       if (!bands.some((band) => x + w > band[0] && y + h > band[1] && x < band[2] && y < band[3])) continue;
       if (!it.styled) styleOf(it);
+      ctx.globalAlpha = it.dim ? +(it.dim.style.opacity || 1) : 1;
       if (it.kind === 'canvas') {
         if (!it.n.width) continue;
         if (it.add && !it.n.classList.contains('whole')) ctx.globalCompositeOperation = 'lighter';
@@ -1657,16 +1687,7 @@
       ctx.fillText(it.text, x, y + (Math.min(h, it.size * 1.5) + it.size * 0.7) / 2);
       ctx.restore();
     }
-    for (const sf of paintables.fades) {
-      const y = sf.y - vy;
-      if (y > root.height || y + sf.h < 0) continue;
-      for (const [x0, x1] of [[0, sf.l], [root.width, root.width - sf.r]]) {
-        const g = ctx.createLinearGradient(x0, 0, x1, 0);
-        [[0, 1], [0.25, 0.844], [0.5, 0.5], [0.75, 0.156], [1, 0]].forEach(([at, k]) => g.addColorStop(at, 'rgba(0,0,0,' + k + ')'));
-        ctx.fillStyle = g;
-        ctx.fillRect(Math.min(x0, x1), y, Math.abs(x1 - x0), sf.h);
-      }
-    }
+    ctx.globalAlpha = 1;
     /* black from `black` to `clear`, through the given stops ([position 0-1, how much shows]), as
        the CSS masks and covers do */
     const fade = (black, clear, fromTop, stops = [], floor = 0) => {
