@@ -620,14 +620,30 @@
   /* a red dot after a name: no score of its own yet */
   .dot { display: inline-block; width: 6px; height: 6px; margin: 0 0 0 7px; border-radius: 50%; background: var(--now); vertical-align: 0.2em; }
 
-  /* a shelf of cards, scrolled sideways: out to the screen's edges, or within the column once it
-     has stopped growing */
+  /* a shelf of cards, scrolled sideways, out to the screen's edges. The first card stops at the
+     start, the last at the end, the others centred, so a card in the middle shows a piece of each
+     neighbour: you can see there is more either way. Once the column stops growing, whole cards
+     fill it and the shelf runs on across the margins, fading out over them on the page's smooth S
+     (library.js fitShelves; the glass scene fades them the same way), so no card is cut off in
+     the middle of the screen */
   .shelf {
     display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory;
     margin-inline: calc(-1 * var(--bleed-l)) calc(-1 * var(--bleed-r)); padding-inline: var(--bleed-l) var(--bleed-r);
     scroll-padding-inline: var(--bleed-l) var(--bleed-r); scrollbar-width: none; touch-action: pan-x pan-y;
   }
   .shelf::-webkit-scrollbar { display: none; }
+  .shelf .card-item { scroll-snap-align: center; }
+  .shelf .card-item:first-child { scroll-snap-align: start; }
+  .shelf .card-item:last-child { scroll-snap-align: end; }
+  @media (min-width: 872px) {
+    .shelf:not(.fitted) {
+      --fade: linear-gradient(to right, transparent, rgb(0 0 0 / 0.156) calc(var(--col-l) * 0.25), rgb(0 0 0 / 0.5) calc(var(--col-l) * 0.5),
+        rgb(0 0 0 / 0.844) calc(var(--col-l) * 0.75), #000 var(--col-l), #000 calc(100% - var(--col-r)), rgb(0 0 0 / 0.844) calc(100% - var(--col-r) * 0.75),
+        rgb(0 0 0 / 0.5) calc(100% - var(--col-r) * 0.5), rgb(0 0 0 / 0.156) calc(100% - var(--col-r) * 0.25), transparent);
+      margin-inline: calc(-1 * var(--col-l)) calc(-1 * var(--col-r)); padding-inline: var(--col-l) var(--col-r); scroll-padding-inline: var(--col-l) var(--col-r);
+      -webkit-mask-image: var(--fade); mask-image: var(--fade);
+    }
+  }
   /* with a mouse: one row of cards filling the column, as many as fit (library.js fitShelves) */
   .shelf.fitted { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); overflow: visible; margin-inline: 0; padding-inline: 0; }
   .shelf.fitted .card-item { width: auto; }

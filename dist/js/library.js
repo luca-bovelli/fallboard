@@ -298,7 +298,7 @@
     rowsLeft = [];
   }
 
-  /* a recent piece: a square card on its cover's colour fields, its opening rising from the
+  /* a recent piece, opening its page: a square card on its cover's colour fields, its opening rising from the
      bottom edge as in the player, as light added to the cover and fading out toward the top (both
      drawn by js/roll-gl.js thumb; the CSS --mesh stands in until it has, or without WebGL 2); its
      name at the top in the cover's ink; the composer under the card */
@@ -311,7 +311,11 @@
     return item;
   }
   function card(r) {
-    const b = button('card', undefined, () => { FB.app.open(r.open, r); close(); }, 'cover');
+    /* to the piece's page (a work's, when the whole work was opened); an upload has none, so
+       it opens in the player */
+    const e = entryOf(r);
+    const b = button('card', undefined, e ? () => push(L.data.kids.has(e.id) ? { view: 'work', id: e.id } : { view: 'piece', id: e.id })
+      : () => { FB.app.open(r.open, r); close(); }, 'cover');
     const look = FB.pieceLook(r) || FB.pieceLook(r, true);
     /* the cover's hands, as the player takes them once the catalogue is in; its fields, for the
        card to draw */
@@ -612,17 +616,22 @@
      built-in's is the cover of the entry that holds its file; an upload's is chosen from its name.
      null while the catalogue a piece needs is still coming; anyway (the catalogue could not be
      had) chooses from the name for every piece */
+  /* the catalogue entry a piece in the player is: its own, or a built-in's, the entry that holds
+     its file; none for an upload, or while the catalogue is still coming */
   let builtinOf = null;
+  function entryOf(meta) {
+    const open = meta.open || {};
+    if (open.kind === 'file' || !L.data) return null;
+    if (open.kind === 'builtin') {
+      if (!builtinOf) builtinOf = new Map(L.data.entries.filter((x) => x.b).map((x) => [x.b, x]));
+      return builtinOf.get(open.file) || null;
+    }
+    return L.data.byId.get(String(meta.id || '').replace(/^cat:/, '')) || null;
+  }
   FB.pieceLook = (meta, anyway) => {
     const open = meta.open || {}, id = String(meta.id || '');
-    let e = null;
-    if (open.kind !== 'file' && !anyway) {
-      if (!L.data) return null;
-      if (open.kind === 'builtin') {
-        if (!builtinOf) builtinOf = new Map(L.data.entries.filter((x) => x.b).map((x) => [x.b, x]));
-        e = builtinOf.get(open.file);
-      } else e = L.data.byId.get(id.replace(/^cat:/, ''));
-    }
+    if (open.kind !== 'file' && !anyway && !L.data) return null;
+    const e = anyway ? null : entryOf(meta);
     const { p, mesh } = lookOf(e ? albumOf(e) : { id, own: true });
     return { hands: p[4], mesh: mesh.css, fields: mesh.fields, ink: p[2], base: p[0], field: p[1][0], inkNotes: p[5] === 'ink' };
   };
@@ -1376,8 +1385,9 @@
 
   /* ------------------------------------------------------------------ Continue's cards
      On a touch screen the shelf swipes, and its cards are sized so the last one in view is cut
-     exactly in half at the edge: whole cards and a half, as near the usual card width as that
-     allows. With a mouse there is no swiping: one row of as many cards as fit at the usual width,
+     exactly in half at the screen's edge: whole cards and a half, as near the usual card width as
+     that allows. Once the column stops growing, whole cards fill it and the others run on into
+     the margins, fading out. With a mouse there is no swiping: one row of as many cards as fit at the usual width,
      stretched to fill the column. */
   const TOUCH = window.matchMedia('(hover: none) and (pointer: coarse)');
   const CARD_GAP = 12;
@@ -1391,10 +1401,18 @@
         shelf.style.setProperty('--cols', cols);
         cards.forEach((c, i) => { c.hidden = i >= cols; });
       } else {
-        const pad = parseFloat(getComputedStyle(shelf).paddingLeft) || 0;
-        const view = shelf.clientWidth - pad;
-        const whole = Math.max(1, Math.round(view / (target + CARD_GAP) - 0.5));
-        shelf.style.setProperty('--card-w', ((view - whole * CARD_GAP) / (whole + 0.5)).toFixed(2) + 'px');
+        const cs = getComputedStyle(shelf), padL = parseFloat(cs.paddingLeft) || 0, padR = parseFloat(cs.paddingRight) || 0;
+        if (padL > 40) {
+          /* a wide screen: whole cards fill the column exactly; the rest run on into the margins,
+             fading out (index.html .shelf) */
+          const col = shelf.clientWidth - padL - padR;
+          const whole = Math.max(1, Math.round((col + CARD_GAP) / (target + CARD_GAP)));
+          shelf.style.setProperty('--card-w', ((col - (whole - 1) * CARD_GAP) / whole).toFixed(2) + 'px');
+        } else {
+          const view = shelf.clientWidth - padL;
+          const whole = Math.max(1, Math.round(view / (target + CARD_GAP) - 0.5));
+          shelf.style.setProperty('--card-w', ((view - whole * CARD_GAP) / (whole + 0.5)).toFixed(2) + 'px');
+        }
       }
     }
   }
@@ -1564,7 +1582,13 @@
       if (it.kind === 'canvas' && n.closest('.card')) it.add = true;   // a card's roll: light added to its cover
       list.push(it);
     }
-    return { scope, list };
+    /* a shelf running into the margins fades out over them (index.html .shelf) */
+    const fades = [];
+    for (const sh of scope.querySelectorAll('.shelf:not(.fitted)')) {
+      const cs = getComputedStyle(sh), l = parseFloat(cs.paddingLeft) || 0, rgt = parseFloat(cs.paddingRight) || 0, r = sh.getBoundingClientRect();
+      if (l > 40 && r.height) fades.push({ y: r.top - root.top + vy, h: r.height, l, r: rgt });
+    }
+    return { scope, list, fades };
   }
   /* what it takes to draw a node, read the first time it is drawn: most never come near the glass */
   function styleOf(it) {
@@ -1632,6 +1656,16 @@
       ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
       ctx.fillText(it.text, x, y + (Math.min(h, it.size * 1.5) + it.size * 0.7) / 2);
       ctx.restore();
+    }
+    for (const sf of paintables.fades) {
+      const y = sf.y - vy;
+      if (y > root.height || y + sf.h < 0) continue;
+      for (const [x0, x1] of [[0, sf.l], [root.width, root.width - sf.r]]) {
+        const g = ctx.createLinearGradient(x0, 0, x1, 0);
+        [[0, 1], [0.25, 0.844], [0.5, 0.5], [0.75, 0.156], [1, 0]].forEach(([at, k]) => g.addColorStop(at, 'rgba(0,0,0,' + k + ')'));
+        ctx.fillStyle = g;
+        ctx.fillRect(Math.min(x0, x1), y, Math.abs(x1 - x0), sf.h);
+      }
     }
     /* black from `black` to `clear`, through the given stops ([position 0-1, how much shows]), as
        the CSS masks and covers do */
