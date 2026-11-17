@@ -497,12 +497,14 @@
      rising to 0.2 of its height from the top, lit in the piece's hands' colours (r.hands), with no
      grid, blurred more and more toward the top (blurTop). Then the card's cover (r.cover, its
      colour fields as js/library.js meshOf lays them out), as it is, and the roll's light added to
-     it in linear light, fading out toward the top. Still: a card's noise does not move. Drawn into
+     it in linear light, fading out toward the top; on a cover too pale for that light to show
+     (r.cover.ink, the cream classic edition), as its ink instead, as much ink as there is light.
+     Still: a card's noise does not move. Drawn into
      the card's 2D canvas; false without WebGL 2 or the piece's colours. */
   const COVER_FS = `#version 300 es
     precision highp float;
     uniform sampler2D uRoll; uniform vec2 uSize;
-    uniform vec3 uBase; uniform int uN; uniform vec4 uRect[4]; uniform vec4 uCol[4];
+    uniform vec3 uBase; uniform int uN; uniform vec4 uRect[4]; uniform vec4 uCol[4]; uniform vec4 uInk;
     out vec4 o;
     vec3 dec(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
     vec3 enc(vec3 c) { return mix(c * 12.92, 1.055 * pow(max(c, 0.0), vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
@@ -517,14 +519,16 @@
         col = mix(col, uCol[i].rgb, clamp(1.0 - (d - st) / (1.0 - st), 0.0, 1.0));
       }
       /* the roll's light, added, from none at the top to all of it 0.8 of the way down */
-      vec3 rgb = dec(col) + dec(texture(uRoll, fc / uSize).rgb) * smoothstep(0.0, 0.8, uv.y);
+      vec3 roll = dec(texture(uRoll, fc / uSize).rgb) * smoothstep(0.0, 0.8, uv.y);
+      float ink = 1.0 - exp(-2.5 * dot(roll, vec3(0.2126, 0.7152, 0.0722)));   // in ink (uInk.a): as much as there is light
+      vec3 rgb = uInk.a > 0.5 ? mix(dec(col), dec(uInk.rgb), ink * 0.85) : dec(col) + roll;
       o = vec4(enc(min(rgb, 1.0)), 1.0);
     }`;
   let coverP = null, UC = null;
   const hexRgb = (hex) => { const n = parseInt(hex.slice(1), 16); return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]; };
   /* the cover under the roll on the screen (the roll copied away first) */
   function cover(cw, ch, look) {
-    if (!coverP) { coverP = compile(QUAD_VS, COVER_FS); UC = uni(coverP, ['uRoll', 'uSize', 'uBase', 'uN', 'uRect', 'uCol']); }
+    if (!coverP) { coverP = compile(QUAD_VS, COVER_FS); UC = uni(coverP, ['uRoll', 'uSize', 'uBase', 'uN', 'uRect', 'uCol', 'uInk']); }
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, sceneTex);
     gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGB, 0, 0, cw, ch, 0);
     const n = Math.min(4, look.fields.length), rect = new Float32Array(16), col = new Float32Array(16);
@@ -533,6 +537,7 @@
     gl.uniform1i(UC.uRoll, 0); gl.uniform2f(UC.uSize, cw, ch);
     gl.uniform3fv(UC.uBase, hexRgb(look.base)); gl.uniform1i(UC.uN, n);
     gl.uniform4fv(UC.uRect, rect); gl.uniform4fv(UC.uCol, col);
+    gl.uniform4fv(UC.uInk, look.ink ? [...hexRgb(look.ink), 1] : [0, 0, 0, 0]);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     gl.bindVertexArray(null);
   }

@@ -315,7 +315,7 @@
     const look = FB.pieceLook(r) || FB.pieceLook(r, true);
     /* the cover's hands, as the player takes them once the catalogue is in; its fields, for the
        card to draw */
-    r = { ...r, hands: look.hands, cover: { fields: look.fields, base: look.base } };
+    r = { ...r, hands: look.hands, cover: { fields: look.fields, base: look.base, ink: look.inkNotes && look.ink } };
     b.style.setProperty('--mesh', look.mesh);
     b.style.setProperty('--ink', look.ink);
     b.dataset.base = look.base;
@@ -366,7 +366,8 @@
      Composers will have photographs instead. */
   const PALETTES = [
     /* base, four colour fields, ink, lines, and the hands' colours in the player (right, left:
-       two of the cover's own colours, the right always the lighter, js/roll-gl.js) */
+       two of the cover's own colours, the right always the lighter, js/roll-gl.js); 'ink' last
+       where a recent piece's card draws its notes in the ink, the cover too pale for their light */
     ['#3424e8', ['#3a2bf0', '#3f8cf2', '#7fe6a8', '#3fe3cf'], '#f7f6ff', 'rgb(255 255 255 / 0.55)', ['#7fe6a8', '#5b6cff']],   // electric
     ['#ff1d1d', ['#ff4a2a', '#ff8b3a', '#ffcf86', '#ff2b1f'], '#ffe8b5', 'rgb(255 232 181 / 0.6)', ['#ffc46b', '#ff4b3e']],    // ember
     ['#1d1450', ['#5b3fe0', '#ef6aa6', '#ffb489', '#2a1a6e'], '#fff0f5', 'rgb(255 240 245 / 0.5)', ['#ffb489', '#8f63ff']],    // dusk
@@ -377,7 +378,7 @@
     ['#ffcf3a', ['#ff9a1f', '#fff2a8', '#f458b0', '#ffd84d'], '#3b0f2c', 'rgb(59 15 44 / 0.5)', ['#ffd84a', '#f45cb2']],       // citrus
     /* the classic editions: gilt on navy, green on cream, cream on claret, pale on moss */
     ['#0e1c3c', ['#1d3672', '#13265a', '#28468a', '#0b1530'], '#e9c97c', 'rgb(233 201 124 / 0.8)', ['#e9c97c', '#5a8cf0']],   // gilt
-    ['#f2e9d4', ['#e9dcbc', '#f7f0de', '#e3d4ae', '#efe4c8'], '#1f4b35', 'rgb(31 75 53 / 0.75)', ['#efd58e', '#3fb07a']],      // folio
+    ['#f2e9d4', ['#e9dcbc', '#f7f0de', '#e3d4ae', '#efe4c8'], '#1f4b35', 'rgb(31 75 53 / 0.75)', ['#efd58e', '#3fb07a'], 'ink'],      // folio
     ['#470b1a', ['#8e1c36', '#d9504e', '#f6b388', '#5a0f22'], '#ffe9d8', 'rgb(255 233 216 / 0.55)', ['#f7b48a', '#e0435f']],   // claret
     ['#0c3527', ['#1d7656', '#97df86', '#eef7bf', '#0f4a35'], '#f3ffe8', 'rgb(243 255 232 / 0.5)', ['#c8f08e', '#2fb08a']],    // moss
   ];
@@ -623,7 +624,7 @@
       } else e = L.data.byId.get(id.replace(/^cat:/, ''));
     }
     const { p, mesh } = lookOf(e ? albumOf(e) : { id, own: true });
-    return { hands: p[4], mesh: mesh.css, fields: mesh.fields, ink: p[2], base: p[0], field: p[1][0] };
+    return { hands: p[4], mesh: mesh.css, fields: mesh.fields, ink: p[2], base: p[0], field: p[1][0], inkNotes: p[5] === 'ink' };
   };
   function makeCover(e) {
     const album = albumOf(e);
