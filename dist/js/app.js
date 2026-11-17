@@ -180,10 +180,28 @@
     const o = store.get();
     const list = (o.recent || []).filter((r) => r.id !== meta.id);
     const nums = score.docNumbers || [];
-    list.unshift({ id: meta.id, title: meta.title, composer: meta.composer || '', open: meta.open, at: Date.now(), dur: Math.round(score.duration), bars: nums.length ? nums[nums.length - 1] : 0, roll: rollOf(score) });
+    list.unshift({ id: meta.id, title: meta.title, composer: meta.composer || '', open: meta.open, hands: meta.hands, at: Date.now(), dur: Math.round(score.duration), bars: nums.length ? nums[nums.length - 1] : 0, roll: rollOf(score) });
     o.recent = list.slice(0, RECENT_MAX);
     o.last = meta.id;
     store.set(o);
+  }
+  /* A piece's colours are its cover's (js/library.js FB.pieceLook): the two hands', kept with
+     its recent entry, so reopening it, after a reload too, has them before the catalogue is in.
+     A piece opened without them waits for the catalogue (its roll stays dark meanwhile). Once the
+     catalogue is in, the cover's colours replace whatever was kept; without it at all, kept
+     colours stay, and a piece with none takes an upload's, chosen from its name */
+  function colourPiece(meta) {
+    const look = FB.pieceLook && FB.pieceLook(meta);
+    if (look) meta.hands = look.hands;
+    if (look || !FB.library) return;
+    const settle = (hands) => {
+      if (S.meta !== meta || String(hands) === String(meta.hands)) return;
+      meta.hands = hands;
+      const o = store.get(), r = (o.recent || []).find((x) => x.id === meta.id);
+      if (r) { r.hands = hands; store.set(o); }
+      kick();
+    };
+    FB.library.load().then(() => settle(FB.pieceLook(meta).hands), () => { if (!meta.hands) settle(FB.pieceLook(meta, true).hands); });
   }
   const files = {
     db: null,
@@ -400,8 +418,7 @@
   }
 
   /* ------------------------------------------------------------------ drawing */
-  const TOKENS = ['stage', 'lane', 'grid', 'grid-2', 'grid-ink', 'rh', 'rh-key', 'rh-hot', 'lh', 'lh-key', 'lh-hot', 'bar-ink',
-    'now', 'paper', 'score-ink'];
+  const TOKENS = ['stage', 'lane', 'grid', 'grid-2', 'grid-ink', 'bar-ink', 'now', 'paper', 'score-ink'];
   function readTheme() {
     const cs = getComputedStyle(document.documentElement);
     for (const k of TOKENS) theme[k] = cs.getPropertyValue('--' + k).trim();
@@ -508,12 +525,13 @@
     const fontPx = clamp(W * 0.46, 8.5, 11.5);
     const inset = Math.min(1.5, W * 0.07);
     const hot = [];
+    const pal = FB.rollGL.flat(ROLL_ENV);   // the piece's colours (none yet: no notes yet)
     const [bar, clock] = progressBounds.roll;
     let barObscured = false, clockObscured = false;
     c.textAlign = 'center';
     c.textBaseline = 'alphabetic';
     c.font = `700 ${fontPx}px ${UI_FONT}`;
-    for (let pass = 0; pass < 2; pass++) {
+    for (let pass = 0; pass < 2 && pal; pass++) {
       for (let i = start; i < notes.length && notes[i].t0 < tTop; i++) {
         const n = notes[i];
         if (n.t1 < disp || !handOK(n)) continue;
@@ -528,12 +546,12 @@
         const hk = n.hand === 0 ? 'rh' : 'lh';
         const rad = Math.min(5, bwid * 0.3);
         if (n.t0 <= live + EPS && n.t1 > live + EPS) { hot.push([n, x, bwid, y1, bh, hk, rad]); continue; }
-        c.fillStyle = theme[black ? hk + '-key' : hk];
+        c.fillStyle = pal[black ? hk + '-key' : hk];
         rr(c, x, y1 - bh, bwid, bh, rad);
         c.fill();
         // the attack: a lighter foot where the note begins
         if (bh > 9) {
-          c.fillStyle = theme[hk + '-hot'];
+          c.fillStyle = pal[hk + '-hot'];
           c.globalAlpha = black ? 0.55 : 0.75;
           rr(c, x, y1 - 3, bwid, 3, 0, rad);
           c.fill();
@@ -549,7 +567,7 @@
     }
     /* the notes sounding now: the same block in the brighter tone, nothing else */
     for (const [n, x, bwid, y1, bh, hk, rad] of hot) {
-      c.fillStyle = theme[hk + '-hot'];
+      c.fillStyle = pal[hk + '-hot'];
       rr(c, x, y1 - bh, bwid, bh, rad);
       c.fill();
       if (bwid >= 14 && bh >= 22) { c.fillStyle = theme['bar-ink']; c.fillText(n.name, x + bwid / 2, Math.min(y1, h) - 8); }
@@ -745,6 +763,7 @@
     piano.stopAll();
     S.score = score;
     S.meta = meta;
+    colourPiece(meta);
     const pos = (store.get().pos || {})[meta.id];
     S.t = pos > 0 && pos < score.duration - 1 ? pos : 0;
     S.viewT = null; S.offset = 0; S.inertia = 0;
@@ -790,14 +809,14 @@
     }
   }
 
-  function loadBuiltin(piece) {
+  function loadBuiltin(piece, hands) {
     // a deploy that caches files stamps itself (tools/stamp.js); the score files take the same version
     const base = 'scores/' + piece.file, v = window.FB_VERSION ? '?v=' + window.FB_VERSION : '';
     return selectScore('Loading the score…', async () => {
       const r = await fetch(base + '.musicxml' + v);
       if (!r.ok) throw new Error('Score download failed');
       return r.text();
-    }, () => ({ ...piece, engraved: base + '.{layout}.json' + v, open: { kind: 'builtin', file: piece.file } }), 'This piece could not be loaded. Try selecting it again.');
+    }, () => ({ ...piece, hands, engraved: base + '.{layout}.json' + v, open: { kind: 'builtin', file: piece.file } }), 'This piece could not be loaded. Try selecting it again.');
   }
 
   /* a score from the library's catalogue: a zipped MusicXML file, engraved here when the score
@@ -829,7 +848,7 @@
     if (!open) return;
     if (open.kind === 'builtin') {
       const piece = BUILTINS.find((p) => p.file === open.file);
-      if (piece) return S.meta?.id === piece.id ? null : loadBuiltin(piece);
+      if (piece) return S.meta?.id === piece.id ? null : loadBuiltin(piece, meta && meta.hands);
     } else if (open.kind === 'url') {
       const v = window.FB_VERSION ? '?v=' + window.FB_VERSION : '';
       return S.meta?.id === meta.id ? null : loadUrl(open.url + v, meta);
@@ -839,7 +858,7 @@
         const xml = await files.get(open.key);
         if (!xml) throw new Error('This upload is no longer stored here. Upload the file again.');
         return xml;
-      }, (score) => ({ id: open.key, title: meta.title || score.title || open.key.slice(5), composer: meta.composer || score.composer || '', open }));
+      }, (score) => ({ id: open.key, title: meta.title || score.title || open.key.slice(5), composer: meta.composer || score.composer || '', hands: meta.hands, open }));
     }
   }
 

@@ -1,5 +1,5 @@
 /* Fallboard — library.js
-   The library over the player. Home has two sections: Continue (an upload card, then the pieces
+   The library over the player. Home has two sections: Continue (the pieces
    opened lately) and Explore (pieces, works or composers to browse). Typing in the search bar
    moves Explore's tabs up into the glass layer and shows results under them. A composer has
    their best-known pieces and their works; a work lists its pieces numbered; a piece has its
@@ -28,8 +28,8 @@
 
   const el = {
     lib: $('library'), scroll: $('libScroll'), page: $('libPage'),
-    back: $('libBack'), scopes: $('libScopes'), profile: $('libProfile'),
-    more: $('libMore'), menu: $('libMenu'), share: $('libShare'), shareNote: $('libShareNote'),
+    back: $('libBack'), scopes: $('libScopes'),
+    more: $('libMore'), menu: $('libMenu'), share: $('libShare'), shareNote: $('libShareNote'), upload: $('libUpload'),
     bottom: $('libBottom'), search: $('libSearch'), query: $('libQuery'), clear: $('libClear'),
     menuBtn: $('menuBtn'), file: $('fileInput'), title: $('libTitle'), fadeTop: $('libFadeTop'),
   };
@@ -298,9 +298,10 @@
     rowsLeft = [];
   }
 
-  /* a recent piece: a square card, its opening as a piano roll rising from the bottom edge as in
-     the player, its name at the top over a wash of its two hands' colours (--wl from the top left,
-     --wr from the top right, js/roll-gl.js washOf); the composer under the card */
+  /* a recent piece: a square card on its cover's colour fields (--mesh), deepening toward the
+     bottom to a dark shade of the cover (--deep, js/roll-gl.js deep), its opening rising from the
+     bottom edge as in the player, as light added to the cover and fading out toward the top; its
+     name at the top in the cover's ink; the composer under the card */
   function cardItem(b, title, under) {
     const item = make('div', 'card-item');
     b.appendChild(make('span', 'shade'));
@@ -311,57 +312,45 @@
     return item;
   }
   function card(r) {
-    const b = button('card', undefined, () => { FB.app.open(r.open, r); close(); }, 'box');
+    const b = button('card', undefined, () => { FB.app.open(r.open, r); close(); }, 'cover');
+    const look = FB.pieceLook(r) || FB.pieceLook(r, true);
+    r = { ...r, hands: look.hands };   // the cover's, as the player takes them once the catalogue is in
+    b.style.setProperty('--mesh', look.mesh);
+    b.style.setProperty('--ink', look.ink);
+    if (FB.rollGL) b.style.setProperty('--deep', FB.rollGL.deep(look.base));
+    b.dataset.base = look.base;
+    b.dataset.field = look.field;
     const cv = make('canvas', 'roll', undefined, 'img');
     cv.setAttribute('aria-hidden', 'true');
     cv._r = r;
     b.appendChild(cv);
     L.thumbs.push([cv, r]);
-    const wash = FB.rollGL && FB.rollGL.washOf(r.id, css);
-    if (wash) { b.style.setProperty('--wr', wash[0]); b.style.setProperty('--wl', wash[1]); }
     return cardItem(b, r.title, r.composer);
-  }
-  /* the first card: your own MusicXML file. Not a piece, so no picture: an empty square in a dim
-     dashed line, the upload icon (a tray, its sides turned up, an arrow rising out of it) and
-     "Upload a score" in small type, underlined, both dimmed, in its middle; what it takes under it, where a piece's composer goes */
-  function uploadCard() {
-    const b = button('card upload', undefined, () => FB.app.upload(), 'box');
-    b.setAttribute('aria-label', 'Upload a score, MusicXML or .mxl');
-    const up = make('span', 'up');
-    up.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>';
-    up.appendChild(make('b', '', 'Upload a score', 'text'));
-    b.appendChild(up);
-    const item = make('div', 'card-item');
-    item.appendChild(b);
-    item.appendChild(make('small', 'by', 'MusicXML or .mxl', 'text'));
-    return item;
   }
   /* the opening bars as the player's roll draws them: pitch across, time rising from the
      keyboard's edge at the bottom of the card (the first notes lowest), each hand in its colour,
      bar lines faint. Drawn lit by js/roll-gl.js; this flat one is for browsers without WebGL 2 */
   const ROLL_FLOOR = 1;   // where the first notes land, as a share of the card's height
   function drawThumb(cv, r) {
-    if (FB.rollGL && FB.rollGL.thumb(cv, r, css)) return;   // lit, as the player draws it; below, the flat roll without WebGL 2
+    if (FB.rollGL && FB.rollGL.thumb(cv, r)) return;   // lit, as the player draws it; below, the flat roll without WebGL 2
     const w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
     if (!w || !h) return;
     cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    c.fillStyle = css.stage; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#000'; c.fillRect(0, 0, w, h);   // nothing, where it is added to the cover
     const roll = r.roll;
-    if (!roll || !roll.notes.length) return;
+    if (!roll || !roll.notes.length || !r.hands) return;
     const t = roll.notes;
     let lo = 127, hi = 0;
     for (let i = 0; i < t.length; i += 4) { lo = Math.min(lo, t[i + 2]); hi = Math.max(hi, t[i + 2]); }
     lo -= 2; hi += 2;
     const keyW = w / (hi - lo + 1), floor = h * ROLL_FLOOR, top = h * 0.38;   // above: the card's name (no blur here)
     const yOf = (cs) => floor - (cs / roll.end) * (floor - top);
-    c.fillStyle = css.grid;
-    for (const b of roll.bars) c.fillRect(0, Math.round(yOf(b)), w, 1);
     for (let i = 0; i < t.length; i += 4) {
       const y0 = yOf(t[i]), y1 = yOf(t[i] + t[i + 1]);
       const x = (t[i + 2] - lo) * keyW;
-      c.fillStyle = t[i + 3] ? css.lh : css.rh;
+      c.fillStyle = r.hands[t[i + 3]];
       rr(c, x + keyW * 0.12, y1 + 0.5, keyW * 0.76, Math.max(2, y0 - y1 - 1), Math.min(2, keyW * 0.3));
       c.fill();
     }
@@ -604,26 +593,43 @@
     if (coversMade.size > 400) coversMade.delete(coversMade.keys().next().value);
     return c;
   }
-  /* the palette a piece's cover is drawn from, for the player, which lights its roll in the
-     palette's hand colours (js/roll-gl.js): the same choices as makeCover, made in the same order */
-  FB.coverPalette = (id) => {
-    const e = L.data && L.data.byId.get(id);
-    if (!e) return null;
-    const album = albumOf(e), pick = chooser(album.id);
-    const layout = layoutOf(album, ['echo', 'frame', 'num', 'staff'][pick(4)]);
-    return layout === 'frame' ? PALETTES[CLASSIC[pick(CLASSIC.length)]] : PALETTES[pick(8)];
-  };
-  function makeCover(e) {
-    const album = albumOf(e);
-    const pick = chooser(album.id);
-    const t = coverText(e);
-    const layout = layoutOf(album, ['echo', 'frame', 'num', 'staff'][pick(4)]);
+  /* an album's look, chosen from its hash in this order: layout, palette, typeface, colour
+     fields. makeCover goes on choosing its ornaments from the same stream. An upload (own: no
+     album in the catalogue) is chosen the same way from its name, its layout as first chosen */
+  function lookOf(album) {
+    const pick = chooser(album.id), wanted = ['echo', 'frame', 'num', 'staff'][pick(4)];
+    const layout = album.own ? wanted : layoutOf(album, wanted);
     const p = layout === 'frame' ? PALETTES[CLASSIC[pick(CLASSIC.length)]] : PALETTES[pick(8)];
     const face = layout === 'echo' ? 'nyght' : layout === 'frame' ? (pick(2) ? 'melodrama' : 'boska')
       : layout === 'num' ? 'boska' : pick(2) ? 'switzer' : 'melodrama';
+    return { pick, layout, p, face, mesh: meshOf(p, pick) };
+  }
+  /* A piece's look for the player and its card: its cover's palette (hands: the two hands'
+     colours, js/roll-gl.js), colour fields, ink and base. A catalogue piece's is its cover's; a
+     built-in's is the cover of the entry that holds its file; an upload's is chosen from its name.
+     null while the catalogue a piece needs is still coming; anyway (the catalogue could not be
+     had) chooses from the name for every piece */
+  let builtinOf = null;
+  FB.pieceLook = (meta, anyway) => {
+    const open = meta.open || {}, id = String(meta.id || '');
+    let e = null;
+    if (open.kind !== 'file' && !anyway) {
+      if (!L.data) return null;
+      if (open.kind === 'builtin') {
+        if (!builtinOf) builtinOf = new Map(L.data.entries.filter((x) => x.b).map((x) => [x.b, x]));
+        e = builtinOf.get(open.file);
+      } else e = L.data.byId.get(id.replace(/^cat:/, ''));
+    }
+    const { p, mesh } = lookOf(e ? albumOf(e) : { id, own: true });
+    return { hands: p[4], mesh, ink: p[2], base: p[0], field: p[1][0] };
+  };
+  function makeCover(e) {
+    const album = albumOf(e);
+    const t = coverText(e);
+    const { pick, layout, p, face, mesh } = lookOf(album);
     const c = make('span', 'cover cv-' + layout, undefined, 'cover');
     c.setAttribute('aria-hidden', 'true');
-    c.style.setProperty('--mesh', meshOf(p, pick));
+    c.style.setProperty('--mesh', mesh);
     c.style.setProperty('--ink', p[2]);
     c.style.setProperty('--line', p[3]);
     c.style.setProperty('--face', FACE[face][0]);
@@ -777,13 +783,14 @@
       const d = L.data;
       head(page, 'Library', []);
       const recent = FB.app.recents();
-      const s = section(page, 'Continue', recent.length ? () => push({ view: 'recent' }) : null);
-      /* a touch screen swipes through a shelf; a mouse gets one row of cards that fills the column
-         (fitShelves sizes both) */
-      const shelf = make('div', TOUCH.matches ? 'shelf' : 'shelf fitted');
-      shelf.appendChild(uploadCard());
-      for (const r of recent.slice(0, HOME_RECENTS)) shelf.appendChild(card(r));
-      s.appendChild(shelf);
+      if (recent.length) {
+        const s = section(page, 'Continue', () => push({ view: 'recent' }));
+        /* a touch screen swipes through a shelf; a mouse gets one row of cards that fills the
+           column (fitShelves sizes both) */
+        const shelf = make('div', TOUCH.matches ? 'shelf' : 'shelf fitted');
+        for (const r of recent.slice(0, HOME_RECENTS)) shelf.appendChild(card(r));
+        s.appendChild(shelf);
+      }
       /* Explore's heading scrolls up under the top bar, where it becomes the small title; its
          tabs pin beneath the bar, and the list runs on under them. The mark holds the tabs'
          place in the page, which a pinned bar no longer tells */
@@ -802,7 +809,6 @@
     recent(page) {
       head(page, 'Continue', []);
       const box = make('div', 'cards');
-      box.appendChild(uploadCard());
       for (const r of FB.app.recents()) box.appendChild(card(r));
       page.appendChild(box);
     },
@@ -1148,8 +1154,9 @@
     a.remove();
   }
   /* ------------------------------------------------------------------ the ellipsis menu
-     On a composer's, a work's or a piece's page (and their lists), the top right holds a menu of
-     what can be done with the page: for now, sharing a link to it. */
+     The top right holds a menu of what can be done where you are: on every page, uploading a
+     score of your own (a MusicXML or .mxl file); on a composer's, a work's or a piece's page (and
+     their lists), sharing a link to it first. */
   function viewName() {
     const d = L.data, top = L.stack[L.stack.length - 1];
     if (!d || !top.id) return 'Fallboard library';
@@ -1171,6 +1178,7 @@
   }
   el.more.addEventListener('click', (e) => { e.stopPropagation(); if (el.menu.hidden) openMenu(); else closeMenu(); });
   document.addEventListener('pointerdown', (e) => { if (!el.menu.hidden && !el.menu.contains(e.target) && !el.more.contains(e.target)) closeMenu(); });
+  el.upload.addEventListener('click', () => { closeMenu(); FB.app.upload(); });
   el.share.addEventListener('click', async () => {
     const url = location.href, text = viewName();
     try {
@@ -1191,10 +1199,8 @@
     const searching = !!L.query.trim();
     el.lib.classList.toggle('is-searching', searching);
     el.scopes.hidden = !searching;
-    /* the top right: the profile on the library's home, the ellipsis menu on a page about something */
-    const about = !!L.stack[L.stack.length - 1].id;
-    el.profile.hidden = about;
-    el.more.hidden = !about;
+    /* the menu shares a page about something */
+    el.share.hidden = !L.stack[L.stack.length - 1].id;
     closeMenu();
     if (!L.data) {
       head(page, 'Library', []);
@@ -1483,7 +1489,7 @@
   const css = {};
   function readTheme() {
     const cs = getComputedStyle(document.documentElement);
-    for (const k of ['bg', 'stage', 'lane', 'grid', 'grid-2', 'rh', 'lh', 'now']) css[k] = cs.getPropertyValue('--' + k).trim();
+    for (const k of ['bg', 'stage', 'lane', 'grid', 'grid-2', 'now']) css[k] = cs.getPropertyValue('--' + k).trim();
   }
   function rr(c, x, y, w, h, r) {
     r = Math.max(0, Math.min(r, w / 2, h / 2));
@@ -1552,6 +1558,7 @@
       const side = n.closest('.shelf, .pages, .viewer-pages');
       const it = { n, side, sx: side ? side.scrollLeft : 0, x: r.left - root.left, y: r.top - root.top + vy, w: r.width, h: r.height };
       it.kind = n.tagName === 'CANVAS' ? 'canvas' : n.tagName === 'IMG' ? 'img' : n.dataset.paint;
+      if (it.kind === 'canvas' && n.closest('.card')) it.add = true;   // a card's roll: light added to its cover
       list.push(it);
     }
     return { scope, list };
@@ -1589,7 +1596,13 @@
       const x = it.x - (it.side ? it.side.scrollLeft - it.sx : 0), y = it.y - vy, w = it.w, h = it.h;
       if (!bands.some((band) => x + w > band[0] && y + h > band[1] && x < band[2] && y < band[3])) continue;
       if (!it.styled) styleOf(it);
-      if (it.kind === 'canvas') { if (it.n.width) ctx.drawImage(it.n, x, y, w, h); continue; }
+      if (it.kind === 'canvas') {
+        if (!it.n.width) continue;
+        if (it.add) ctx.globalCompositeOperation = 'lighter';
+        ctx.drawImage(it.n, x, y, w, h);
+        ctx.globalCompositeOperation = 'source-over';
+        continue;
+      }
       /* a page of sheet music is drawn as the paper it shows: drawing the SVG itself could lock
          the canvas, and the glass could no longer read it */
       if (it.kind === 'img') { ctx.fillStyle = '#fff'; ctx.fillRect(x, y, w, h); continue; }
@@ -1863,7 +1876,7 @@
     for (let x = d.parentOf(e); x; x = d.parentOf(x)) chain.unshift({ view: 'work', id: x.id });
     return [...stack, ...chain, d.kids.has(e.id) ? { view: 'work', id: e.id } : { view: 'piece', id: e.id }];
   }
-  FB.library = { open, close, isOpen: () => L.open };
+  FB.library = { open, close, load, isOpen: () => L.open };
   const asked = /^#library(?:\/(.+))?$/.exec(location.hash);
   if (asked) {
     /* a link into the library: the player's entry underneath, then a step for each level, so

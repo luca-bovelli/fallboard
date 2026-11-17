@@ -20,9 +20,9 @@
    The heat strip: along the keys, how long each has sounded, on a logarithm, cooling in a third of
    a second; it lifts the field above warm keys and adds a low bloom. It is never drawn.
 
-   Colours come from the piece's cover (FB.coverPalette in js/library.js): its two colours
-   furthest apart in hue, the lighter to the right hand; the player's --rh and --lh when there is
-   no cover, or when the flat roll stands in.
+   Colours come from the piece's cover (FB.pieceLook in js/library.js): two of its palette's
+   colours, the lighter to the right hand, which the piece carries as meta.hands. An upload has a
+   palette chosen from its name. There are no others: until they are known nothing is coloured.
 
    The keys: a white keyboard, neutral, below a black line, each white key a rounded rectangle, so
    black dents show between them at the top and bottom, with hairline seams between. A struck
@@ -30,7 +30,8 @@
    key and fading out down it; a struck black key becomes a cap of that colour, its sides a deeper
    shade. Keys light
    fully the moment a note starts and go dark within 60 ms of its end. The hands' icons
-   (--hand-r, --hand-l) take the hands' colours. */
+   (--hand-r, --hand-l) and the sounding notes in the score (--note-r, --note-l) take the hands'
+   colours. */
 (function () {
   'use strict';
   const FB = (window.FB = window.FB || {});
@@ -66,30 +67,42 @@
   const lift = (rgb, t) => { const [L, C, h] = toLch(rgb); return lch(L + (0.97 - L) * t, C, h); };
 
   /* ------------------------------------------------------------------ the piece's colours */
-  /* a piece's hands: its cover palette's two hand colours (the palette's fifth entry, in
-     js/library.js), or the player's --rh and --lh without a cover, or while the flat roll stands in */
+  /* a piece's hands, [right, left] hex: its cover palette's two hand colours (the palette's fifth
+     entry, js/library.js FB.pieceLook), which the piece carries as meta.hands. There is no other
+     pair: until a piece's are known its notes are not drawn */
   const handsMade = new Map();
-  function handsOf(id, flat, theme) {
-    id = id ? String(id).replace(/^cat:/, '') : '';
-    const pal = !flat && id && FB.coverPalette ? FB.coverPalette(id) : null;
-    const key = flat + '|' + id + '|' + !!pal;
+  function handsOf(hex) {
+    if (!hex) return null;
+    const key = hex.join();
     if (!handsMade.has(key)) {
-      const hex = pal ? pal[4] : [theme.rh || '#d2a94f', theme.lh || '#4f8fe6'];
       handsMade.set(key, hex.map((x) => handColours(hexLin(x))));
       if (handsMade.size > 40) handsMade.delete(handsMade.keys().next().value);
     }
     return handsMade.get(key);
   }
-  /* the player's: the hands' icons take the same colours */
+  /* the player's: the hands' icons and the sounding notes in the score take the same colours */
   let shown = null;
   function colours(env) {
-    const hands = handsOf(env.S.meta && env.S.meta.id, failed || lost, env.theme);
-    if (hands !== shown) {
+    const hands = handsOf(env.S.meta && env.S.meta.hands);
+    if (hands && hands !== shown) {
       shown = hands; keyCache = null;
       const root = document.documentElement.style;
       root.setProperty('--hand-r', css(hands[0].lin)); root.setProperty('--hand-l', css(hands[1].lin));
+      root.setProperty('--note-r', css(hands[0].score)); root.setProperty('--note-l', css(hands[1].score));
     }
     return hands;
+  }
+  /* the flat roll's colours (js/app.js drawRoll, without WebGL 2): each hand's note, a deeper one
+     for black keys' notes, a lighter one for the attack and the notes sounding */
+  function flat(env) {
+    const hands = colours(env);
+    if (!hands) return null;
+    const out = {};
+    hands.forEach((hc, i) => {
+      const k = i ? 'lh' : 'rh', [L, C, h] = toLch(hc.lin);
+      out[k] = css(hc.lin); out[k + '-key'] = css(lch(L * 0.78, C, h)); out[k + '-hot'] = css(lift(hc.lin, 0.5));
+    });
+    return out;
   }
   function handColours(rgb) {
     const [, C, h] = toLch(rgb);
@@ -103,6 +116,7 @@
     return {
       lin: rgb,                                         // the bloom's colour
       note: srgb(rgb), rim: srgb(lift(rgb, 0.55)),      // a glass note's tint and its rim light
+      score: lift(rgb, 0.3),                            // a sounding note in the score, on its dark paper
       lab: toLab(lch(0.5, Math.min(0.22, C * 1.5), h)), // the field's colour, at lightness 0.5
       key: vivid(kL), keyRim: vivid(kL + 0.08), keyDeep: vivid(kL * 0.62),
     };
@@ -391,6 +405,7 @@
     const w = R.w, h = R.h, pps = S.pps, sc = S.score, W = G.W, left = G.left, bw = W * BLACK_W;
     const cw = el.roll.width, chh = el.roll.height, dpr = cw / w;
     const hands = colours(env), T = clock();
+    if (!hands) { c.fillStyle = theme.stage; c.fillRect(0, 0, w, h); return true; }   // its colours are on their way (js/app.js setScore)
 
     const inst = [], fieldNotes = [], names = [], labels = [], bars = [], beats = [];
     const heat = [new Float32Array(HEAT_N), new Float32Array(HEAT_N)];
@@ -479,23 +494,24 @@
      Its opening bars (r.roll: start and length in hundredths of a second, pitch and hand, the bar
      starts and the end; js/app.js rollOf) as the player shows them as it begins: on the player's
      keys, the first notes landing on the card's bottom edge, where the keyboard would be, the rest
-     rising to 0.2 of its height from the top, under the card's name and its wash, blurred more and
-     more toward the top (blurTop), lit in the piece's hands' colours, with the grid's lanes and bar lines. Still:
-     a card's noise does not move. Drawn into the card's 2D canvas; false without WebGL 2. */
-  /* a card's wash (index.html .card .shade): each hand's colour deepened to lightness 0.42, so white
-     type reads over it, a yellow turned toward amber as it deepens (a deep yellow is olive);
-     [right, left] as css */
-  function washOf(id, theme) {
-    return handsOf(id, failed || lost, theme).map((hc) => {
-      const [, C, h] = toLch(hc.lin);
-      let deg = (h * 180) / Math.PI;
-      deg -= 25 * Math.max(0, 1 - Math.abs(deg - 95) / 25);
-      return css(lch(0.42, clamp(C, 0.09, 0.16), (deg * Math.PI) / 180));
-    });
+     rising to 0.2 of its height from the top, lit in the piece's hands' colours (r.hands), with no
+     grid. It is light on black, added to the card's cover (index.html .card), fading out toward
+     the top and blurred more and more as it goes (blurTop). Still: a card's noise does not move.
+     Drawn into the card's 2D canvas; false without WebGL 2 or the piece's colours. */
+  /* what a card's cover deepens to at its bottom (index.html .card .shade), where its notes are:
+     the cover's base colour at lightness 0.2, a yellow turned toward amber as it deepens (a deep
+     yellow is olive) */
+  function deep(hex) {
+    const [, C, h] = toLch(hexLin(hex));
+    let deg = (h * 180) / Math.PI;
+    deg -= 30 * Math.max(0, 1 - Math.abs(deg - 95) / 30);
+    return css(lch(0.2, clamp(C, 0.03, 0.09), (deg * Math.PI) / 180));
   }
   let whiteAt = null;   // how many white keys lie below each key, from A0
-  function thumb(cv, r, theme) {
-    if (!r.roll || !r.roll.notes.length || !ready()) return false;
+  const CARD_GRID = { lane: '#000000', grid: '#000000', 'grid-2': '#000000' };   // a card's roll has no grid
+  function thumb(cv, r) {
+    const hands = handsOf(r.hands);
+    if (!hands || !r.roll || !r.roll.notes.length || !ready()) return false;
     const w = cv.clientWidth, H = cv.clientHeight;
     if (!w || !H) return true;
     if (!whiteAt) { whiteAt = new Int16Array(128); for (let m = 21, n = 0; m < 128; m++) { whiteAt[m] = n; if (!FB.isBlack(m)) n++; } }
@@ -505,7 +521,7 @@
     const left = whiteAt[clamp(lo, 21, 108)] - 1.5, W = w / (whiteAt[clamp(hi, 21, 108)] + 2.5 - left), bw = W * 0.58;
     const keyX = (m) => (FB.isBlack(m) ? (whiteAt[m] - left) * W - bw / 2 : (whiteAt[m] - left) * W);
     const yOf = (cs) => h - (cs / roll.end) * (h - top), inset = Math.min(1.5, W * 0.07);
-    const hands = handsOf(r.id, false, theme), inst = [], fieldNotes = [];
+    const inst = [], fieldNotes = [];
     for (let pass = 0; pass < 2; pass++) {
       for (let i = 0; i < t.length; i += 4) {
         const m = t[i + 2], black = FB.isBlack(m);
@@ -517,17 +533,17 @@
       }
     }
     heatPx.fill(0);
-    draw({ cw: Math.round(w * dpr), ch: Math.round(h * dpr), w, h, dpr, T: 12, hands, inst, fieldNotes, bars: roll.bars.map((b) => Math.round(yOf(b))).slice(0, 64), beats: [], W, left, bw, theme });
-    blurTop(Math.round(w * dpr), Math.round(h * dpr), Math.round(H * 0.55 * dpr), 12 * dpr);
+    draw({ cw: Math.round(w * dpr), ch: Math.round(h * dpr), w, h, dpr, T: 12, hands, inst, fieldNotes, bars: [], beats: [], W, left, bw, theme: CARD_GRID });
+    blurTop(Math.round(w * dpr), Math.round(h * dpr), Math.round(H * 0.6 * dpr), 6 * dpr);
     cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr);
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    c.fillStyle = '#000'; c.fillRect(0, 0, w, H);
     c.drawImage(glc, 0, 0, w, h);
-    /* and darkened toward the top as it blurs, quadratically too, so the card's wash lies on a
-       deep ground rather than on the blurred notes' haze */
-    const reach = H * 0.78, fade = c.createLinearGradient(0, 0, 0, reach);
-    for (let i = 0; i <= 10; i++) { const u = i / 10; fade.addColorStop(u, `rgba(0,0,0,${Math.min(1, 1.15 * (1 - u) * (1 - u)).toFixed(3)})`); }
+    /* faded out toward the top: the card adds this light to its cover (index.html .card .roll),
+       so black is nothing there, and fading to black fades it out. Eased in and out, from none at
+       the top to all of it at 0.8 of the way down */
+    const reach = H * 0.8, fade = c.createLinearGradient(0, 0, 0, reach);
+    for (let i = 0; i <= 10; i++) { const u = i / 10; fade.addColorStop(u, `rgba(0,0,0,${(1 - u * u * (3 - 2 * u)).toFixed(3)})`); }
     c.fillStyle = fade; c.fillRect(0, 0, w, reach);
     return true;
   }
@@ -604,7 +620,8 @@
     const w = G.width, h = G.height, W = G.W, left = G.left, bw = W * BLACK_W;
     const hands = colours(env), hair = w > 0 ? w / c.canvas.width : 1;
     const bh = Math.round(h * BLACK_H);
-    if (!keyCache || keyCache.h !== h || keyCache.bh !== bh) {
+    if (!hands) held = new Map();   // the piece's colours are on their way: no key lights yet
+    else if (!keyCache || keyCache.h !== h || keyCache.bh !== bh) {
       keyCache = { h, bh, white: [], body: [], face: [] };
       hands.forEach((hc, i) => {
         keyCache.white[i] = keyGradient(c, h, h, false, hc, 0);
@@ -615,7 +632,7 @@
     /* which keys give light: those sounding, fully, and those whose note ended within the release */
     const lit = new Map();
     for (const [m, hand] of held) lit.set(m, [hand, 1]);
-    if (S.score && RELEASE > 0) {
+    if (S.score && hands) {
       const t = env.now(), notes = S.score.notes;
       for (let i = env.lowerT0(t - S.score.maxDur - RELEASE - EPS); i < notes.length && notes[i].t0 <= t + EPS; i++) {
         const n = notes[i];
@@ -690,7 +707,7 @@
   }
 
   FB.rollGL = {
-    roll, keys, thumb, washOf,
+    roll, keys, thumb, deep, flat, colours,
     /* the field moves on its own (the noise), so the roll wants frames while it shows */
     get moving() { return !STILL && !failed && !lost && !!gl; },
   };

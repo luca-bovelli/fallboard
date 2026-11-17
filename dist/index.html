@@ -41,9 +41,6 @@
     --fill: rgb(255 255 255 / 0.15);
     --fill-ink: rgb(0 0 0 / 0.15);
     --focus: #0a84ff;
-    /* the hands' colours in their icons: the roll's, set by js/roll-gl.js from the piece's cover */
-    --hand-r: #d2a94f;
-    --hand-l: #4f8fe6;
     --now: #f0475a;
     --glass-fill: rgb(76 76 76 / 42%);
     --glass-filter: blur(8px) saturate(150%) brightness(1.08);
@@ -59,15 +56,9 @@
     --paper: #121315;
     --paper-edge: rgb(255 255 255 / 0.06);
     --score-ink: #e9e3d6;
-    --rh: #d2a94f;
-    --rh-key: #a17c2d;
-    --rh-hot: #f8dc94;
-    --lh: #4f8fe6;
-    --lh-key: #2f64b3;
-    --lh-hot: #abcdfb;
     --bar-ink: #171204;
-    --note-r: #efc567;
-    --note-l: #80b4ff;
+    /* the hands' colours are the piece's, from its cover: set by js/roll-gl.js (--hand-r, --hand-l
+       for their icons, --note-r, --note-l for the notes sounding in the score) */
     /* depth: a control floating over the music, a menu over that, a knob on a track */
     --shadow-float: 0 10px 36px rgb(0 0 0 / 0.36);
     --shadow-pop: 0 28px 90px rgb(0 0 0 / 0.5), var(--shadow-float);
@@ -192,8 +183,8 @@
   .sys svg { display: block; width: 100%; height: 100%; overflow: visible; }
   .sys svg g[stroke-width] { stroke: currentColor; }
   .sys svg polyline { fill: none; }
-  .sys svg g.Note > .on.r { fill: var(--note-r); }
-  .sys svg g.Note > .on.l { fill: var(--note-l); }
+  .sys svg g.Note > .on.r { fill: var(--note-r, currentColor); }
+  .sys svg g.Note > .on.l { fill: var(--note-l, currentColor); }
   /* hand focus: each hand's marks are one layer (see Notation.svgFor), faded as a whole so
      overlapping marks do not stack; barlines and the brace belong to both and stay */
   .sys svg [data-layer] { transition: opacity var(--dur-move) ease-out; }
@@ -353,8 +344,8 @@
   .hand-icon use { stroke: none; }
   .seg .hand-icon.one { width: 20px; height: 20px; }
   .seg .hand-icon.two { width: calc(20px * 40.2 / 24); height: 20px; }
-  .hand-icon .left { fill: var(--hand-l); }
-  .hand-icon .right { fill: var(--hand-r); }
+  .hand-icon .left { fill: var(--hand-l, currentColor); }
+  .hand-icon .right { fill: var(--hand-r, currentColor); }
   .hand-toggle[data-hand="L"] .right, .hand-toggle[data-hand="R"] .left {
     fill: var(--c1); opacity: var(--o-inactive);
   }
@@ -514,10 +505,10 @@
 
   /* ---------- library ----------
      Everything the player can open. The content is flat and matte on the black page; the
-     controls float over it as one layer of glass, as on the player: back, a profile, and search
+     controls float over it as one layer of glass, as on the player: back, a menu, and search
      at the bottom where a thumb reaches it. While searching, Explore's tabs move up into the glass
      layer and the results fill the page. The content fades to black under the search bar so the
-     field reads clearly. Colour keeps its meaning: gold and blue are the hands, red is a mark
+     field reads clearly. Colour keeps its meaning: a piece's two cover colours are its hands, red is a mark
      (where you left off; a piece still without its own score); surfaces are the roll's greys. */
   .library {
     position: fixed; inset: 0; z-index: 30; overflow: hidden;
@@ -534,7 +525,7 @@
     animation: lib-in var(--dur-move) var(--ease);
   }
   /* The column grows with the screen up to --content-max. Its margin is either one edge, or wide
-     enough to keep the back and profile buttons outside it (an edge, the button, an edge): never
+     enough to keep the back and menu buttons outside it (an edge, the button, an edge): never
      in between, where a button would sit half over the content. So it runs edge to edge until
      872 px (720 + 2 × (16 + 44 + 16)), then stops at 720 px, centred. */
   @media (min-width: 872px) {
@@ -640,36 +631,27 @@
   .shelf.fitted { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); overflow: visible; margin-inline: 0; padding-inline: 0; }
   .shelf.fitted .card-item { width: auto; }
   .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-w), 1fr)); gap: 12px; }
-  /* a card: a square, the piece's name at the top over a wash of its two hands' colours, deepened
-     for the type (--wl, the left hand's, from the top left, leading; --wr, the right hand's, from
-     the top right; library.js card, js/roll-gl.js washOf), easing into the piece's opening, which
-     rises from the bottom edge as in the player (library.js drawThumb). A faint light rim holds
-     the square against the black page. The composer under it, on the page itself */
+  /* a card: a square on its cover's colour fields (--mesh), the piece's name at the top in the
+     cover's ink (--ink), the cover deepening toward the bottom, eased, to a dark shade of itself
+     (--deep, js/roll-gl.js deep), where the piece's opening rises from the bottom edge as in the
+     player: light added to the cover, so its black is nothing, fading out toward the top
+     (library.js card, drawThumb). A faint light rim holds the square against the black page. The
+     composer under it, on the page itself */
   .card-item { flex: none; width: var(--card-w); min-width: 0; display: flex; flex-direction: column; gap: 8px; scroll-snap-align: start; }
   .cards .card-item { width: auto; }
   .card {
-    --wl: #2a2a30; --wr: #2a2a30;
     position: relative; isolation: isolate; display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 0;
-    border-radius: var(--r-card); overflow: hidden; background: #000; color: inherit; text-align: left; cursor: pointer;
+    border-radius: var(--r-card); overflow: hidden; background: var(--mesh, #000); color: var(--ink, var(--t1)); text-align: left; cursor: pointer;
   }
   .card::before { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07); pointer-events: none; }
-  .card .roll { position: absolute; inset: 0; z-index: -2; display: block; width: 100%; height: 100%; }
   .card .shade {
-    position: absolute; inset: 0; z-index: -1; pointer-events: none;
-    background:
-      radial-gradient(135% 95% at 0% 0%, var(--wl) 0%, color-mix(in oklab, var(--wl) 62%, transparent) 30%, color-mix(in oklab, var(--wl) 22%, transparent) 56%, transparent 80%),
-      radial-gradient(100% 72% at 104% -4%, var(--wr) 0%, color-mix(in oklab, var(--wr) 52%, transparent) 34%, color-mix(in oklab, var(--wr) 14%, transparent) 58%, transparent 74%);
+    position: absolute; inset: 0; z-index: -2; pointer-events: none;
+    background: linear-gradient(to bottom, transparent 8%, color-mix(in oklab, var(--deep, #000) 15.6%, transparent) 31%,
+      color-mix(in oklab, var(--deep, #000) 50%, transparent) 54%, color-mix(in oklab, var(--deep, #000) 84.4%, transparent) 77%, var(--deep, #000) 100%);
   }
-  /* the upload card: no fill, a dim dashed line round it, the upload icon and an underlined
-     "Upload a score" in its middle, both dimmed as the app dims an icon; what it takes is under it */
-  .card.upload { background: none; border: 1.5px dashed rgb(255 255 255 / 0.2); }
-  .card.upload::before, .card.upload .shade { display: none; }
-  .card .up { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px; opacity: var(--o-inactive); }
-  .card .up svg { width: 28px; height: 28px; fill: none; stroke: var(--t1); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .card .up b { max-width: 100%; font-size: var(--fs-s); font-weight: 400; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .roll { position: absolute; inset: 0; z-index: -1; display: block; width: 100%; height: 100%; mix-blend-mode: screen; mix-blend-mode: plus-lighter; }
   .card .title {
     position: absolute; top: 0; left: 0; right: 0; padding: 12px 12px 0; font-size: var(--fs-m); font-weight: 600; line-height: 1.25;
-    text-shadow: 0 1px 10px rgb(0 0 0 / 0.25);
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
   .card-item .by { padding-inline: 2px; font-size: var(--fs-s); color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -907,7 +889,7 @@
   .lib-scopes { position: absolute; top: 0; left: calc(var(--control) + var(--edge)); right: 0; animation: scopes-in var(--dur-move) var(--ease); }
   @media (min-width: 872px) { .lib-scopes { left: calc(var(--col-l) - var(--gutter-l)); right: calc(var(--col-r) - var(--gutter-r)); } }
   @keyframes scopes-in { from { opacity: 0; transform: translateY(28px); } }
-  .library.is-searching :is(#libProfile, #libMore) { display: none; }
+  .library.is-searching #libMore { display: none; }
   /* the menu under the ellipsis, against the right edge */
   .lib-menu { left: auto; right: var(--gutter-r); top: calc(var(--lib-top) + var(--control) + var(--gap)); z-index: 5; transform-origin: calc(100% - 22px) 0; }
   .lib-bottom { position: absolute; z-index: 4; left: var(--col-l); right: var(--col-r); bottom: calc(var(--lib-bottom) + var(--kb)); transition: bottom var(--dur-keyboard) var(--ease); }
@@ -1060,12 +1042,8 @@
       <button type="button" data-tab="composers" aria-pressed="false">Composers</button>
     </div>
     <span class="grow"></span>
-    <!-- a place for accounts on the library's home; it does nothing yet -->
-    <button type="button" class="round glass-material" id="libProfile" aria-label="Profile (coming soon)" title="Profile (coming soon)">
-      <svg viewBox="0 0 24 24" aria-hidden="true" class="filled"><circle cx="12" cy="8.2" r="4.2"/><path d="M4.2 20.2c0-4.1 3.5-6.9 7.8-6.9s7.8 2.8 7.8 6.9c0 .55-.45 1-1 1H5.2c-.55 0-1-.45-1-1Z"/></svg>
-    </button>
-    <!-- on a composer's, a work's or a piece's page: what can be done with it -->
-    <button type="button" class="round glass-material" id="libMore" aria-label="More" title="More" aria-haspopup="true" aria-expanded="false" aria-controls="libMenu" hidden>
+    <!-- what can be done here: on every page, uploading a score; on a page about something, sharing it -->
+    <button type="button" class="round glass-material" id="libMore" aria-label="More" title="More" aria-haspopup="true" aria-expanded="false" aria-controls="libMenu">
       <svg viewBox="0 0 24 24" aria-hidden="true" class="filled"><circle cx="5.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/></svg>
     </button>
   </header>
@@ -1074,6 +1052,10 @@
       <button type="button" id="libShare">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
         <b>Share</b><small id="libShareNote">Send a link to this page</small>
+      </button>
+      <button type="button" id="libUpload">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 19h14"/></svg>
+        <b>Upload a score</b><small>MusicXML or .mxl</small>
       </button>
     </div>
   </div>
