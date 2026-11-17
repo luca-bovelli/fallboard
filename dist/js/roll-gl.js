@@ -540,13 +540,13 @@
      index 1.46. A ray from the eye enters the front, crosses the solid and leaves at its back, so
      near the edge what lies under the card (its cover and the roll's light) is bent inward; Fresnel
      loss at both faces, normalised so the flat middle is the cover as it is; the controls' rim
-     light along the top and bottom edges, stronger than the controls' (0.5 to their 0.2). No coating: the controls' grey would dull the
+     light along the top and bottom edges (0.2, as the controls). No coating: the controls' grey would dull the
      cover. Functions as js/glass.js writes them. */
   const GLASS_FS = `#version 300 es
     precision highp float;
     uniform sampler2D uScene; uniform vec2 uSize; uniform vec4 rectangle; uniform float corner;
     out vec4 o;
-    const float shapeSoftness = 0.5, capFlatness = 0.8, lightScale = 0.04, ior = 1.46, backgroundGap = 0.0, rimGain = 0.5;
+    const float shapeSoftness = 0.5, capFlatness = 0.8, lightScale = 0.04, ior = 1.46, backgroundGap = 0.0, rimGain = 0.2;
     vec3 dec(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
     vec3 enc(vec3 c) { return mix(c * 12.92, 1.055 * pow(max(c, 0.0), vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
     float squircleHinge(float q, float e) { float root = sqrt(q * q + e * e); return q < 0.0 ? e * e / max(root - q, 0.00000001) : q + root; }
