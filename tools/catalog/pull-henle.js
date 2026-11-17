@@ -20,7 +20,12 @@ const OUT = path.join(ROOT, 'catalog', 'raw', 'henle.json');
 const UA = 'Mozilla/5.0 (compatible; fallboard-catalogue/1.0)';
 const SITEMAP = 'https://www.henle.de/sitemap/salesChannel-0cb0024164614b6294ee03320d7f6070-2fbb5fe2e29a4d70aa5854ce7ce3e20b/0cb0024164614b6294ee03320d7f6070-sitemap-www-henle-de-en-1.xml.gz';
 const GAP = 1200;   // ms between requests
-const NOT_PIANO = /violin|viola|violoncello|cello|flute|oboe|clarinet|bassoon|horn|trumpet|trombone|guitar|harp(?!sichord)|organ|string|quartet|quintet|trio|sextet|septet|octet|nonet|song|lieder|voice|vocal|choir|chor|concert(o|ino)|duo|four-hands|4-hands|two-pianos|2-pianos|mandolin|saxophone|bass|gamba|recorder|symphon|serenade-for|divertimento|orchestra|wind|ensemble|sinfonia-concertante|mass|requiem|opera|aria|duets?/i;
+/* whole words of the page's name only: inside words they matched piano pieces ("Hungarian" and
+   "Variations" hold "aria", "c-sharp-minor" holds "harp", "Symphonic Etudes" "symphon"). Songs
+   and lieder are let through: "Songs without Words", "15 Hungarian Peasant Songs". An
+   edition that gets past this but is not for piano solo is still dropped below, by its
+   instrumentation */
+const NOT_PIANO = /(^|[-/.])(violins?|violas?|violoncellos?|cellos?|flutes?|oboes?|clarinets?|bassoons?|horns?|trumpets?|trombones?|guitars?|harps?|organ|strings?|quartets?|quintets?|trios?|sextets?|septets?|octets?|nonets?|voices?|vocal|choir|chorus|concertos?|concertino|duos?|four-hands|4-hands|two-pianos|2-pianos|mandolin|saxophone|bass|gamba|recorders?|symphony|symphonies|serenade-for|orchestra|winds?|ensemble|sinfonia-concertante|mass|masses|requiem|operas?|arias?)(?=[-/.]|$)/i;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function get(url, tries = 4) {

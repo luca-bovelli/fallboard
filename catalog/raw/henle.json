@@ -1,6 +1,6 @@
 {
  "source": "G. Henle Verlag, levels of difficulty (Rolf Koenen), from henle.de",
- "pulled": "2026-11-15",
+ "pulled": "2026-11-17",
  "editions": [
   {
    "hn": 1,
@@ -5003,6 +5003,19 @@
    ]
   },
   {
+   "hn": 87,
+   "url": "https://www.henle.de/en/Abegg-Variations-op.-1/HN-87",
+   "edition": "Abegg Variations op. 1",
+   "composer": "Schumann_Robert",
+   "pieces": [
+    {
+     "title": "Abegg Variations op. 1",
+     "level": 7,
+     "abrsm": "Piano LRSM recommended <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 88,
    "url": "https://www.henle.de/en/Novelettes-op.-21/HN-88",
    "edition": "Novelettes op. 21",
@@ -5432,6 +5445,89 @@
     {
      "title": "Fugue a minor BWV 895",
      "level": 5
+    }
+   ]
+  },
+  {
+   "hn": 116,
+   "url": "https://www.henle.de/en/Piano-Variations/HN-116",
+   "edition": "Piano Variations",
+   "composer": "Mozart_Wolfgang_Amadeus",
+   "pieces": [
+    {
+     "title": "8 Variations on a Dutch Song K. Anh. 208 (24)",
+     "level": 5
+    },
+    {
+     "title": "7 Piano Variations on \"Willem van Nassau\" D major K. 25",
+     "level": 5
+    },
+    {
+     "title": "6 Piano Variations on \"Mio caro Adone\" K. 180 (173c)",
+     "level": 5
+    },
+    {
+     "title": "12 Piano Variations on a Minuet K. 179 (189a)",
+     "level": 6
+    },
+    {
+     "title": "9 Piano Variations on the Ariette \"Lison dormait\" K. 264 (315d)",
+     "level": 6
+    },
+    {
+     "title": "8 Piano Variations on a March from \"Les Mariages Samnites\" K. 352 (374c)",
+     "level": 5
+    },
+    {
+     "title": "12 Piano Variations on “La belle Françoise” K. 353 (300f)",
+     "level": 5
+    },
+    {
+     "title": "12 Piano Variations on the Romance “Je suis Lindor” K. 354 (299a)",
+     "level": 6
+    },
+    {
+     "title": "6 Piano Variations on “Salve, tu Domine” K. 398 (416e)",
+     "level": 6
+    },
+    {
+     "title": "10 Piano Variations on “Unser dummer Pöbel meint” K. 455",
+     "level": 6,
+     "abrsm": "Piano ARSM"
+    },
+    {
+     "title": "12 Piano Variations on an Allegretto K. 500",
+     "level": 6
+    },
+    {
+     "title": "6 Piano Variations on an Allegretto K. 54 (547b)",
+     "level": 5
+    },
+    {
+     "title": "9 Piano Variations on a Minuet by Duport K. 573",
+     "level": 6,
+     "abrsm": "Piano ARSM"
+    },
+    {
+     "title": "8 Piano Variations on “Ein Weib ist das herrlichste Ding” K. 613",
+     "level": 6
+    },
+    {
+     "title": "8 Piano Variations on “Come un'agnello” K. 460 (454a)",
+     "level": 6
+    },
+    {
+     "title": "Theme and two Variations K. 460 (454a)",
+     "level": 5
+    },
+    {
+     "title": "6 Piano Variations on the Final Theme of the Clarinet Quintet K. 581 K. Anh. 137",
+     "level": 6
+    },
+    {
+     "title": "12 Piano Variations on “Ah, vous dirai-je Maman” K. 265 (300e)",
+     "level": 5,
+     "abrsm": "Piano Grade 5 recommended Read more ... <div class=\""
     }
    ]
   },
@@ -6175,6 +6271,58 @@
    ]
   },
   {
+   "hn": 143,
+   "url": "https://www.henle.de/en/Variations-for-Piano-Volume-I/HN-143",
+   "edition": "Variations for Piano, Volume I",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "9 Piano Variations on a March by Dressler (first version) WoO 63",
+     "level": 6
+    },
+    {
+     "title": "6 Piano Variations on the Swiss Song “Es hätt e’ Buur e’ Töchterli” WoO 64",
+     "level": 4
+    },
+    {
+     "title": "24 Piano Variations on \"Venni Amore\" by Righini WoO 65",
+     "level": 7
+    },
+    {
+     "title": "13 Piano Variations on \"Es war einmal ein alter Mann\" by Ditters von Dittersdorf WoO 66",
+     "level": 6
+    },
+    {
+     "title": "12 Piano Variations on the \"Minuet à la Viganò\" de Haibel WoO 68",
+     "level": 6
+    },
+    {
+     "title": "9 Piano Variations on \"Quant' è più bello\" from La Molinara by Paisiello A major WoO 69",
+     "level": 5
+    },
+    {
+     "title": "6 Piano Variations on \"Nel cor più non mi sento\" by Paisiello WoO 70",
+     "level": 4
+    },
+    {
+     "title": "12 Piano Variations on a Russian Dance by Wranitzky WoO 71",
+     "level": 6
+    },
+    {
+     "title": "8 Piano Variations on \"Mich brennt ein heißes Fieber\" by Grétry WoO 72",
+     "level": 5
+    },
+    {
+     "title": "10 Piano Variations on \"La stessa, la stessissima\" by Salieri WoO 73",
+     "level": 6
+    },
+    {
+     "title": "7 Piano Variations on \"Kind, willst du ruhig schlafen\" by Winter WoO 75",
+     "level": 7
+    }
+   ]
+  },
+  {
    "hn": 146,
    "url": "https://www.henle.de/en/Piano-Sonatas-Volume-I/HN-146",
    "edition": "Piano Sonatas, Volume I",
@@ -6593,6 +6741,46 @@
    ]
   },
   {
+   "hn": 159,
+   "url": "https://www.henle.de/en/Goldberg-Variations-BWV-988/HN-159",
+   "edition": "Goldberg Variations BWV 988",
+   "composer": "Bach_Johann_Sebastian",
+   "pieces": [
+    {
+     "title": "Goldberg Variations G major BWV 988",
+     "level": 9
+    }
+   ]
+  },
+  {
+   "hn": 161,
+   "url": "https://www.henle.de/en/Four-Duets-BWV-802-805/HN-161",
+   "edition": "Four Duets BWV 802-805",
+   "composer": "Bach_Johann_Sebastian",
+   "pieces": [
+    {
+     "title": "Duet I from Clavier exercise part 3 e minor BWV 802",
+     "level": 5,
+     "group": "Four Duets BWV 802-805"
+    },
+    {
+     "title": "Duet II from Clavier exercise part 3 F major BWV 803",
+     "level": 5,
+     "group": "Four Duets BWV 802-805"
+    },
+    {
+     "title": "Duet III from Clavier exercise part 3 G major BWV 804",
+     "level": 5,
+     "group": "Four Duets BWV 802-805"
+    },
+    {
+     "title": "Duet IV from Clavier exercise part 3 a minor BWV 805",
+     "level": 5,
+     "group": "Four Duets BWV 802-805"
+    }
+   ]
+  },
+  {
    "hn": 163,
    "url": "https://www.henle.de/en/Chromatic-Fantasy-and-Fugue-d-minor-BWV-903-and-903a/HN-163",
    "edition": "Chromatic Fantasy and Fugue d minor BWV 903 and 903a",
@@ -6614,6 +6802,92 @@
     {
      "title": "Piano Sonata (Sonata facile) C major K. 545",
      "level": 5
+    }
+   ]
+  },
+  {
+   "hn": 165,
+   "url": "https://www.henle.de/en/12-Variations-on-Ah-vous-dirai-je-Maman-K.-265/HN-165",
+   "edition": "12 Variations on “Ah, vous dirai-je Maman” K. 265",
+   "composer": "Mozart_Wolfgang_Amadeus",
+   "pieces": [
+    {
+     "title": "12 Piano Variations on “Ah, vous dirai-je Maman” K. 265 (300e)",
+     "level": 5,
+     "abrsm": "Piano Grade 5 recommended <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 166,
+   "url": "https://www.henle.de/en/Songs-from-the-Mur-Island-Little-Pieces-for-Piano/HN-166",
+   "edition": "Songs from the Mur-Island, Little Pieces for Piano",
+   "composer": "Tajcevic_Marko",
+   "pieces": [
+    {
+     "title": "Song from the Mur-Island no. 1",
+     "level": 2,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 2",
+     "level": 2,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 3",
+     "level": 2,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 4",
+     "level": 2,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 5",
+     "level": 2,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 6",
+     "level": 2,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 7",
+     "level": 3,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 8",
+     "level": 2,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 9",
+     "level": 3,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 10",
+     "level": 2,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 11",
+     "level": 3,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 12",
+     "level": 3,
+     "group": "Songs from the Mur-Island"
+    },
+    {
+     "title": "Song from the Mur-Island no. 13",
+     "level": 3,
+     "group": "Songs from the Mur-Island"
     }
    ]
   },
@@ -7045,6 +7319,32 @@
    ]
   },
   {
+   "hn": 189,
+   "url": "https://www.henle.de/en/10-Variations-on-Unser-dummer-Poebel-meint-K.-455/HN-189",
+   "edition": "10 Variations on “Unser dummer Pöbel meint” K. 455",
+   "composer": "Mozart_Wolfgang_Amadeus",
+   "pieces": [
+    {
+     "title": "10 Piano Variations on “Unser dummer Pöbel meint” K. 455",
+     "level": 6,
+     "abrsm": "Piano ARSM <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 190,
+   "url": "https://www.henle.de/en/9-Variations-on-a-Minuet-by-Duport-K.-573/HN-190",
+   "edition": "9 Variations on a Minuet by Duport K. 573",
+   "composer": "Mozart_Wolfgang_Amadeus",
+   "pieces": [
+    {
+     "title": "9 Piano Variations on a Minuet by Duport K. 573",
+     "level": 6,
+     "abrsm": "Piano ARSM <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 201,
    "url": "https://www.henle.de/en/Toccata-C-major-op.-7-Versions-1830-and-1834/HN-201",
    "edition": "Toccata C major op. 7, Versions 1830 and 1834",
@@ -7442,6 +7742,220 @@
     {
      "title": "Fugue after Erselius B flat major BWV 955",
      "level": 6
+    }
+   ]
+  },
+  {
+   "hn": 224,
+   "url": "https://www.henle.de/en/Piano-Pieces-Piano-Variations/HN-224",
+   "edition": "Piano Pieces - Piano Variations",
+   "composer": "Haydn_Joseph",
+   "pieces": [
+    {
+     "title": "Capriccio in G “Acht Sauschneider müssen seyn” Hob. XVII:1",
+     "level": 4
+    },
+    {
+     "title": "Piano Variations in A Hob. XVII:2",
+     "level": 5
+    },
+    {
+     "title": "Piano Variations in E flat Hob. XVII:3",
+     "level": 5
+    },
+    {
+     "title": "Piano arrangement of the 2nd movement from the Symphony Hob. I:81",
+     "level": 4
+    },
+    {
+     "title": "Piano arrangement of the aria “Io son poverina” from La vera costanza",
+     "level": 3
+    },
+    {
+     "title": "Piano arrangement of the 2nd movement from the Symphony Hob. I:79",
+     "level": 4
+    },
+    {
+     "title": "Piano arrangement of the 3rd movement from the Symphony Hob. I:85",
+     "level": 3
+    },
+    {
+     "title": "Piano arrangement of the 2nd movement from the Symphony Hob. I:85",
+     "level": 3
+    },
+    {
+     "title": "Piano arrangement of the second part of the overture Hob. Ia:15 from La vera costanza",
+     "level": 3
+    },
+    {
+     "title": "Adagio in F Hob. XVII:9",
+     "level": 3
+    },
+    {
+     "title": "Piano arrangement of the final part of the Introduzione from La vera costanza",
+     "level": 4
+    },
+    {
+     "title": "Piano arrangement of the 2nd movement from the symphony Hob. I:53",
+     "level": 3
+    },
+    {
+     "title": "Piano arrangement of the 4th movement from the String Quartet Hob. III:41 (“op. 33 No. 5”)",
+     "level": 4
+    },
+    {
+     "title": "Capriccio (Fantasia) in C Hob. XVII:4",
+     "level": 7
+    },
+    {
+     "title": "Piano Variations in C Hob. XVII:5",
+     "level": 4
+    },
+    {
+     "title": "Piano Variations (Sonata) f minor Hob. XVII:6",
+     "level": 7,
+     "abrsm": "Piano ARSM"
+    },
+    {
+     "title": "Adagio in G Urfassung von Hob.XV:22II",
+     "level": 6
+    },
+    {
+     "title": "Largo assai in E after Hob. III:74II",
+     "level": 5
+    },
+    {
+     "title": "Poco adagio G major - after the variations on \"Gott erhalte\" Hob. III:77II",
+     "level": 5
+    },
+    {
+     "title": "Andante in C after Hob.I:94II",
+     "level": 4
+    },
+    {
+     "title": "Adagio in G nach Hob. I:93II",
+     "level": 4
+    },
+    {
+     "title": "Menuett in C after Hob. I:97III",
+     "level": 3
+    },
+    {
+     "title": "Piano Variations in A major Hob. XVII:2: Additional variations from the first edition",
+     "level": 2,
+     "group": "Appendix: Works of doubtful authenticity"
+    },
+    {
+     "title": "Variations in D Hob. XVII:7",
+     "level": 3,
+     "group": "Appendix: Works of doubtful authenticity"
+    }
+   ]
+  },
+  {
+   "hn": 225,
+   "url": "https://www.henle.de/en/Piano-Pieces-Piano-Variations/HN-225",
+   "edition": "Piano Pieces - Piano Variations",
+   "composer": "Haydn_Joseph",
+   "pieces": [
+    {
+     "title": "Capriccio in G “Acht Sauschneider müssen seyn” Hob. XVII:1",
+     "level": 4
+    },
+    {
+     "title": "Piano Variations in A Hob. XVII:2",
+     "level": 5
+    },
+    {
+     "title": "Piano Variations in E flat Hob. XVII:3",
+     "level": 5
+    },
+    {
+     "title": "Piano arrangement of the 2nd movement from the Symphony Hob. I:81",
+     "level": 4
+    },
+    {
+     "title": "Piano arrangement of the aria “Io son poverina” from La vera costanza",
+     "level": 3
+    },
+    {
+     "title": "Piano arrangement of the 2nd movement from the Symphony Hob. I:79",
+     "level": 4
+    },
+    {
+     "title": "Piano arrangement of the 3rd movement from the Symphony Hob. I:85",
+     "level": 3
+    },
+    {
+     "title": "Piano arrangement of the 2nd movement from the Symphony Hob. I:85",
+     "level": 3
+    },
+    {
+     "title": "Piano arrangement of the second part of the overture Hob. Ia:15 from La vera costanza",
+     "level": 3
+    },
+    {
+     "title": "Adagio in F Hob. XVII:9",
+     "level": 3
+    },
+    {
+     "title": "Piano arrangement of the final part of the Introduzione from La vera costanza",
+     "level": 4
+    },
+    {
+     "title": "Piano arrangement of the 2nd movement from the symphony Hob. I:53",
+     "level": 3
+    },
+    {
+     "title": "Piano arrangement of the 4th movement from the String Quartet Hob. III:41 (“op. 33 No. 5”)",
+     "level": 4
+    },
+    {
+     "title": "Capriccio (Fantasia) in C Hob. XVII:4",
+     "level": 7
+    },
+    {
+     "title": "Piano Variations in C Hob. XVII:5",
+     "level": 4
+    },
+    {
+     "title": "Piano Variations (Sonata) f minor Hob. XVII:6",
+     "level": 7,
+     "abrsm": "Piano ARSM"
+    },
+    {
+     "title": "Adagio in G Urfassung von Hob.XV:22II",
+     "level": 6
+    },
+    {
+     "title": "Largo assai in E after Hob. III:74II",
+     "level": 5
+    },
+    {
+     "title": "Poco adagio G major - after the variations on \"Gott erhalte\" Hob. III:77II",
+     "level": 5
+    },
+    {
+     "title": "Andante in C after Hob.I:94II",
+     "level": 4
+    },
+    {
+     "title": "Adagio in G nach Hob. I:93II",
+     "level": 4
+    },
+    {
+     "title": "Menuett in C after Hob. I:97III",
+     "level": 3
+    },
+    {
+     "title": "Piano Variations in A major Hob. XVII:2: Additional variations from the first edition",
+     "level": 2,
+     "group": "Appendix: Works of doubtful authenticity"
+    },
+    {
+     "title": "Variations in D Hob. XVII:7",
+     "level": 3,
+     "group": "Appendix: Works of doubtful authenticity"
     }
    ]
   },
@@ -7870,6 +8384,19 @@
    ]
   },
   {
+   "hn": 248,
+   "url": "https://www.henle.de/en/Symphonic-Etudes-op.-13-Versions-1837-and-1852/HN-248",
+   "edition": "Symphonic Etudes op. 13, Versions 1837 and 1852",
+   "composer": "Schumann_Robert",
+   "pieces": [
+    {
+     "title": "Symphonic Etudes - Versions 1837 and 1852 op. 13",
+     "level": 9,
+     "abrsm": "Piano FRSM recommended <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 253,
    "url": "https://www.henle.de/en/Kreisleriana-op.-16/HN-253",
    "edition": "Kreisleriana op. 16",
@@ -7974,6 +8501,232 @@
      "title": "3 Allegri Capricciosi di Bravura op. 84",
      "level": 7,
      "group": "6 Eglogues op. 35"
+    }
+   ]
+  },
+  {
+   "hn": 261,
+   "url": "https://www.henle.de/en/Easy-Piano-Variations-from-the-Baroque-and-Classical-Periods/HN-261",
+   "edition": "Easy Piano Variations from the Baroque and Classical Periods",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "Carl Philipp Emanuel Bach 6 Variations (First Edition) C major Wq 118,5",
+     "level": 3
+    },
+    {
+     "title": "Johann Christian Bach 4 Variations G major op. 5,3",
+     "level": 3
+    },
+    {
+     "title": "Ludwig van Beethoven 9 Piano Variations on \"Quant' è più bello\" from La Molinara by Paisiello A major WoO 69",
+     "level": 5
+    },
+    {
+     "title": "Georg Friedrich Händel 5 Variations B flat major",
+     "level": 3
+    },
+    {
+     "title": "Joseph Haydn Piano Variations in E flat Hob. XVII:3",
+     "level": 5
+    },
+    {
+     "title": "Wolfgang Amadeus Mozart 7 Piano Variations on \"Willem van Nassau\" D major K. 25",
+     "level": 5
+    }
+   ]
+  },
+  {
+   "hn": 262,
+   "url": "https://www.henle.de/en/Suites-Sonatas-Capriccios-Variations/HN-262",
+   "edition": "Suites, Sonatas, Capriccios, Variations",
+   "composer": "Bach_Johann_Sebastian",
+   "pieces": [
+    {
+     "title": "Suite a minor BWV 818",
+     "level": 5
+    },
+    {
+     "title": "Suite a minor BWV 818a",
+     "level": 5,
+     "abrsm": "Harpsichord Grade 5"
+    },
+    {
+     "title": "Suite E flat major BWV 819",
+     "level": 5
+    },
+    {
+     "title": "Suite E flat major BWV 819a",
+     "level": 5
+    },
+    {
+     "title": "Overture (Suite) F major BWV 820",
+     "level": 5
+    },
+    {
+     "title": "Suite f minor BWV 823",
+     "level": 4
+    },
+    {
+     "title": "Suite A major BWV 832",
+     "level": 4
+    },
+    {
+     "title": "Suite (Prelude and Partita) F major BWV 833",
+     "level": 4
+    },
+    {
+     "title": "Second Minuet from French Suite c minor BWV 813a",
+     "level": 3
+    },
+    {
+     "title": "Minuet from French Suite E flat major BWV 815a",
+     "level": 3
+    },
+    {
+     "title": "Minuet I from the Notebook for W. F. Bach G major BWV 841",
+     "level": 2
+    },
+    {
+     "title": "Minuet II from the\"Notebook for W. F. Bach g minor BWV 842",
+     "level": 3
+    },
+    {
+     "title": "Minuet III from the Notebook for W. F. Bach G major BWV 843",
+     "level": 3
+    },
+    {
+     "title": "Sonata D major BWV 963",
+     "level": 5
+    },
+    {
+     "title": "Sonata a minor BWV 967",
+     "level": 5
+    },
+    {
+     "title": "Sonata after Reinken a minor BWV 965",
+     "level": 7
+    },
+    {
+     "title": "Piano Sonata after Reinken C major BWV 966",
+     "level": 6
+    },
+    {
+     "title": "Sonata after the Violin Sonata A minor d minor BWV 964",
+     "level": 7
+    },
+    {
+     "title": "Adagio after the Violin Sonata C major (Sonata movement) G major BWV 968",
+     "level": 4
+    },
+    {
+     "title": "Capriccio sopra la lontananza del fratello dilettissimo B flat major BWV 992",
+     "level": 4
+    },
+    {
+     "title": "Capriccio E major BWV 993",
+     "level": 6
+    },
+    {
+     "title": "Aria Variata a minor BWV 989",
+     "level": 5
+    }
+   ]
+  },
+  {
+   "hn": 263,
+   "url": "https://www.henle.de/en/Suites-Sonatas-Capriccios-Variations/HN-263",
+   "edition": "Suites, Sonatas, Capriccios, Variations",
+   "composer": "Bach_Johann_Sebastian",
+   "pieces": [
+    {
+     "title": "Suite a minor BWV 818",
+     "level": 5
+    },
+    {
+     "title": "Suite a minor BWV 818a",
+     "level": 5,
+     "abrsm": "Harpsichord Grade 5"
+    },
+    {
+     "title": "Suite E flat major BWV 819",
+     "level": 5
+    },
+    {
+     "title": "Suite E flat major BWV 819a",
+     "level": 5
+    },
+    {
+     "title": "Overture (Suite) F major BWV 820",
+     "level": 5
+    },
+    {
+     "title": "Suite f minor BWV 823",
+     "level": 4
+    },
+    {
+     "title": "Suite A major BWV 832",
+     "level": 4
+    },
+    {
+     "title": "Suite (Prelude and Partita) F major BWV 833",
+     "level": 4
+    },
+    {
+     "title": "Second Minuet from French Suite c minor BWV 813a",
+     "level": 3
+    },
+    {
+     "title": "Minuet from French Suite E flat major BWV 815a",
+     "level": 3
+    },
+    {
+     "title": "Minuet I from the Notebook for W. F. Bach G major BWV 841",
+     "level": 2
+    },
+    {
+     "title": "Minuet II from the\"Notebook for W. F. Bach g minor BWV 842",
+     "level": 3
+    },
+    {
+     "title": "Minuet III from the Notebook for W. F. Bach G major BWV 843",
+     "level": 3
+    },
+    {
+     "title": "Sonata D major BWV 963",
+     "level": 5
+    },
+    {
+     "title": "Sonata a minor BWV 967",
+     "level": 5
+    },
+    {
+     "title": "Sonata after Reinken a minor BWV 965",
+     "level": 7
+    },
+    {
+     "title": "Piano Sonata after Reinken C major BWV 966",
+     "level": 6
+    },
+    {
+     "title": "Sonata after the Violin Sonata A minor d minor BWV 964",
+     "level": 7
+    },
+    {
+     "title": "Adagio after the Violin Sonata C major (Sonata movement) G major BWV 968",
+     "level": 4
+    },
+    {
+     "title": "Capriccio sopra la lontananza del fratello dilettissimo B flat major BWV 992",
+     "level": 4
+    },
+    {
+     "title": "Capriccio E major BWV 993",
+     "level": 6
+    },
+    {
+     "title": "Aria Variata a minor BWV 989",
+     "level": 5
     }
    ]
   },
@@ -8224,6 +8977,19 @@
     {
      "title": "Appendix: Mazurka op. 7,2a",
      "level": 5
+    }
+   ]
+  },
+  {
+   "hn": 272,
+   "url": "https://www.henle.de/en/Handel-Variations-op.-24/HN-272",
+   "edition": "Handel Variations op. 24",
+   "composer": "Brahms_Johannes",
+   "pieces": [
+    {
+     "title": "Variations on a theme of Händel op. 24",
+     "level": 9,
+     "abrsm": "Piano FRSM recommended <div class=\""
     }
    ]
   },
@@ -8718,6 +9484,276 @@
    ]
   },
   {
+   "hn": 327,
+   "url": "https://www.henle.de/en/Piano-works-Volume-III-Songs-without-Words/HN-327",
+   "edition": "Piano works, Volume III - Songs without Words",
+   "composer": "Mendelssohn_Bartholdy_Felix",
+   "pieces": [
+    {
+     "title": "Song without Words E major op. 19,1",
+     "level": 5,
+     "group": "Songs without Words op. 19",
+     "abrsm": "Piano Grade 7"
+    },
+    {
+     "title": "Song without Words a minor op. 19,2",
+     "level": 5,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words A major op. 19,3",
+     "level": 6,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words A major op. 19,4",
+     "level": 4,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words f sharp minor op. 19,5",
+     "level": 7,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) g minor op. 19,6",
+     "level": 4,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words E flat major op. 30,1",
+     "level": 5,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words b flat minor op. 30,2",
+     "level": 7,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words E major op. 30,3",
+     "level": 4,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words b minor op. 30,4",
+     "level": 7,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words D major op. 30,5",
+     "level": 6,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) f sharp minor op. 30,6",
+     "level": 5,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words E flat major op. 38,1",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words c minor op. 38,2",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words E major op. 38,3",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words A major op. 38,4",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words a minor op. 38,5",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words (Duetto) A flat major op. 38,6",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words A flat major op. 53,1",
+     "level": 5,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words E flat major op. 53,2",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words g minor op. 53,3",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words F major op. 53,4",
+     "level": 5,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words a minor op. 53,5",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words A major op. 53,6",
+     "level": 7,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words G major op. 62,1",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words B flat major op. 62,2",
+     "level": 7,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words e minor op. 62,3",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words G major op. 62,4",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) a minor op. 62,5",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words (Spring Song) A major op. 62,6",
+     "level": 5,
+     "group": "Songs without Words op. 62",
+     "abrsm": "Piano Grade 8"
+    },
+    {
+     "title": "Song without Words E flat major op. 67,1",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words f sharp minor op. 67,2",
+     "level": 6,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words B flat major op. 67,3",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words C major op. 67,4",
+     "level": 7,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words b minor op. 67,5",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words E major op. 67,6",
+     "level": 6,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words F major op. 85,1",
+     "level": 5,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words a minor op. 85,2",
+     "level": 6,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words E flat major op. 85,3",
+     "level": 7,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words D major op. 85,4",
+     "level": 5,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words A major op. 85,5",
+     "level": 5,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words B flat major op. 85,6",
+     "level": 6,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words e minor op. 102,1",
+     "level": 5,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words D major op. 102,2",
+     "level": 5,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words C major op. 102,3",
+     "level": 7,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words g minor op. 102,4",
+     "level": 5,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words A major op. 102,5",
+     "level": 6,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words C major op. 102,6",
+     "level": 5,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words (Rider's Song) d minor",
+     "level": 7,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Appendix: Song without Words (version of the english First Edition) b minor op. 30,4",
+     "level": null,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Appendix: Song without Words (version of a transcription by Carl Klingemann) B flat major op. 85,6",
+     "level": null,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Appendix: Song without Words (version of later autograph) D major op. 102,2",
+     "level": null,
+     "group": "Songs without Words op. 102"
+    }
+   ]
+  },
+  {
    "hn": 330,
    "url": "https://www.henle.de/en/Piano-Sonatas-Selection-Volume-II-1790-1805/HN-330",
    "edition": "Piano Sonatas, Selection, Volume II (1790-1805)",
@@ -8911,6 +9947,18 @@
     {
      "title": "Appendix: Initial Prélude HWV 568",
      "level": 6
+    }
+   ]
+  },
+  {
+   "hn": 337,
+   "url": "https://www.henle.de/en/Piano-Sonata-f-sharp-minor-op.-11/HN-337",
+   "edition": "Piano Sonata f sharp minor op. 11",
+   "composer": "Schumann_Robert",
+   "pieces": [
+    {
+     "title": "Piano Sonata f sharp minor op. 11",
+     "level": 9
     }
    ]
   },
@@ -9547,6 +10595,276 @@
    ]
   },
   {
+   "hn": 361,
+   "url": "https://www.henle.de/en/Piano-works-Volume-III-Songs-without-Words/HN-361",
+   "edition": "Piano works, Volume III - Songs without Words",
+   "composer": "Mendelssohn_Bartholdy_Felix",
+   "pieces": [
+    {
+     "title": "Song without Words E major op. 19,1",
+     "level": 5,
+     "group": "Songs without Words op. 19",
+     "abrsm": "Piano Grade 7"
+    },
+    {
+     "title": "Song without Words a minor op. 19,2",
+     "level": 5,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words A major op. 19,3",
+     "level": 6,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words A major op. 19,4",
+     "level": 4,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words f sharp minor op. 19,5",
+     "level": 7,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) g minor op. 19,6",
+     "level": 4,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words E flat major op. 30,1",
+     "level": 5,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words b flat minor op. 30,2",
+     "level": 7,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words E major op. 30,3",
+     "level": 4,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words b minor op. 30,4",
+     "level": 7,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words D major op. 30,5",
+     "level": 6,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) f sharp minor op. 30,6",
+     "level": 5,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words E flat major op. 38,1",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words c minor op. 38,2",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words E major op. 38,3",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words A major op. 38,4",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words a minor op. 38,5",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words (Duetto) A flat major op. 38,6",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words A flat major op. 53,1",
+     "level": 5,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words E flat major op. 53,2",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words g minor op. 53,3",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words F major op. 53,4",
+     "level": 5,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words a minor op. 53,5",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words A major op. 53,6",
+     "level": 7,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words G major op. 62,1",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words B flat major op. 62,2",
+     "level": 7,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words e minor op. 62,3",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words G major op. 62,4",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) a minor op. 62,5",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words (Spring Song) A major op. 62,6",
+     "level": 5,
+     "group": "Songs without Words op. 62",
+     "abrsm": "Piano Grade 8"
+    },
+    {
+     "title": "Song without Words E flat major op. 67,1",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words f sharp minor op. 67,2",
+     "level": 6,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words B flat major op. 67,3",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words C major op. 67,4",
+     "level": 7,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words b minor op. 67,5",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words E major op. 67,6",
+     "level": 6,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words F major op. 85,1",
+     "level": 5,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words a minor op. 85,2",
+     "level": 6,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words E flat major op. 85,3",
+     "level": 7,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words D major op. 85,4",
+     "level": 5,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words A major op. 85,5",
+     "level": 5,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words B flat major op. 85,6",
+     "level": 6,
+     "group": "Songs without Words op. 85"
+    },
+    {
+     "title": "Song without Words e minor op. 102,1",
+     "level": 5,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words D major op. 102,2",
+     "level": 5,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words C major op. 102,3",
+     "level": 7,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words g minor op. 102,4",
+     "level": 5,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words A major op. 102,5",
+     "level": 6,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words C major op. 102,6",
+     "level": 5,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Song without Words (Rider's Song) d minor",
+     "level": 7,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Appendix: Song without Words (version of the english First Edition) b minor op. 30,4",
+     "level": null,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Appendix: Song without Words (version of a transcription by Carl Klingemann) B flat major op. 85,6",
+     "level": null,
+     "group": "Songs without Words op. 102"
+    },
+    {
+     "title": "Appendix: Song without Words (version of later autograph) D major op. 102,2",
+     "level": null,
+     "group": "Songs without Words op. 102"
+    }
+   ]
+  },
+  {
    "hn": 362,
    "url": "https://www.henle.de/en/Piano-Sonata-no.-30-E-major-op.-109/HN-362",
    "edition": "Piano Sonata no. 30 E major op. 109",
@@ -9613,6 +10931,18 @@
     {
      "title": "Funeral March (Marche funèbre) from Piano Sonata op. 35",
      "level": 4
+    }
+   ]
+  },
+  {
+   "hn": 371,
+   "url": "https://www.henle.de/en/Air-with-Variations-from-Suite-E-major-HWV-430-The-Harmonious-Blacksmith/HN-371",
+   "edition": "Air with Variations from Suite E major HWV 430 The Harmonious Blacksmith",
+   "composer": "Haendel_Georg_Friedrich",
+   "pieces": [
+    {
+     "title": "Air with Variations (The Harmonious Blacksmith) HWV 430",
+     "level": 5
     }
    ]
   },
@@ -10550,6 +11880,19 @@
    ]
   },
   {
+   "hn": 394,
+   "url": "https://www.henle.de/en/Paganini-Variations-op.-35/HN-394",
+   "edition": "Paganini Variations op. 35",
+   "composer": "Brahms_Johannes",
+   "pieces": [
+    {
+     "title": "Paganini Variations op. 35",
+     "level": 9,
+     "abrsm": "Piano FRSM recommended <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 395,
    "url": "https://www.henle.de/en/Selected-Piano-Sonatas-Volume-I/HN-395",
    "edition": "Selected Piano Sonatas, Volume I",
@@ -10849,6 +12192,42 @@
    ]
   },
   {
+   "hn": 414,
+   "url": "https://www.henle.de/en/Selected-Piano-Pieces-Concert-Pieces-Variations/HN-414",
+   "edition": "Selected Piano Pieces (Concert Pieces, Variations)",
+   "composer": "Weber_Carl_Maria_von",
+   "pieces": [
+    {
+     "title": "Momento Capriccioso B flat major op. 12",
+     "level": 7
+    },
+    {
+     "title": "Grande Polonaise E flat major op. 21",
+     "level": 7
+    },
+    {
+     "title": "Air russe varié (Schöne Minka) c minor op. 40 (37)",
+     "level": 7
+    },
+    {
+     "title": "Piano Variations on a Gipsy Song C major op. 55",
+     "level": 7
+    },
+    {
+     "title": "Rondo brillante E flat major op. 62",
+     "level": 7
+    },
+    {
+     "title": "Invitation to the Dance D flat major op. 65",
+     "level": 7
+    },
+    {
+     "title": "Polacca brillante E major op. 72",
+     "level": 7
+    }
+   ]
+  },
+  {
    "hn": 415,
    "url": "https://www.henle.de/en/Invitation-to-the-Dance-D-flat-major-op.-65/HN-415",
    "edition": "Invitation to the Dance D flat major op. 65",
@@ -11073,6 +12452,74 @@
    ]
   },
   {
+   "hn": 438,
+   "url": "https://www.henle.de/en/Schumann-Variations-op.-9/HN-438",
+   "edition": "Schumann Variations op. 9",
+   "composer": "Brahms_Johannes",
+   "pieces": [
+    {
+     "title": "Piano Variations on a theme of Schumann op. 9",
+     "level": 7
+    }
+   ]
+  },
+  {
+   "hn": 439,
+   "url": "https://www.henle.de/en/Variations-op.-21-no.-1-and-no.-2/HN-439",
+   "edition": "Variations op. 21 no. 1 and no. 2",
+   "composer": "Brahms_Johannes",
+   "pieces": [
+    {
+     "title": "Variations op. 21,1",
+     "level": 7,
+     "abrsm": "Piano FRSM recommended"
+    },
+    {
+     "title": "Variations on a Hungarian Song op. 21,2",
+     "level": 7
+    }
+   ]
+  },
+  {
+   "hn": 440,
+   "url": "https://www.henle.de/en/Piano-Variations/HN-440",
+   "edition": "Piano Variations",
+   "composer": "Brahms_Johannes",
+   "pieces": [
+    {
+     "title": "Piano Variations on a theme of Schumann op. 9",
+     "level": 7
+    },
+    {
+     "title": "Variations op. 21,1",
+     "level": 7,
+     "abrsm": "Piano FRSM recommended"
+    },
+    {
+     "title": "Variations on a Hungarian Song op. 21,2",
+     "level": 7
+    },
+    {
+     "title": "Variations on a theme of Händel op. 24",
+     "level": 9,
+     "abrsm": "Piano FRSM recommended"
+    },
+    {
+     "title": "Paganini Variations op. 35",
+     "level": 9,
+     "abrsm": "Piano FRSM recommended"
+    },
+    {
+     "title": "App. A: Piano version of the variation movement from the String sextet op. 18",
+     "level": 6
+    },
+    {
+     "title": "Appendix B: Variations op. 23, version for piano 2-hands by Th. Kirchner",
+     "level": 7
+    }
+   ]
+  },
+  {
    "hn": 441,
    "url": "https://www.henle.de/en/Humoreske-B-flat-major-op.-20/HN-441",
    "edition": "Humoreske B flat major op. 20",
@@ -11081,6 +12528,54 @@
     {
      "title": "Humoresque B flat major op. 20",
      "level": 7
+    }
+   ]
+  },
+  {
+   "hn": 444,
+   "url": "https://www.henle.de/en/Piano-Pieces-Piano-Variations/HN-444",
+   "edition": "Piano Pieces - Piano Variations",
+   "composer": "Schubert_Franz",
+   "pieces": [
+    {
+     "title": "Andante C major D 29",
+     "level": 5
+    },
+    {
+     "title": "10 Piano Variations F major D 156",
+     "level": 7
+    },
+    {
+     "title": "Adagio G major D 178",
+     "level": 5
+    },
+    {
+     "title": "13 Piano Variations a minor D 576",
+     "level": 6
+    },
+    {
+     "title": "Scherzo B flat major D 593",
+     "level": 3
+    },
+    {
+     "title": "Scherzo D flat major D 593",
+     "level": 5
+    },
+    {
+     "title": "Fantasy (Grazer Fantasie) C major D 605 A",
+     "level": 7
+    },
+    {
+     "title": "March E major D 606",
+     "level": 5
+    },
+    {
+     "title": "Hungarian Melody b minor D 817",
+     "level": 5
+    },
+    {
+     "title": "Allegretto c minor D 915",
+     "level": 5
     }
    ]
   },
@@ -12150,6 +13645,18 @@
    ]
   },
   {
+   "hn": 482,
+   "url": "https://www.henle.de/en/Variations-on-a-Theme-Ghost-Variations/HN-482",
+   "edition": "Variations on a Theme (Ghost Variations)",
+   "composer": "Schumann_Robert",
+   "pieces": [
+    {
+     "title": "Variations on a Theme (Ghost Variations) E flat major Anh. F39",
+     "level": 7
+    }
+   ]
+  },
+  {
    "hn": 484,
    "url": "https://www.henle.de/en/24-Preludes-op.-11/HN-484",
    "edition": "24 Préludes op. 11",
@@ -12598,6 +14105,30 @@
    ]
   },
   {
+   "hn": 493,
+   "url": "https://www.henle.de/en/Variations-and-Fugue-on-a-Theme-by-J.-S.-Bach-op.-81/HN-493",
+   "edition": "Variations and Fugue on a Theme by J. S. Bach op. 81",
+   "composer": "Reger_Max",
+   "pieces": [
+    {
+     "title": "Piano Variations and Fugue on a Theme by J. S. Bach op. 81",
+     "level": 9
+    }
+   ]
+  },
+  {
+   "hn": 494,
+   "url": "https://www.henle.de/en/Prelude-Choral-et-Fugue/HN-494",
+   "edition": "Prélude, Choral et Fugue",
+   "composer": "Franck_Cesar",
+   "pieces": [
+    {
+     "title": "Prélude, choral et fugue (A Mademoiselle Marie Poitevin)",
+     "level": 8
+    }
+   ]
+  },
+  {
    "hn": 497,
    "url": "https://www.henle.de/en/Twelve-Piano-Pieces-op.-40/HN-497",
    "edition": "Twelve Piano Pieces op. 40",
@@ -12773,6 +14304,64 @@
      "title": "Piano Sonata b minor",
      "level": 9,
      "abrsm": "Piano FRSM recommended <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 560,
+   "url": "https://www.henle.de/en/Hungarian-Dances-nos.-1-10/HN-560",
+   "edition": "Hungarian Dances nos. 1-10",
+   "composer": "Brahms_Johannes",
+   "pieces": [
+    {
+     "title": "Hungarian Dance no. 1 g minor",
+     "level": 8,
+     "group": "Hungarian Dances no. 1-10"
+    },
+    {
+     "title": "Hungarian Dance no. 2 d minor",
+     "level": 8,
+     "group": "Hungarian Dances no. 1-10"
+    },
+    {
+     "title": "Hungarian Dance no. 3 F major",
+     "level": 7,
+     "group": "Hungarian Dances no. 1-10"
+    },
+    {
+     "title": "Hungarian Dance no. 4 f sharp minor",
+     "level": 8,
+     "group": "Hungarian Dances no. 1-10"
+    },
+    {
+     "title": "Hungarian Dance no. 5 f sharp minor",
+     "level": 8,
+     "group": "Hungarian Dances no. 1-10"
+    },
+    {
+     "title": "Hungarian Dance no. 6 D flat major",
+     "level": 8,
+     "group": "Hungarian Dances no. 1-10"
+    },
+    {
+     "title": "Hungarian Dance no. 7 F major",
+     "level": 7,
+     "group": "Hungarian Dances no. 1-10"
+    },
+    {
+     "title": "Hungarian Dance no. 8 a minor",
+     "level": 8,
+     "group": "Hungarian Dances no. 1-10"
+    },
+    {
+     "title": "Hungarian Dance no. 9 e minor",
+     "level": 8,
+     "group": "Hungarian Dances no. 1-10"
+    },
+    {
+     "title": "Hungarian Dance no. 10 E major",
+     "level": 8,
+     "group": "Hungarian Dances no. 1-10"
     }
    ]
   },
@@ -13358,6 +14947,18 @@
      "title": "6. Epílogo (Serenata del espectro)",
      "level": 8,
      "group": "Goyescas - Los majos enamorados"
+    }
+   ]
+  },
+  {
+   "hn": 585,
+   "url": "https://www.henle.de/en/Spinning-Song-from-The-Flying-Dutchman/HN-585",
+   "edition": "Spinning Song from “The Flying Dutchman”",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Spinning Song from “The Flying Dutchman” (Richard Wagner)",
+     "level": 7
     }
    ]
   },
@@ -14404,6 +16005,19 @@
    ]
   },
   {
+   "hn": 620,
+   "url": "https://www.henle.de/en/Variations-serieuses-op.-54/HN-620",
+   "edition": "Variations sérieuses op. 54",
+   "composer": "Mendelssohn_Bartholdy_Felix",
+   "pieces": [
+    {
+     "title": "Variations sérieuses op. 54",
+     "level": 8,
+     "abrsm": "Piano LRSM recommended <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 623,
    "url": "https://www.henle.de/en/Piano-Sonata-a-minor-op.-post.-143-D-784/HN-623",
    "edition": "Piano Sonata a minor op. post. 143 D 784",
@@ -14704,6 +16318,18 @@
      "level": 9,
      "group": "Iberia · Fourth Book",
      "abrsm": "Piano LRSM <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 654,
+   "url": "https://www.henle.de/en/Waltz-c-sharp-minor-op.-64-no.-2/HN-654",
+   "edition": "Waltz c sharp minor op. 64 no. 2",
+   "composer": "Chopin_Frederic",
+   "pieces": [
+    {
+     "title": "Waltz c sharp minor op. 64,2",
+     "level": 6
     }
    ]
   },
@@ -15044,6 +16670,19 @@
    ]
   },
   {
+   "hn": 745,
+   "url": "https://www.henle.de/en/Theme-et-Variations-op.-73-for-Piano/HN-745",
+   "edition": "Thème et Variations op. 73 for Piano",
+   "composer": "Faure_Gabriel",
+   "pieces": [
+    {
+     "title": "Thème et Variations op. 73",
+     "level": 8,
+     "abrsm": "Piano FRSM <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 747,
    "url": "https://www.henle.de/en/Piano-Sonata-no.-7-op.-64/HN-747",
    "edition": "Piano Sonata no. 7 op. 64",
@@ -15265,6 +16904,22 @@
    ]
   },
   {
+   "hn": 781,
+   "url": "https://www.henle.de/en/Nocturne-c-sharp-minor-Lento-con-gran-espressione/HN-781",
+   "edition": "Nocturne c sharp minor (Lento con gran espressione)",
+   "composer": "Chopin_Frederic",
+   "pieces": [
+    {
+     "title": "Nocturne (version 1) c sharp minor KK IVa,16",
+     "level": 5
+    },
+    {
+     "title": "Nocturne (version 2) c sharp minor KK IVa,16",
+     "level": 5
+    }
+   ]
+  },
+  {
    "hn": 782,
    "url": "https://www.henle.de/en/Chants-d-Espagne-op.-232/HN-782",
    "edition": "Chants d'Espagne op. 232",
@@ -15392,6 +17047,54 @@
     {
      "title": "Asturias (Leyenda)",
      "level": 6
+    }
+   ]
+  },
+  {
+   "hn": 804,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-6/HN-804",
+   "edition": "Hungarian Rhapsody no. 6",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 6",
+     "level": 9
+    }
+   ]
+  },
+  {
+   "hn": 805,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-9-The-Carnival-at-Pest/HN-805",
+   "edition": "Hungarian Rhapsody no. 9 (The Carnival at Pest)",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 9 The Carnival at Pest",
+     "level": 8
+    }
+   ]
+  },
+  {
+   "hn": 806,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-12/HN-806",
+   "edition": "Hungarian Rhapsody no. 12",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 12",
+     "level": 9
+    }
+   ]
+  },
+  {
+   "hn": 807,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-15-Rakoczi-March/HN-807",
+   "edition": "Hungarian Rhapsody no. 15 (Rákóczi March)",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 15 - Rákóczi March",
+     "level": 8
     }
    ]
   },
@@ -16923,6 +18626,19 @@
      "title": "Langsam, ausdrucksvoll op. 126,7",
      "level": 5,
      "group": "Seven Piano Pieces in Fughetta Form op. 126"
+    }
+   ]
+  },
+  {
+   "hn": 912,
+   "url": "https://www.henle.de/en/Variations-f-minor-Sonata-Hob.-XVII-6/HN-912",
+   "edition": "Variations f minor (Sonata) Hob. XVII:6",
+   "composer": "Haydn_Joseph",
+   "pieces": [
+    {
+     "title": "Piano Variations (Sonata) f minor Hob. XVII:6",
+     "level": 7,
+     "abrsm": "Piano ARSM <div class=\""
     }
    ]
   },
@@ -19249,6 +20965,18 @@
    ]
   },
   {
+   "hn": 949,
+   "url": "https://www.henle.de/en/Variations-on-the-Hymn-Gott-erhalte-Version-for-Piano/HN-949",
+   "edition": "Variations on the Hymn \"Gott erhalte\", Version for Piano",
+   "composer": "Haydn_Joseph",
+   "pieces": [
+    {
+     "title": "Piano Variations on the Hymn \"Gott erhalte\" from the Kaiserquartett Hob. III:77 G major",
+     "level": 5
+    }
+   ]
+  },
+  {
    "hn": 951,
    "url": "https://www.henle.de/en/Piano-Music-from-Bach-to-Debussy/HN-951",
    "edition": "Piano Music from Bach to Debussy",
@@ -19925,6 +21653,19 @@
      "title": "Tarantella",
      "level": 8,
      "group": "Venezia e Napoli"
+    }
+   ]
+  },
+  {
+   "hn": 993,
+   "url": "https://www.henle.de/en/Barcarolle-F-sharp-major-op.-60/HN-993",
+   "edition": "Barcarolle F sharp major op. 60",
+   "composer": "Chopin_Frederic",
+   "pieces": [
+    {
+     "title": "Barcarolle F sharp major op. 60",
+     "level": 8,
+     "abrsm": "Piano LRSM recommended <div class=\""
     }
    ]
   },
@@ -20610,6 +22351,18 @@
    ]
   },
   {
+   "hn": 1022,
+   "url": "https://www.henle.de/en/Serenade-Leise-flehen-meine-Lieder-D-957-4/HN-1022",
+   "edition": "Serenade (“Leise flehen meine Lieder”) D 957,4",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Serenade (“Leise flehen meine Lieder”) D 957,4 (Franz Schubert)",
+     "level": 5
+    }
+   ]
+  },
+  {
    "hn": 1032,
    "url": "https://www.henle.de/en/Piano-Sonatas-Volume-I/HN-1032",
    "edition": "Piano Sonatas, Volume I",
@@ -20929,6 +22682,19 @@
     {
      "title": "The Trout D 550 (Franz Schubert)",
      "level": 7
+    }
+   ]
+  },
+  {
+   "hn": 1062,
+   "url": "https://www.henle.de/en/Piano-Sonata-no.-14-c-sharp-minor-op.-27-no.-2-Moonlight/HN-1062",
+   "edition": "Piano Sonata no. 14 c sharp minor op. 27 no. 2 (Moonlight)",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "Piano Sonata (Moonlight Sonata) c sharp minor op. 27,2",
+     "level": 7,
+     "abrsm": "Piano ARSM <div class=\""
     }
    ]
   },
@@ -21434,6 +23200,42 @@
    ]
   },
   {
+   "hn": 1108,
+   "url": "https://www.henle.de/en/Piano-Sonata-no.-2-g-sharp-minor-op.-19-Sonate-Fantaisie/HN-1108",
+   "edition": "Piano Sonata no. 2 g sharp minor op. 19 (Sonate-Fantaisie)",
+   "composer": "Skrjabin_Alexander",
+   "pieces": [
+    {
+     "title": "Piano Sonata (Sonate-Fantaisie) no. 2 g sharp minor op. 19",
+     "level": 8
+    }
+   ]
+  },
+  {
+   "hn": 1109,
+   "url": "https://www.henle.de/en/Piano-Sonata-no.-3-f-sharp-minor-op.-23/HN-1109",
+   "edition": "Piano Sonata no. 3 f sharp minor op. 23",
+   "composer": "Skrjabin_Alexander",
+   "pieces": [
+    {
+     "title": "Piano Sonata no. 3 f sharp minor op. 23",
+     "level": 8
+    }
+   ]
+  },
+  {
+   "hn": 1110,
+   "url": "https://www.henle.de/en/Piano-Sonata-no.-4-F-sharp-major-op.-30/HN-1110",
+   "edition": "Piano Sonata no. 4 F sharp major op. 30",
+   "composer": "Skrjabin_Alexander",
+   "pieces": [
+    {
+     "title": "Piano Sonata no. 4 F sharp major op. 30",
+     "level": 8
+    }
+   ]
+  },
+  {
    "hn": 1111,
    "url": "https://www.henle.de/en/Piano-Sonata-no.-5-op.-53/HN-1111",
    "edition": "Piano Sonata no. 5 op. 53",
@@ -21913,6 +23715,18 @@
    ]
   },
   {
+   "hn": 1154,
+   "url": "https://www.henle.de/en/Polonaise-f-sharp-minor-op.-44/HN-1154",
+   "edition": "Polonaise f sharp minor op. 44",
+   "composer": "Chopin_Frederic",
+   "pieces": [
+    {
+     "title": "Polonaise f sharp minor op. 44",
+     "level": 7
+    }
+   ]
+  },
+  {
    "hn": 1156,
    "url": "https://www.henle.de/en/Valse-romantique/HN-1156",
    "edition": "Valse romantique",
@@ -22038,6 +23852,46 @@
    ]
   },
   {
+   "hn": 1159,
+   "url": "https://www.henle.de/en/Goldberg-Variations-BWV-988/HN-1159",
+   "edition": "Goldberg Variations BWV 988",
+   "composer": "Bach_Johann_Sebastian",
+   "pieces": [
+    {
+     "title": "Goldberg Variations G major BWV 988",
+     "level": 9
+    }
+   ]
+  },
+  {
+   "hn": 1161,
+   "url": "https://www.henle.de/en/Four-Duets-BWV-802-805/HN-1161",
+   "edition": "Four Duets BWV 802-805",
+   "composer": "Bach_Johann_Sebastian",
+   "pieces": [
+    {
+     "title": "Duet I from Clavier exercise part 3 e minor BWV 802",
+     "level": 5,
+     "group": "Four Duets BWV 802-805"
+    },
+    {
+     "title": "Duet II from Clavier exercise part 3 F major BWV 803",
+     "level": 5,
+     "group": "Four Duets BWV 802-805"
+    },
+    {
+     "title": "Duet III from Clavier exercise part 3 G major BWV 804",
+     "level": 5,
+     "group": "Four Duets BWV 802-805"
+    },
+    {
+     "title": "Duet IV from Clavier exercise part 3 a minor BWV 805",
+     "level": 5,
+     "group": "Four Duets BWV 802-805"
+    }
+   ]
+  },
+  {
    "hn": 1162,
    "url": "https://www.henle.de/en/Bourree-fantasque/HN-1162",
    "edition": "Bourrée fantasque",
@@ -22077,6 +23931,30 @@
      "title": "Klavierstück op. 33b",
      "level": 8,
      "group": "Piano Pieces op. 33a & 33b"
+    }
+   ]
+  },
+  {
+   "hn": 1172,
+   "url": "https://www.henle.de/en/Venetian-Gondola-Songs-for-Piano/HN-1172",
+   "edition": "Venetian Gondola Songs for Piano",
+   "composer": "Mendelssohn_Bartholdy_Felix",
+   "pieces": [
+    {
+     "title": "Song without Words (Venetian Gondola Song) g minor op. 19,6",
+     "level": 4
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) f sharp minor op. 30,6",
+     "level": 5
+    },
+    {
+     "title": "Gondola Song A major",
+     "level": 5
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) a minor op. 62,5",
+     "level": 5
     }
    ]
   },
@@ -23520,6 +25398,18 @@
    ]
   },
   {
+   "hn": 1204,
+   "url": "https://www.henle.de/en/Spring-night-from-Song-Cycle-op.-39/HN-1204",
+   "edition": "Spring night from Song Cycle op. 39",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Spring night from Song Cycle op. 39 (Robert Schumann)",
+     "level": 7
+    }
+   ]
+  },
+  {
    "hn": 1205,
    "url": "https://www.henle.de/en/Nocturnes/HN-1205",
    "edition": "Nocturnes",
@@ -23553,6 +25443,30 @@
    ]
   },
   {
+   "hn": 1206,
+   "url": "https://www.henle.de/en/Corelli-Variations-op.-42/HN-1206",
+   "edition": "Corelli Variations op. 42",
+   "composer": "Rachmaninow_Sergej",
+   "pieces": [
+    {
+     "title": "Corelli Variations op. 42",
+     "level": 8
+    }
+   ]
+  },
+  {
+   "hn": 1211,
+   "url": "https://www.henle.de/en/Prelude-c-sharp-minor-op.-3-no.-2/HN-1211",
+   "edition": "Prélude c sharp minor op. 3 no. 2",
+   "composer": "Rachmaninow_Sergej",
+   "pieces": [
+    {
+     "title": "Prélude c sharp minor op. 3,2",
+     "level": 5
+    }
+   ]
+  },
+  {
    "hn": 1212,
    "url": "https://www.henle.de/en/Prelude-g-minor-op.-23-no.-5/HN-1212",
    "edition": "Prélude g minor op. 23 no. 5",
@@ -23560,6 +25474,18 @@
    "pieces": [
     {
      "title": "Prélude g minor op. 23,5",
+     "level": 7
+    }
+   ]
+  },
+  {
+   "hn": 1213,
+   "url": "https://www.henle.de/en/Prelude-g-sharp-minor-op.-32-no.-12/HN-1213",
+   "edition": "Prélude g sharp minor op. 32 no. 12",
+   "composer": "Rachmaninow_Sergej",
+   "pieces": [
+    {
+     "title": "Prélude g sharp minor op. 32,12",
      "level": 7
     }
    ]
@@ -24515,6 +26441,103 @@
    ]
   },
   {
+   "hn": 1262,
+   "url": "https://www.henle.de/en/Suites-Sonatas-Capriccios-Variations/HN-1262",
+   "edition": "Suites, Sonatas, Capriccios, Variations",
+   "composer": "Bach_Johann_Sebastian",
+   "pieces": [
+    {
+     "title": "Suite a minor BWV 818",
+     "level": 5
+    },
+    {
+     "title": "Suite a minor BWV 818a",
+     "level": 5,
+     "abrsm": "Harpsichord Grade 5"
+    },
+    {
+     "title": "Suite E flat major BWV 819",
+     "level": 5
+    },
+    {
+     "title": "Suite E flat major BWV 819a",
+     "level": 5
+    },
+    {
+     "title": "Overture (Suite) F major BWV 820",
+     "level": 5
+    },
+    {
+     "title": "Suite f minor BWV 823",
+     "level": 4
+    },
+    {
+     "title": "Suite A major BWV 832",
+     "level": 4
+    },
+    {
+     "title": "Suite (Prelude and Partita) F major BWV 833",
+     "level": 4
+    },
+    {
+     "title": "Second Minuet from French Suite c minor BWV 813a",
+     "level": 3
+    },
+    {
+     "title": "Minuet from French Suite E flat major BWV 815a",
+     "level": 3
+    },
+    {
+     "title": "Minuet I from the Notebook for W. F. Bach G major BWV 841",
+     "level": 2
+    },
+    {
+     "title": "Minuet II from the\"Notebook for W. F. Bach g minor BWV 842",
+     "level": 3
+    },
+    {
+     "title": "Minuet III from the Notebook for W. F. Bach G major BWV 843",
+     "level": 3
+    },
+    {
+     "title": "Sonata D major BWV 963",
+     "level": 5
+    },
+    {
+     "title": "Sonata a minor BWV 967",
+     "level": 5
+    },
+    {
+     "title": "Sonata after Reinken a minor BWV 965",
+     "level": 7
+    },
+    {
+     "title": "Piano Sonata after Reinken C major BWV 966",
+     "level": 6
+    },
+    {
+     "title": "Sonata after the Violin Sonata A minor d minor BWV 964",
+     "level": 7
+    },
+    {
+     "title": "Adagio after the Violin Sonata C major (Sonata movement) G major BWV 968",
+     "level": 4
+    },
+    {
+     "title": "Capriccio sopra la lontananza del fratello dilettissimo B flat major BWV 992",
+     "level": 4
+    },
+    {
+     "title": "Capriccio E major BWV 993",
+     "level": 6
+    },
+    {
+     "title": "Aria Variata a minor BWV 989",
+     "level": 5
+    }
+   ]
+  },
+  {
    "hn": 1264,
    "url": "https://www.henle.de/en/Etude-Tableau-e-flat-minor-op.-39-no.-5/HN-1264",
    "edition": "Étude-Tableau e flat minor op. 39 no. 5",
@@ -24522,6 +26545,125 @@
    "pieces": [
     {
      "title": "Étude-Tableau e flat minor op. 39,5",
+     "level": 9
+    }
+   ]
+  },
+  {
+   "hn": 1267,
+   "url": "https://www.henle.de/en/Piano-Variations-Volume-I/HN-1267",
+   "edition": "Piano Variations, Volume I",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "9 Piano Variations on a March by Dressler (first version) WoO 63",
+     "level": 6
+    },
+    {
+     "title": "6 Piano Variations on the Swiss Song “Es hätt e’ Buur e’ Töchterli” WoO 64",
+     "level": 4
+    },
+    {
+     "title": "24 Piano Variations on \"Venni Amore\" by Righini WoO 65",
+     "level": 7
+    },
+    {
+     "title": "13 Piano Variations on \"Es war einmal ein alter Mann\" by Ditters von Dittersdorf WoO 66",
+     "level": 6
+    },
+    {
+     "title": "12 Piano Variations on the \"Minuet à la Viganò\" de Haibel WoO 68",
+     "level": 6
+    },
+    {
+     "title": "9 Piano Variations on \"Quant' è più bello\" from La Molinara by Paisiello A major WoO 69",
+     "level": 5
+    },
+    {
+     "title": "6 Piano Variations on \"Nel cor più non mi sento\" by Paisiello WoO 70",
+     "level": 4
+    },
+    {
+     "title": "12 Piano Variations on a Russian Dance by Wranitzky WoO 71",
+     "level": 6
+    },
+    {
+     "title": "8 Piano Variations on \"Mich brennt ein heißes Fieber\" by Grétry WoO 72",
+     "level": 5
+    },
+    {
+     "title": "10 Piano Variations on \"La stessa, la stessissima\" by Salieri WoO 73",
+     "level": 6
+    },
+    {
+     "title": "7 Piano Variations on \"Kind, willst du ruhig schlafen\" by Winter WoO 75",
+     "level": 7
+    }
+   ]
+  },
+  {
+   "hn": 1269,
+   "url": "https://www.henle.de/en/Piano-Variations-Volume-II/HN-1269",
+   "edition": "Piano Variations, Volume II",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "8 Piano Variations on \"Tändeln und scherzen\" by Süßmayr WoO 76",
+     "level": 6
+    },
+    {
+     "title": "6 Easy Piano variations G major WoO 77",
+     "level": 5
+    },
+    {
+     "title": "6 Piano Variations F major op. 34",
+     "level": 7,
+     "abrsm": "Piano ARSM"
+    },
+    {
+     "title": "15 Piano Variations (with Fugue) E flat major op. 35",
+     "level": 8,
+     "abrsm": "Piano FRSM"
+    },
+    {
+     "title": "7 Piano Variations on \"God save the King\" WoO 78",
+     "level": 5
+    },
+    {
+     "title": "5 Piano Variations on \"Rule Britannia\" WoO 79",
+     "level": 6
+    },
+    {
+     "title": "32 Piano Variations c minor WoO 80",
+     "level": 7,
+     "abrsm": "Piano ARSM"
+    },
+    {
+     "title": "6 Piano Variations D major op. 76",
+     "level": 7
+    },
+    {
+     "title": "Diabelli Variations C major op. 120",
+     "level": 9
+    },
+    {
+     "title": "Appendix: 9 Piano Variations on a March by Dressler (second version) WoO 63",
+     "level": null
+    },
+    {
+     "title": "Appendix: 8 Piano Variations on \"Ich hab' ein kleines Hüttchen nur\" Anh. 10",
+     "level": null
+    }
+   ]
+  },
+  {
+   "hn": 1276,
+   "url": "https://www.henle.de/en/Diabelli-Variations-op.-120/HN-1276",
+   "edition": "Diabelli Variations op. 120",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "Diabelli Variations C major op. 120",
      "level": 9
     }
    ]
@@ -24761,6 +26903,19 @@
    ]
   },
   {
+   "hn": 1289,
+   "url": "https://www.henle.de/en/Piano-Sonata-f-sharp-minor-op.-2/HN-1289",
+   "edition": "Piano Sonata f sharp minor op. 2",
+   "composer": "Brahms_Johannes",
+   "pieces": [
+    {
+     "title": "Piano Sonata f sharp minor op. 2",
+     "level": 8,
+     "abrsm": "Piano FRSM <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 1290,
    "url": "https://www.henle.de/en/Piano-Sonata-f-minor-op.-5/HN-1290",
    "edition": "Piano Sonata f minor op. 5",
@@ -24786,6 +26941,69 @@
    ]
   },
   {
+   "hn": 1293,
+   "url": "https://www.henle.de/en/Chorale-Preludes/HN-1293",
+   "edition": "Chorale Preludes",
+   "composer": "Busoni_Ferruccio",
+   "pieces": [
+    {
+     "title": "Come, God, Creator!",
+     "level": 7,
+     "group": "Chorale Preludes (J. S. Bach)"
+    },
+    {
+     "title": "Awake, the voice commands",
+     "level": 5,
+     "group": "Chorale Preludes (J. S. Bach)"
+    },
+    {
+     "title": "Now comes the gentiles‘ Saviour",
+     "level": 5,
+     "group": "Chorale Preludes (J. S. Bach)"
+    },
+    {
+     "title": "Rejoice, beloved Christians",
+     "level": 7,
+     "group": "Chorale Preludes (J. S. Bach)"
+    },
+    {
+     "title": "I call on Thee, Lord",
+     "level": 5,
+     "group": "Chorale Preludes (J. S. Bach)"
+    },
+    {
+     "title": "Lord God, Heaven’s gate unlock!",
+     "level": 7,
+     "group": "Chorale Preludes (J. S. Bach)"
+    },
+    {
+     "title": "Through Adam came our fall",
+     "level": 5,
+     "group": "Chorale Preludes (J. S. Bach)"
+    },
+    {
+     "title": "Through Adam came our fall",
+     "level": 4,
+     "group": "Chorale Preludes (J. S. Bach)"
+    },
+    {
+     "title": "In Thee is joy",
+     "level": 7,
+     "group": "Chorale Preludes (J. S. Bach)"
+    },
+    {
+     "title": "Jesus Christ, our Lord and saviour, who turn’dst from us the wrath of God",
+     "level": 6,
+     "group": "Chorale Preludes (J. S. Bach)"
+    },
+    {
+     "title": "Appendix: From deep affliction I cry out to you",
+     "level": 6,
+     "group": "Chorale Preludes (J. S. Bach)"
+    }
+   ]
+  },
+  {
    "hn": 1295,
    "url": "https://www.henle.de/en/Alborada-del-gracioso/HN-1295",
    "edition": "Alborada del gracioso",
@@ -24799,6 +27017,19 @@
    ]
   },
   {
+   "hn": 1299,
+   "url": "https://www.henle.de/en/Eroica-Variations-op.-35/HN-1299",
+   "edition": "Eroica Variations op. 35",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "15 Piano Variations (with Fugue) E flat major op. 35",
+     "level": 8,
+     "abrsm": "Piano FRSM <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 1300,
    "url": "https://www.henle.de/en/Piano-Sonata-A-major-K.-331-Alla-Turca/HN-1300",
    "edition": "Piano Sonata A major K. 331 (Alla Turca)",
@@ -24808,6 +27039,18 @@
      "title": "Piano Sonata (Alla Turca) A major K. 331 (300i)",
      "level": 6,
      "abrsm": "Piano Grade 8 <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 1301,
+   "url": "https://www.henle.de/en/Meditation-Ave-Maria/HN-1301",
+   "edition": "Méditation, Ave Maria",
+   "composer": "Gounod_Charles",
+   "pieces": [
+    {
+     "title": "Méditation, Ave Maria (J. S. Bach)",
+     "level": 4
     }
    ]
   },
@@ -24897,6 +27140,18 @@
    ]
   },
   {
+   "hn": 1312,
+   "url": "https://www.henle.de/en/Piano-Sonata-no.-24-F-sharp-major-op.-78-A-Therese/HN-1312",
+   "edition": "Piano Sonata no. 24 F sharp major op. 78 (À Thérèse)",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "Piano Sonata F sharp major op. 78",
+     "level": 7
+    }
+   ]
+  },
+  {
    "hn": 1313,
    "url": "https://www.henle.de/en/Piano-Sonata-no.-25-Sonatina-G-major-op.-79/HN-1313",
    "edition": "Piano Sonata no. 25 (Sonatina) G major op. 79",
@@ -24968,6 +27223,18 @@
      "title": "La Fille aux cheveux de lin",
      "level": 5,
      "abrsm": "Piano Grade 8 <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 1320,
+   "url": "https://www.henle.de/en/Fantaisie-Impromptu-c-sharp-minor-op.-post.-66/HN-1320",
+   "edition": "Fantaisie-Impromptu c sharp minor op. post. 66",
+   "composer": "Chopin_Frederic",
+   "pieces": [
+    {
+     "title": "Fantaisie-Impromptu c sharp minor op. 66",
+     "level": 7
     }
    ]
   },
@@ -25645,6 +27912,19 @@
    ]
   },
   {
+   "hn": 1342,
+   "url": "https://www.henle.de/en/Scherzo-c-sharp-minor-op.-39/HN-1342",
+   "edition": "Scherzo c sharp minor op. 39",
+   "composer": "Chopin_Frederic",
+   "pieces": [
+    {
+     "title": "Scherzo c sharp minor op. 39",
+     "level": 8,
+     "abrsm": "Piano LRSM <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 1343,
    "url": "https://www.henle.de/en/Scherzo-E-major-op.-54/HN-1343",
    "edition": "Scherzo E major op. 54",
@@ -25654,6 +27934,18 @@
      "title": "Scherzo E major op. 54",
      "level": 8,
      "abrsm": "Piano LRSM <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 1344,
+   "url": "https://www.henle.de/en/Variations-op.-27/HN-1344",
+   "edition": "Variations op. 27",
+   "composer": "Webern_Anton",
+   "pieces": [
+    {
+     "title": "Variations op. 27",
+     "level": 7
     }
    ]
   },
@@ -25907,6 +28199,18 @@
    ]
   },
   {
+   "hn": 1356,
+   "url": "https://www.henle.de/en/Love-Song-Dedication-from-Myrthen-op.-25/HN-1356",
+   "edition": "Love Song (Dedication) from Myrthen op. 25",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Love Song (Dedication) (Robert Schumann)",
+     "level": 7
+    }
+   ]
+  },
+  {
    "hn": 1362,
    "url": "https://www.henle.de/en/Piano-Sonata-G-major-op.-78-D-894/HN-1362",
    "edition": "Piano Sonata G major op. 78 D 894",
@@ -25973,6 +28277,19 @@
    ]
   },
   {
+   "hn": 1373,
+   "url": "https://www.henle.de/en/Six-Variations-in-F-major-op.-34/HN-1373",
+   "edition": "Six Variations in F major op. 34",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "6 Piano Variations F major op. 34",
+     "level": 7,
+     "abrsm": "Piano ARSM <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 1374,
    "url": "https://www.henle.de/en/French-Overture-b-minor-BWV-831/HN-1374",
    "edition": "French Overture b minor BWV 831",
@@ -26005,6 +28322,39 @@
     {
      "title": "Intermezzo A major op. 118,2",
      "level": 6,
+     "abrsm": "Piano ARSM <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 1387,
+   "url": "https://www.henle.de/en/3-Variation-Works-WoO-64-70-77/HN-1387",
+   "edition": "3 Variation Works WoO 64, 70, 77",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "6 Piano Variations on the Swiss Song “Es hätt e’ Buur e’ Töchterli” WoO 64",
+     "level": 4
+    },
+    {
+     "title": "6 Piano Variations on \"Nel cor più non mi sento\" by Paisiello WoO 70",
+     "level": 4
+    },
+    {
+     "title": "6 Easy Piano variations G major WoO 77",
+     "level": 5
+    }
+   ]
+  },
+  {
+   "hn": 1388,
+   "url": "https://www.henle.de/en/32-Variations-c-minor-WoO-80/HN-1388",
+   "edition": "32 Variations c minor WoO 80",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "32 Piano Variations c minor WoO 80",
+     "level": 7,
      "abrsm": "Piano ARSM <div class=\""
     }
    ]
@@ -26193,6 +28543,308 @@
     {
      "title": "Suite op. 14 BB 70",
      "level": 7
+    }
+   ]
+  },
+  {
+   "hn": 1404,
+   "url": "https://www.henle.de/en/15-Hungarian-Peasant-Songs/HN-1404",
+   "edition": "15 Hungarian Peasant Songs",
+   "composer": "Bartok_Bela",
+   "pieces": [
+    {
+     "title": "Rubato BB 79,1",
+     "level": 4,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Andante BB 79,2",
+     "level": 4,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Poco rubato BB 79,3",
+     "level": 3,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Andante BB 79,4",
+     "level": 3,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Scherzo BB 79,5",
+     "level": 5,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Ballade (Tema con variazioni) BB 79,6",
+     "level": 4,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Allegro BB 79,7",
+     "level": 4,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Allegretto BB 79,8",
+     "level": 3,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Allegretto BB 79,9",
+     "level": 4,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "L'istesso tempo BB 79,10",
+     "level": 4,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Assai moderato BB 79,11",
+     "level": 3,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Allegretto BB 79,12",
+     "level": 4,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Poco più vivo BB 79,13",
+     "level": 4,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Allegro BB 79,14",
+     "level": 4,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    },
+    {
+     "title": "Allegro BB 79,15",
+     "level": 5,
+     "group": "15 Hungarian Peasant Songs BB 79"
+    }
+   ]
+  },
+  {
+   "hn": 1405,
+   "url": "https://www.henle.de/en/Improvisations-on-Hungarian-Peasant-Songs-op.-20/HN-1405",
+   "edition": "Improvisations on Hungarian Peasant Songs op. 20",
+   "composer": "Bartok_Bela",
+   "pieces": [
+    {
+     "title": "I. Molto moderato",
+     "level": 4,
+     "group": "Improvisations on Hungarian Peasant Songs op. 20 BB 83"
+    },
+    {
+     "title": "II. Molto capriccioso",
+     "level": 7,
+     "group": "Improvisations on Hungarian Peasant Songs op. 20 BB 83"
+    },
+    {
+     "title": "III. Lento, rubato",
+     "level": 7,
+     "group": "Improvisations on Hungarian Peasant Songs op. 20 BB 83"
+    },
+    {
+     "title": "IV. Allegretto scherzando",
+     "level": 7,
+     "group": "Improvisations on Hungarian Peasant Songs op. 20 BB 83"
+    },
+    {
+     "title": "V. Allegro molto",
+     "level": 8,
+     "group": "Improvisations on Hungarian Peasant Songs op. 20 BB 83"
+    },
+    {
+     "title": "VI. Allegro moderato, molto capriccioso",
+     "level": 8,
+     "group": "Improvisations on Hungarian Peasant Songs op. 20 BB 83"
+    },
+    {
+     "title": "VII. Sostenuto, rubato",
+     "level": 7,
+     "group": "Improvisations on Hungarian Peasant Songs op. 20 BB 83"
+    },
+    {
+     "title": "VIII. Allegro",
+     "level": 8,
+     "group": "Improvisations on Hungarian Peasant Songs op. 20 BB 83"
+    }
+   ]
+  },
+  {
+   "hn": 1406,
+   "url": "https://www.henle.de/en/Romanian-Christmas-Songs/HN-1406",
+   "edition": "Romanian Christmas Songs",
+   "composer": "Bartok_Bela",
+   "pieces": [
+    {
+     "title": "1. Allegro",
+     "level": 4,
+     "group": "First Series"
+    },
+    {
+     "title": "2. Allegro",
+     "level": 4,
+     "group": "First Series"
+    },
+    {
+     "title": "3. Allegro",
+     "level": 4,
+     "group": "First Series"
+    },
+    {
+     "title": "3. Allegro (concert version)",
+     "level": 6,
+     "group": "First Series"
+    },
+    {
+     "title": "4. Andante",
+     "level": 4,
+     "group": "First Series"
+    },
+    {
+     "title": "5. Allegro moderato",
+     "level": 4,
+     "group": "First Series"
+    },
+    {
+     "title": "5. Allegro moderato (concert version)",
+     "level": 6,
+     "group": "First Series"
+    },
+    {
+     "title": "6. Andante",
+     "level": 3,
+     "group": "First Series"
+    },
+    {
+     "title": "6. Andante (concert version)",
+     "level": 4,
+     "group": "First Series"
+    },
+    {
+     "title": "7. Andante",
+     "level": 4,
+     "group": "First Series"
+    },
+    {
+     "title": "8. Allegretto",
+     "level": 5,
+     "group": "First Series"
+    },
+    {
+     "title": "9. Allegro",
+     "level": 5,
+     "group": "First Series"
+    },
+    {
+     "title": "10. Più allegro",
+     "level": 4,
+     "group": "First Series"
+    },
+    {
+     "title": "1. Molto moderato",
+     "level": 4,
+     "group": "Second Series"
+    },
+    {
+     "title": "2. Moderato",
+     "level": 4,
+     "group": "Second Series"
+    },
+    {
+     "title": "2. Moderato (concert version)",
+     "level": 5,
+     "group": "Second Series"
+    },
+    {
+     "title": "3. Andante",
+     "level": 4,
+     "group": "Second Series"
+    },
+    {
+     "title": "4. Andante",
+     "level": 4,
+     "group": "Second Series"
+    },
+    {
+     "title": "5. Moderato",
+     "level": 4,
+     "group": "Second Series"
+    },
+    {
+     "title": "5. Moderato (concert version)",
+     "level": 6,
+     "group": "Second Series"
+    },
+    {
+     "title": "6. Andante",
+     "level": 4,
+     "group": "Second Series"
+    },
+    {
+     "title": "7. Variante della precedente",
+     "level": 4,
+     "group": "Second Series"
+    },
+    {
+     "title": "7. Variante della precedente (concert version)",
+     "level": 6,
+     "group": "Second Series"
+    },
+    {
+     "title": "(6.) Andante",
+     "level": 3,
+     "group": "Second Series"
+    },
+    {
+     "title": "8. Allegro",
+     "level": 3,
+     "group": "Second Series"
+    },
+    {
+     "title": "8. Allegro (concert version)",
+     "level": 5,
+     "group": "Second Series"
+    },
+    {
+     "title": "9. Allegretto",
+     "level": 5,
+     "group": "Second Series"
+    },
+    {
+     "title": "10. Allegro",
+     "level": 5,
+     "group": "Second Series"
+    }
+   ]
+  },
+  {
+   "hn": 1407,
+   "url": "https://www.henle.de/en/Three-Hungarian-Folk-Tunes/HN-1407",
+   "edition": "Three Hungarian Folk Tunes",
+   "composer": "Bartok_Bela",
+   "pieces": [
+    {
+     "title": "1. Andante tranquillo",
+     "level": 2,
+     "group": "3 Hungarian Folk Songs BB 80b"
+    },
+    {
+     "title": "2. Allegro non troppo",
+     "level": 2,
+     "group": "3 Hungarian Folk Songs BB 80b"
+    },
+    {
+     "title": "3. Maestoso",
+     "level": 2,
+     "group": "3 Hungarian Folk Songs BB 80b"
     }
    ]
   },
@@ -26988,6 +29640,39 @@
    ]
   },
   {
+   "hn": 1411,
+   "url": "https://www.henle.de/en/Six-Dances-in-Bulgarian-Rhythm-from-Mikrokosmos/HN-1411",
+   "edition": "Six Dances in Bulgarian Rhythm from Mikrokosmos",
+   "composer": "Bartok_Bela",
+   "pieces": [
+    {
+     "title": "Six Dances in Bulgarian Rhythm, No. 1",
+     "level": 6
+    },
+    {
+     "title": "Six Dances in Bulgarian Rhythm, No. 2",
+     "level": 6
+    },
+    {
+     "title": "Six Dances in Bulgarian Rhythm, No. 3",
+     "level": 7
+    },
+    {
+     "title": "Six Dances in Bulgarian Rhythm, No. 4",
+     "level": 7
+    },
+    {
+     "title": "Six Dances in Bulgarian Rhythm, No. 5",
+     "level": 7
+    },
+    {
+     "title": "Six Dances in Bulgarian Rhythm, No. 6",
+     "level": 7,
+     "abrsm": "Piano Grade 8 <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 1412,
    "url": "https://www.henle.de/en/Studies-op.-18/HN-1412",
    "edition": "Studies op. 18",
@@ -27476,6 +30161,18 @@
    ]
   },
   {
+   "hn": 1516,
+   "url": "https://www.henle.de/en/Piano-Sonata-no.-24-F-sharp-major-op.-78/HN-1516",
+   "edition": "Piano Sonata no. 24 F sharp major op. 78",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "Piano Sonata F sharp major op. 78",
+     "level": 7
+    }
+   ]
+  },
+  {
    "hn": 1518,
    "url": "https://www.henle.de/en/Six-Partitas-BWV-825-830/HN-1518",
    "edition": "Six Partitas BWV 825-830",
@@ -27872,6 +30569,18 @@
     {
      "title": "Piano Sonata E flat major Hob. XVI:Es3",
      "level": 4
+    }
+   ]
+  },
+  {
+   "hn": 1537,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-7/HN-1537",
+   "edition": "Hungarian Rhapsody no. 7",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 7",
+     "level": 7
     }
    ]
   },
@@ -28282,6 +30991,30 @@
    ]
   },
   {
+   "hn": 1583,
+   "url": "https://www.henle.de/en/Etude-d-sharp-minor-op.-8-no.-12/HN-1583",
+   "edition": "Etude d sharp minor op. 8 no. 12",
+   "composer": "Skrjabin_Alexander",
+   "pieces": [
+    {
+     "title": "Etude d sharp minor op. 8,12",
+     "level": 8
+    }
+   ]
+  },
+  {
+   "hn": 1586,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-2/HN-1586",
+   "edition": "Hungarian Rhapsody no. 2",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 2",
+     "level": 8
+    }
+   ]
+  },
+  {
    "hn": 1587,
    "url": "https://www.henle.de/en/Piano-Sonata-no.-23-f-minor-op.-57-Appassionata/HN-1587",
    "edition": "Piano Sonata no. 23 f minor op. 57 (Appassionata)",
@@ -28687,6 +31420,18 @@
    ]
   },
   {
+   "hn": 1594,
+   "url": "https://www.henle.de/en/Etude-c-sharp-minor-op.-2-no.-1/HN-1594",
+   "edition": "Etude c sharp minor op. 2 no. 1",
+   "composer": "Skrjabin_Alexander",
+   "pieces": [
+    {
+     "title": "Etude c-sharp minor op. 2 no. 1",
+     "level": 4
+    }
+   ]
+  },
+  {
    "hn": 1595,
    "url": "https://www.henle.de/en/English-Suites-BWV-806-811/HN-1595",
    "edition": "English Suites BWV 806-811",
@@ -28768,6 +31513,18 @@
      "title": "Etude E flat major op. 42 no. 8",
      "level": 8,
      "group": "Eight Etudes op. 42"
+    }
+   ]
+  },
+  {
+   "hn": 1598,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-1/HN-1598",
+   "edition": "Hungarian Rhapsody no. 1",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 1",
+     "level": 8
     }
    ]
   },
@@ -29131,6 +31888,30 @@
    ]
   },
   {
+   "hn": 1634,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-3/HN-1634",
+   "edition": "Hungarian Rhapsody no. 3",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 3",
+     "level": 5
+    }
+   ]
+  },
+  {
+   "hn": 1635,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-4/HN-1635",
+   "edition": "Hungarian Rhapsody no. 4",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 4",
+     "level": 8
+    }
+   ]
+  },
+  {
    "hn": 1636,
    "url": "https://www.henle.de/en/Complete-Lyric-Pieces/HN-1636",
    "edition": "Complete Lyric Pieces",
@@ -29471,6 +32252,18 @@
    ]
   },
   {
+   "hn": 1637,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-5/HN-1637",
+   "edition": "Hungarian Rhapsody no. 5",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 5",
+     "level": 6
+    }
+   ]
+  },
+  {
    "hn": 1641,
    "url": "https://www.henle.de/en/Les-Jeux-d-eaux-a-la-Villa-d-Este/HN-1641",
    "edition": "Les Jeux d’eaux à la Villa d’Este",
@@ -29614,6 +32407,30 @@
    ]
   },
   {
+   "hn": 1663,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-8/HN-1663",
+   "edition": "Hungarian Rhapsody no. 8",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 8",
+     "level": 7
+    }
+   ]
+  },
+  {
+   "hn": 1664,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-10/HN-1664",
+   "edition": "Hungarian Rhapsody no. 10",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 10",
+     "level": 7
+    }
+   ]
+  },
+  {
    "hn": 1665,
    "url": "https://www.henle.de/en/HN-1665",
    "edition": "La Valse",
@@ -29622,6 +32439,596 @@
     {
      "title": "La Valse",
      "level": 8
+    }
+   ]
+  },
+  {
+   "hn": 1668,
+   "url": "https://www.henle.de/en/Piano-Works-Volume-III-Songs-without-Words/HN-1668",
+   "edition": "Piano Works, Volume III - Songs without Words",
+   "composer": "Mendelssohn_Bartholdy_Felix",
+   "pieces": [
+    {
+     "title": "Song without Words E major op. 19,1",
+     "level": 5,
+     "group": "Songs without Words op. 19",
+     "abrsm": "Piano Grade 7"
+    },
+    {
+     "title": "Song without Words a minor op. 19,2",
+     "level": 5,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words A major op. 19,3",
+     "level": 6,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words A major op. 19,4",
+     "level": 4,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words f sharp minor op. 19,5",
+     "level": 7,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) g minor op. 19,6",
+     "level": 4,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words E flat major op. 30,1",
+     "level": 5,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words b flat minor op. 30,2",
+     "level": 7,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words E major op. 30,3",
+     "level": 4,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words b minor op. 30,4",
+     "level": 7,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words D major op. 30,5",
+     "level": 6,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) f sharp minor op. 30,6",
+     "level": 5,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words E flat major op. 38,1",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words c minor op. 38,2",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words E major op. 38,3",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words A major op. 38,4",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words a minor op. 38,5",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words (Duetto) A flat major op. 38,6",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words A flat major op. 53,1",
+     "level": 5,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words E flat major op. 53,2",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words g minor op. 53,3",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words F major op. 53,4",
+     "level": 5,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words a minor op. 53,5",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words A major op. 53,6",
+     "level": 7,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words G major op. 62,1",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words B flat major op. 62,2",
+     "level": 7,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words e minor op. 62,3",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words G major op. 62,4",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) a minor op. 62,5",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words (Spring Song) A major op. 62,6",
+     "level": 5,
+     "group": "Songs without Words op. 62",
+     "abrsm": "Piano Grade 8"
+    },
+    {
+     "title": "Song without Words E flat major op. 67,1",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words f sharp minor op. 67,2",
+     "level": 6,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words B flat major op. 67,3",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words C major op. 67,4",
+     "level": 7,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words b minor op. 67,5",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words E major op. 67,6",
+     "level": 6,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "No. 1 op. 85 no. 1 · MWV U 189",
+     "level": 5,
+     "group": "Appendix I"
+    },
+    {
+     "title": "No. 2 op. 85 no. 2 · MWV U 101",
+     "level": 6,
+     "group": "Appendix I"
+    },
+    {
+     "title": "No. 3 op. 85 no. 3 · MWV U 111",
+     "level": 7,
+     "group": "Appendix I"
+    },
+    {
+     "title": "No. 4 op. 85 no. 5 · MWV U 191",
+     "level": 5,
+     "group": "Appendix I"
+    },
+    {
+     "title": "No. 5 Rider's Song MWV U 187",
+     "level": 7,
+     "group": "Appendix I"
+    },
+    {
+     "title": "No. 6 op. 102 no. 2 · MWV U 192",
+     "level": 5,
+     "group": "Appendix I"
+    },
+    {
+     "title": "Gondola Song MWV U 136",
+     "level": 5,
+     "group": "Appendix I"
+    },
+    {
+     "title": "E flat major MWV U 68",
+     "level": 4,
+     "group": "Appendix II"
+    },
+    {
+     "title": "A major MWV U 76",
+     "level": 3,
+     "group": "Appendix II"
+    },
+    {
+     "title": "f sharp minor MWV U 124",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "A major MWV U 138",
+     "level": 4,
+     "group": "Appendix II"
+    },
+    {
+     "title": "F major MWV U 150",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 102 no. 4 · MWV U 152",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 85 no. 6 · MWV U 155",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 102 no. 1 · MWV U 162",
+     "level": 4,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 102 no. 6 · MWV U 172",
+     "level": 4,
+     "group": "Appendix II"
+    },
+    {
+     "title": "D major MWV U 178",
+     "level": 6,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 85 no. 4 · MWV U 190",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 102 no. 5 · MWV U 194",
+     "level": 4,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 102 no. 3 · MWV U 195",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "E flat major MWV 82 (fragment)",
+     "level": 3,
+     "group": "Appendix II"
+    }
+   ]
+  },
+  {
+   "hn": 1669,
+   "url": "https://www.henle.de/en/Piano-works-Volume-III-Songs-without-Words/HN-1669",
+   "edition": "Piano works, Volume III - Songs without Words",
+   "composer": "Mendelssohn_Bartholdy_Felix",
+   "pieces": [
+    {
+     "title": "Song without Words E major op. 19,1",
+     "level": 5,
+     "group": "Songs without Words op. 19",
+     "abrsm": "Piano Grade 7"
+    },
+    {
+     "title": "Song without Words a minor op. 19,2",
+     "level": 5,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words A major op. 19,3",
+     "level": 6,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words A major op. 19,4",
+     "level": 4,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words f sharp minor op. 19,5",
+     "level": 7,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) g minor op. 19,6",
+     "level": 4,
+     "group": "Songs without Words op. 19"
+    },
+    {
+     "title": "Song without Words E flat major op. 30,1",
+     "level": 5,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words b flat minor op. 30,2",
+     "level": 7,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words E major op. 30,3",
+     "level": 4,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words b minor op. 30,4",
+     "level": 7,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words D major op. 30,5",
+     "level": 6,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) f sharp minor op. 30,6",
+     "level": 5,
+     "group": "Songs without Words op. 30"
+    },
+    {
+     "title": "Song without Words E flat major op. 38,1",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words c minor op. 38,2",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words E major op. 38,3",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words A major op. 38,4",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words a minor op. 38,5",
+     "level": 6,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words (Duetto) A flat major op. 38,6",
+     "level": 5,
+     "group": "Songs without Words op. 38"
+    },
+    {
+     "title": "Song without Words A flat major op. 53,1",
+     "level": 5,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words E flat major op. 53,2",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words g minor op. 53,3",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words F major op. 53,4",
+     "level": 5,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words a minor op. 53,5",
+     "level": 6,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words A major op. 53,6",
+     "level": 7,
+     "group": "Songs without Words op. 53"
+    },
+    {
+     "title": "Song without Words G major op. 62,1",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words B flat major op. 62,2",
+     "level": 7,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words e minor op. 62,3",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words G major op. 62,4",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words (Venetian Gondola Song) a minor op. 62,5",
+     "level": 5,
+     "group": "Songs without Words op. 62"
+    },
+    {
+     "title": "Song without Words (Spring Song) A major op. 62,6",
+     "level": 5,
+     "group": "Songs without Words op. 62",
+     "abrsm": "Piano Grade 8"
+    },
+    {
+     "title": "Song without Words E flat major op. 67,1",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words f sharp minor op. 67,2",
+     "level": 6,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words B flat major op. 67,3",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words C major op. 67,4",
+     "level": 7,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words b minor op. 67,5",
+     "level": 5,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "Song without Words E major op. 67,6",
+     "level": 6,
+     "group": "Songs without Words op. 67"
+    },
+    {
+     "title": "No. 1 op. 85 no. 1 · MWV U 189",
+     "level": 5,
+     "group": "Appendix I"
+    },
+    {
+     "title": "No. 2 op. 85 no. 2 · MWV U 101",
+     "level": 6,
+     "group": "Appendix I"
+    },
+    {
+     "title": "No. 3 op. 85 no. 3 · MWV U 111",
+     "level": 7,
+     "group": "Appendix I"
+    },
+    {
+     "title": "No. 4 op. 85 no. 5 · MWV U 191",
+     "level": 5,
+     "group": "Appendix I"
+    },
+    {
+     "title": "No. 5 Rider's Song MWV U 187",
+     "level": 7,
+     "group": "Appendix I"
+    },
+    {
+     "title": "No. 6 op. 102 no. 2 · MWV U 192",
+     "level": 5,
+     "group": "Appendix I"
+    },
+    {
+     "title": "Gondola Song MWV U 136",
+     "level": 5,
+     "group": "Appendix I"
+    },
+    {
+     "title": "E flat major MWV U 68",
+     "level": 4,
+     "group": "Appendix II"
+    },
+    {
+     "title": "A major MWV U 76",
+     "level": 3,
+     "group": "Appendix II"
+    },
+    {
+     "title": "f sharp minor MWV U 124",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "A major MWV U 138",
+     "level": 4,
+     "group": "Appendix II"
+    },
+    {
+     "title": "F major MWV U 150",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 102 no. 4 · MWV U 152",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 85 no. 6 · MWV U 155",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 102 no. 1 · MWV U 162",
+     "level": 4,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 102 no. 6 · MWV U 172",
+     "level": 4,
+     "group": "Appendix II"
+    },
+    {
+     "title": "D major MWV U 178",
+     "level": 6,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 85 no. 4 · MWV U 190",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 102 no. 5 · MWV U 194",
+     "level": 4,
+     "group": "Appendix II"
+    },
+    {
+     "title": "Op. 102 no. 3 · MWV U 195",
+     "level": 5,
+     "group": "Appendix II"
+    },
+    {
+     "title": "E flat major MWV 82 (fragment)",
+     "level": 3,
+     "group": "Appendix II"
     }
    ]
   },
@@ -29697,6 +33104,18 @@
     {
      "title": "French Suite E major BWV 817",
      "level": 5
+    }
+   ]
+  },
+  {
+   "hn": 1677,
+   "url": "https://www.henle.de/en/Etude-c-sharp-minor-op.-42-no.-5/HN-1677",
+   "edition": "Etude c sharp minor op. 42 no. 5",
+   "composer": "Skrjabin_Alexander",
+   "pieces": [
+    {
+     "title": "Etude c sharp minor op. 42 no. 5",
+     "level": 7
     }
    ]
   },
@@ -30208,6 +33627,18 @@
    ]
   },
   {
+   "hn": 1714,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-11/HN-1714",
+   "edition": "Hungarian Rhapsody no. 11",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 11",
+     "level": 7
+    }
+   ]
+  },
+  {
    "hn": 1717,
    "url": "https://www.henle.de/en/Transcendental-Studies/HN-1717",
    "edition": "Transcendental Studies",
@@ -30580,6 +34011,18 @@
      "title": "English Suite no. 6 d minor BWV 811",
      "level": 7,
      "abrsm": "Harpsichord Grade 7 recommended Harpsichord ARSM <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 1739,
+   "url": "https://www.henle.de/en/Hungarian-Rhapsody-no.-13/HN-1739",
+   "edition": "Hungarian Rhapsody no. 13",
+   "composer": "Liszt_Franz",
+   "pieces": [
+    {
+     "title": "Hungarian Rhapsody no. 13",
+     "level": 8
     }
    ]
   },
@@ -32397,6 +35840,32 @@
    ]
   },
   {
+   "hn": 3213,
+   "url": "https://www.henle.de/en/12-Variations-on-Ah-vous-dirai-je-Maman-K.-265/HN-3213",
+   "edition": "12 Variations on “Ah, vous dirai-je Maman” K. 265",
+   "composer": "Mozart_Wolfgang_Amadeus",
+   "pieces": [
+    {
+     "title": "12 Piano Variations on “Ah, vous dirai-je Maman” K. 265 (300e)",
+     "level": 5,
+     "abrsm": "Piano Grade 5 recommended <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 3218,
+   "url": "https://www.henle.de/en/Variations-f-minor-Sonata-Hob.-XVII-6/HN-3218",
+   "edition": "Variations f minor (Sonata) Hob. XVII:6",
+   "composer": "Haydn_Joseph",
+   "pieces": [
+    {
+     "title": "Piano Variations (Sonata) f minor Hob. XVII:6",
+     "level": 7,
+     "abrsm": "Piano ARSM <div class=\""
+    }
+   ]
+  },
+  {
    "hn": 3219,
    "url": "https://www.henle.de/en/Rigoletto-Concert-Paraphrase/HN-3219",
    "edition": "Rigoletto - Concert Paraphrase",
@@ -32442,6 +35911,19 @@
     {
      "title": "Piano Sonata no. 7 op. 64",
      "level": 9
+    }
+   ]
+  },
+  {
+   "hn": 3233,
+   "url": "https://www.henle.de/en/Eroica-Variations-op.-35/HN-3233",
+   "edition": "Eroica Variations op. 35",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "15 Piano Variations (with Fugue) E flat major op. 35",
+     "level": 8,
+     "abrsm": "Piano FRSM <div class=\""
     }
    ]
   },
@@ -32626,6 +36108,204 @@
      "title": "Piano Sonata (Appassionata) f minor op. 57",
      "level": 9,
      "abrsm": "Piano FRSM Read more ... <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 4272,
+   "url": "https://www.henle.de/en/Sect.-7-Vol.-5-Variations-for-Piano/HN-4272",
+   "edition": "Sect. 7, Vol. 5",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "9 Piano Variations on a March by Dressler (first version) WoO 63",
+     "level": 6
+    },
+    {
+     "title": "6 Piano Variations on the Swiss Song “Es hätt e’ Buur e’ Töchterli” WoO 64",
+     "level": 4
+    },
+    {
+     "title": "24 Piano Variations on \"Venni Amore\" by Righini WoO 65",
+     "level": 7
+    },
+    {
+     "title": "13 Piano Variations on \"Es war einmal ein alter Mann\" by Ditters von Dittersdorf WoO 66",
+     "level": 6
+    },
+    {
+     "title": "12 Piano Variations on the \"Minuet à la Viganò\" de Haibel WoO 68",
+     "level": 6
+    },
+    {
+     "title": "9 Piano Variations on \"Quant' è più bello\" from La Molinara by Paisiello A major WoO 69",
+     "level": 5
+    },
+    {
+     "title": "6 Piano Variations on \"Nel cor più non mi sento\" by Paisiello WoO 70",
+     "level": 4
+    },
+    {
+     "title": "12 Piano Variations on a Russian Dance by Wranitzky WoO 71",
+     "level": 6
+    },
+    {
+     "title": "8 Piano Variations on \"Mich brennt ein heißes Fieber\" by Grétry WoO 72",
+     "level": 5
+    },
+    {
+     "title": "10 Piano Variations on \"La stessa, la stessissima\" by Salieri WoO 73",
+     "level": 6
+    },
+    {
+     "title": "7 Piano Variations on \"Kind, willst du ruhig schlafen\" by Winter WoO 75",
+     "level": 7
+    },
+    {
+     "title": "8 Piano Variations on \"Tändeln und scherzen\" by Süßmayr WoO 76",
+     "level": 6
+    },
+    {
+     "title": "6 Easy Piano variations G major WoO 77",
+     "level": 5
+    },
+    {
+     "title": "6 Piano Variations F major op. 34",
+     "level": 7,
+     "abrsm": "Piano ARSM"
+    },
+    {
+     "title": "15 Piano Variations (with Fugue) E flat major op. 35",
+     "level": 8,
+     "abrsm": "Piano FRSM"
+    },
+    {
+     "title": "7 Piano Variations on \"God save the King\" WoO 78",
+     "level": 5
+    },
+    {
+     "title": "5 Piano Variations on \"Rule Britannia\" WoO 79",
+     "level": 6
+    },
+    {
+     "title": "32 Piano Variations c minor WoO 80",
+     "level": 7,
+     "abrsm": "Piano ARSM"
+    },
+    {
+     "title": "6 Piano Variations D major op. 76",
+     "level": 7
+    },
+    {
+     "title": "Diabelli Variations C major op. 120",
+     "level": 9
+    },
+    {
+     "title": "Appendix: 9 Piano Variations on a March by Dressler (second version) WoO 63",
+     "level": null
+    },
+    {
+     "title": "Appendix: 8 Piano Variations on \"Ich hab' ein kleines Hüttchen nur\" Anh. 10",
+     "level": null
+    }
+   ]
+  },
+  {
+   "hn": 4273,
+   "url": "https://www.henle.de/en/Sect.-7-Vol.-5-Variations-for-Piano/HN-4273",
+   "edition": "Sect. 7, Vol. 5",
+   "composer": "Beethoven_Ludwig_van",
+   "pieces": [
+    {
+     "title": "9 Piano Variations on a March by Dressler (first version) WoO 63",
+     "level": 6
+    },
+    {
+     "title": "6 Piano Variations on the Swiss Song “Es hätt e’ Buur e’ Töchterli” WoO 64",
+     "level": 4
+    },
+    {
+     "title": "24 Piano Variations on \"Venni Amore\" by Righini WoO 65",
+     "level": 7
+    },
+    {
+     "title": "13 Piano Variations on \"Es war einmal ein alter Mann\" by Ditters von Dittersdorf WoO 66",
+     "level": 6
+    },
+    {
+     "title": "12 Piano Variations on the \"Minuet à la Viganò\" de Haibel WoO 68",
+     "level": 6
+    },
+    {
+     "title": "9 Piano Variations on \"Quant' è più bello\" from La Molinara by Paisiello A major WoO 69",
+     "level": 5
+    },
+    {
+     "title": "6 Piano Variations on \"Nel cor più non mi sento\" by Paisiello WoO 70",
+     "level": 4
+    },
+    {
+     "title": "12 Piano Variations on a Russian Dance by Wranitzky WoO 71",
+     "level": 6
+    },
+    {
+     "title": "8 Piano Variations on \"Mich brennt ein heißes Fieber\" by Grétry WoO 72",
+     "level": 5
+    },
+    {
+     "title": "10 Piano Variations on \"La stessa, la stessissima\" by Salieri WoO 73",
+     "level": 6
+    },
+    {
+     "title": "7 Piano Variations on \"Kind, willst du ruhig schlafen\" by Winter WoO 75",
+     "level": 7
+    },
+    {
+     "title": "8 Piano Variations on \"Tändeln und scherzen\" by Süßmayr WoO 76",
+     "level": 6
+    },
+    {
+     "title": "6 Easy Piano variations G major WoO 77",
+     "level": 5
+    },
+    {
+     "title": "6 Piano Variations F major op. 34",
+     "level": 7,
+     "abrsm": "Piano ARSM"
+    },
+    {
+     "title": "15 Piano Variations (with Fugue) E flat major op. 35",
+     "level": 8,
+     "abrsm": "Piano FRSM"
+    },
+    {
+     "title": "7 Piano Variations on \"God save the King\" WoO 78",
+     "level": 5
+    },
+    {
+     "title": "5 Piano Variations on \"Rule Britannia\" WoO 79",
+     "level": 6
+    },
+    {
+     "title": "32 Piano Variations c minor WoO 80",
+     "level": 7,
+     "abrsm": "Piano ARSM"
+    },
+    {
+     "title": "6 Piano Variations D major op. 76",
+     "level": 7
+    },
+    {
+     "title": "Diabelli Variations C major op. 120",
+     "level": 9
+    },
+    {
+     "title": "Appendix: 9 Piano Variations on a March by Dressler (second version) WoO 63",
+     "level": null
+    },
+    {
+     "title": "Appendix: 8 Piano Variations on \"Ich hab' ein kleines Hüttchen nur\" Anh. 10",
+     "level": null
     }
    ]
   },
@@ -35053,6 +38733,18 @@
      "level": 7,
      "group": "Mikrokosmos V-VI",
      "abrsm": "Piano Grade 8 Read more ... <div class=\""
+    }
+   ]
+  },
+  {
+   "hn": 8210,
+   "url": "https://www.henle.de/en/Piano-Sonata-f-sharp-minor-op.-81/HN-8210",
+   "edition": "Piano Sonata f sharp minor op. 81",
+   "composer": "Hummel_Johann_Nepomuk",
+   "pieces": [
+    {
+     "title": "Piano Sonata f sharp minor op. 81",
+     "level": 6
     }
    ]
   },
