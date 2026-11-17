@@ -726,7 +726,6 @@
     position: relative; isolation: isolate; display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 0;
     border-radius: var(--r-card); overflow: hidden; background: var(--mesh, #000); color: var(--ink, var(--t1)); text-align: left; cursor: pointer;
   }
-  .card::before { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07); pointer-events: none; }
   .card .roll { position: absolute; inset: 0; z-index: -1; display: block; width: 100%; height: 100%; mix-blend-mode: screen; mix-blend-mode: plus-lighter; }
   .card .roll.whole { mix-blend-mode: normal; }   /* drawn with its cover (js/roll-gl.js thumb) */
   .card .title {
@@ -762,6 +761,9 @@
   .row.num + .row.num::before { left: calc(12px + 2.4ch + 12px); }
   .row.has-cover { grid-template-columns: var(--cover-s) minmax(0, 1fr) auto; }
   .row.has-cover + .row.has-cover::before { left: calc(12px + var(--cover-s) + 12px); }
+  /* a row with a cover: its wash as far from the cover at the sides as above and below it (8 px),
+     its corner concentric with the cover's */
+  .row.has-cover::after { inset: 0 4px; border-radius: 16px; }
 
   /* ---------- covers ----------
      Every piece and work has artwork of its own, built by library.js cover() from its id: a mesh
@@ -827,7 +829,8 @@
     --glow-fade: linear-gradient(to bottom, rgb(0 0 0 / 1) 8.24%, rgb(0 0 0 / 1) 11.1%, rgb(0 0 0 / 1) 13.96%, rgb(0 0 0 / 0.9999) 16.82%, rgb(0 0 0 / 0.9989) 19.68%, rgb(0 0 0 / 0.9946) 22.54%, rgb(0 0 0 / 0.9837) 25.4%, rgb(0 0 0 / 0.9641) 28.26%, rgb(0 0 0 / 0.935) 31.12%, rgb(0 0 0 / 0.897) 33.98%, rgb(0 0 0 / 0.8514) 36.84%, rgb(0 0 0 / 0.7998) 39.7%, rgb(0 0 0 / 0.744) 42.56%, rgb(0 0 0 / 0.6851) 45.42%, rgb(0 0 0 / 0.6243) 48.28%, rgb(0 0 0 / 0.5624) 51.14%, rgb(0 0 0 / 0.5) 54%, rgb(0 0 0 / 0.4376) 56.86%, rgb(0 0 0 / 0.3757) 59.72%, rgb(0 0 0 / 0.3149) 62.58%, rgb(0 0 0 / 0.256) 65.44%, rgb(0 0 0 / 0.2002) 68.3%, rgb(0 0 0 / 0.1486) 71.16%, rgb(0 0 0 / 0.103) 74.02%, rgb(0 0 0 / 0.065) 76.88%, rgb(0 0 0 / 0.0359) 79.74%, rgb(0 0 0 / 0.0163) 82.6%, rgb(0 0 0 / 0.0054) 85.46%, rgb(0 0 0 / 0.0011) 88.32%, rgb(0 0 0 / 0.0001) 91.18%, rgb(0 0 0 / 0) 94.04%, rgb(0 0 0 / 0) 96.9%, rgb(0 0 0 / 0) 99.76%);
     -webkit-mask-image: var(--glow-fade); mask-image: var(--glow-fade);
   }
-  .hero .cover { width: min(100%, var(--cover-l)); border-radius: 12px; box-shadow: 0 30px 90px rgb(0 0 0 / 0.55); }
+  .hero-art { display: block; width: min(100%, var(--cover-l)); filter: drop-shadow(0 30px 90px rgb(0 0 0 / 0.55)); }
+  .hero .cover { display: block; width: 100%; border-radius: 12px; }
   .hero-text { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
   .hero-text h1 { margin: 0; font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; text-wrap: balance; }
   .hero-text p { margin: 0; font-size: var(--fs-m); color: var(--t2); }

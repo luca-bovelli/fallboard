@@ -329,6 +329,7 @@
     cv._r = r;
     b.appendChild(cv);
     L.thumbs.push([cv, r]);
+    squircle(b);
     return cardItem(b, r.title, r.composer);
   }
   /* the opening bars as the player's roll draws them: pitch across, time rising from the
@@ -359,6 +360,58 @@
       c.fill();
     }
   }
+
+  /* ------------------------------------------------------------------ the squircle
+     Cards, tiles and covers take the glass's own corner (js/glass.js squircleAxis, softness 1/2,
+     the controls' shapeN 2): along each axis a smooth hinge, the shape where the two add to 1,
+     its corner radius the element's own border-radius. It is fuller than a round corner at the
+     diagonal and leaves the straight edge sooner, so it clips the element (clip-path, made once
+     per size and radius), and the border-radius underneath comes down to 0.8 of itself, a round
+     corner just outside the squircle, for anything that reads it (the glass scene draws the
+     squircle itself). */
+  const hinge = (q, e) => { const root = Math.sqrt(q * q + e * e); return q < 0 ? (e * e) / Math.max(root - q, 1e-8) : q + root; };
+  function sqAxis(x, half, r) {
+    if (Math.abs(half - r) < 1e-6) return (x * x) / (r * r);
+    const e = r * 0.5, c = half - r, vp = hinge(x - c, e), vm = hinge(-x - c, e), v0 = hinge(-c, e);
+    const eP = hinge(r, e), eM = hinge(r - 2 * half, e), den = Math.max((eP - v0) * (eP + v0) + (eM - v0) * (eM + v0), 1e-8);
+    return Math.max(0, ((vp - v0) * (vp + v0) + (vm - v0) * (vm + v0)) / den);
+  }
+  const sqMade = new Map();
+  /* the outline as an SVG path, w x h with corner r: each corner traced by 32 rays from a point
+     2.5 corners in from it (the curve leaves the straight edge within about two), each to where
+     the two axes add to 1; straight edges between */
+  function squirclePath(w, h, r) {
+    const key = w + 'x' + h + ':' + r;
+    if (!sqMade.has(key)) {
+      const hw = w / 2, hh = h / 2, cx = Math.max(0, hw - 2.5 * r), cy = Math.max(0, hh - 2.5 * r), quarter = [];
+      for (let i = 0; i <= 32; i++) {
+        const a = (i / 32) * (Math.PI / 2), dx = Math.cos(a), dy = Math.sin(a);
+        let lo = 0, hi = hw + hh;
+        for (let k = 0; k < 30; k++) { const t = (lo + hi) / 2; if (sqAxis(cx + t * dx, hw, r) + sqAxis(cy + t * dy, hh, r) < 1) lo = t; else hi = t; }
+        quarter.push([cx + lo * dx, cy + lo * dy]);
+      }
+      const pts = [];
+      for (const [x, y] of quarter) pts.push([hw + x, hh - y]);               // top right, from the right edge round to the top
+      for (const [x, y] of quarter.slice().reverse()) pts.push([hw - x, hh - y]); // top left
+      for (const [x, y] of quarter) pts.push([hw - x, hh + y]);               // bottom left
+      for (const [x, y] of quarter.slice().reverse()) pts.push([hw + x, hh + y]); // bottom right
+      sqMade.set(key, 'M' + pts.map(([x, y]) => x.toFixed(2) + ' ' + y.toFixed(2)).join('L') + 'Z');
+      if (sqMade.size > 200) sqMade.delete(sqMade.keys().next().value);
+    }
+    return sqMade.get(key);
+  }
+  function shapeSquircle(n) {
+    const w = n.offsetWidth, h = n.offsetHeight;
+    if (!w || !h) return;
+    if (n._sqR === undefined) n._sqR = parseFloat(getComputedStyle(n).borderTopLeftRadius) || 0;
+    const r = Math.min(n._sqR, w / 2, h / 2);
+    if (!r) return;
+    n.style.borderRadius = (r * 0.8).toFixed(2) + 'px';
+    n.style.clipPath = `path('${squirclePath(w, h, +r.toFixed(2))}')`;
+    n._sq = [w, h, +r.toFixed(2)];
+  }
+  const squircles = new ResizeObserver((list) => { for (const en of list) shapeSquircle(en.target); });
+  const squircle = (n) => { squircles.observe(n); return n; };
 
   /* ------------------------------------------------------------------ covers
      Every piece and work has artwork of its own, decided by a hash of its id, so it is the same
@@ -583,6 +636,9 @@
      get ids of their own, as every mask on the page must */
   const coversMade = new Map();
   function cover(e) {
+    return squircle(coverOf(e));
+  }
+  function coverOf(e) {
     const key = (fontsIn ? '' : '~') + e.id;
     const kept = coversMade.get(key);
     if (kept) {
@@ -718,7 +774,9 @@
     const art = cover(e);
     const glow = make('span', 'hero-glow');
     glow.style.setProperty('--mesh', art.style.getPropertyValue('--mesh'));
-    h.append(glow, art);
+    const frame = make('span', 'hero-art');   // its shadow, which the cover's own clip would cut off
+    frame.appendChild(art);
+    h.append(glow, frame);
     const text = make('div', 'hero-text');
     const h1 = make('h1', '', title, 'text');
     h1.dataset.title = title;
@@ -737,7 +795,7 @@
   }
 
   function tile(c) {
-    const b = button('tile', undefined, () => push({ view: 'composer', id: c.id }), 'box');
+    const b = squircle(button('tile', undefined, () => push({ view: 'composer', id: c.id }), 'box'));
     b.appendChild(make('b', '', c.name, 'text'));
     b.appendChild(make('small', '', lifeOf(c), 'text'));
     const era = make('span', 'era');
@@ -1689,6 +1747,15 @@
   new ResizeObserver(unmeasure).observe(el.lib);
   /* the scene under the glass: the page, every box, miniature and line of text near a glass
      control, drawn where it sits, then the same fade to black as the content above the search */
+  /* a node's outline in the scene, filled: its squircle, or its rounded rectangle */
+  const sqPaths = new Map();
+  function fillShape(ctx, it, x, y, w, h) {
+    const sq = it.n._sq;
+    if (!sq) { rr(ctx, x, y, w, h, it.radius); ctx.fill(); return; }
+    const key = sq.join();
+    if (!sqPaths.has(key)) sqPaths.set(key, new Path2D(squirclePath(sq[0], sq[1], sq[2])));
+    ctx.save(); ctx.translate(x, y); ctx.scale(w / sq[0], h / sq[1]); ctx.fill(sqPaths.get(key)); ctx.restore();
+  }
   function paint(ctx) {
     const root = el.lib.getBoundingClientRect();
     ctx.fillStyle = css.bg;
@@ -1723,14 +1790,12 @@
         g.addColorStop(0, it.field || css.lane);
         g.addColorStop(1, it.base || css.lane);
         ctx.fillStyle = g;
-        rr(ctx, x, y, w, h, it.radius);
-        ctx.fill();
+        fillShape(ctx, it, x, y, w, h);
         continue;
       }
       if (it.kind === 'box') {
         ctx.fillStyle = it.bg;
-        rr(ctx, x, y, w, h, it.radius);
-        ctx.fill();
+        fillShape(ctx, it, x, y, w, h);
         continue;
       }
       ctx.font = it.font;
