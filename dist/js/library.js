@@ -1428,8 +1428,8 @@
      half where the next card out stops. On a phone, past the screen's edge, half at three
      quarters of a card (a card stopped at the side shows a quarter); once the column has stopped
      growing, past the column's edge, half one card and a gap out (the first stop in the margin).
-     It dims as the square of that distance, so slowly as it starts to leave and faster as it
-     goes, on past half to nothing. A card in full view is not dimmed at all. Positions come from the scroll alone: the
+     It dims as the cube of that distance, so hardly at all as it starts to leave and faster and
+     faster as it goes, on past half to nothing. A card in full view is not dimmed at all. Positions come from the scroll alone: the
      cards are all one width, a gap apart */
   function dimShelf(shelf) {
     const cs = getComputedStyle(shelf), padL = parseFloat(cs.paddingLeft) || 0, padR = parseFloat(cs.paddingRight) || 0;
@@ -1450,7 +1450,7 @@
     [...shelf.children].forEach((item, i) => {
       const x = d.padL + i * (d.c + CARD_GAP) - sx;
       const out = Math.max(0, d.lo - x, x + d.c - d.hi);   // how far past the edge, in px
-      const u = out / d.half, o = Math.max(0, 1 - 0.5 * u * u);   // as the square of the distance
+      const u = out / d.half, o = Math.max(0, 1 - 0.5 * u * u * u);   // as the cube of the distance
       item.style.opacity = o > 0.999 ? '' : o.toFixed(3);
     });
     /* And over that, each edge fades: how much shows falls as the square of the way to the
