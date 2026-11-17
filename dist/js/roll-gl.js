@@ -247,7 +247,7 @@
   const NOTE_FS = `#version 300 es
     precision highp float;
     in vec2 vP; in vec2 vHalf; in vec4 vA; in vec4 vB; in vec2 vParm;
-    uniform float uDpr; uniform sampler2D uBg; uniform vec2 uSize;
+    uniform float uDpr; uniform sampler2D uBg; uniform vec2 uSize; uniform float uBgGain; uniform float uBgTint;
     out vec4 o;
     ${COMMON}
     float box(vec2 p, vec2 b, float r) { vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
@@ -256,8 +256,10 @@
       float cov = clamp(0.5 - d * uDpr, 0.0, 1.0) * (1.0 - vB.a), hot = vParm.y, inner = max(-d, 0.0), fromFoot = vHalf.y - vP.y;
       vec2 gr = vec2(dFdx(d), dFdy(d));
       vec2 nrm = length(gr) > 1e-5 ? normalize(gr) : vec2(0.0);
-      vec3 behind = pow(texture(uBg, (gl_FragCoord.xy - nrm * 11.0 * exp(-inner / 3.5) * uDpr) / uSize).rgb, vec3(2.2));
       vec3 tone = pow(vA.rgb, vec3(2.2)), lite = pow(vB.rgb, vec3(2.2));
+      /* what lies behind, bent; on the keys tinted by the hand and dimmed (uBgTint, uBgGain), as the
+         light field is behind the roll's notes */
+      vec3 behind = pow(texture(uBg, (gl_FragCoord.xy - nrm * 11.0 * exp(-inner / 3.5) * uDpr) / uSize).rgb, vec3(2.2)) * mix(vec3(1.0), tone, uBgTint) * uBgGain;
       vec3 col = tone * (0.24 + 0.26 * hot) * vA.a;
       col += behind * mix(vec3(1.0), tone * 1.6, 0.5) * 1.5;
       col += lite * (exp(-inner / 0.8) * 0.85 + exp(-inner / 4.0) * (0.2 + 0.2 * hot));
@@ -299,7 +301,7 @@
     fieldP = compile(QUAD_VS, FIELD_FS); screenP = compile(QUAD_VS, SCREEN_FS); noteP = compile(NOTE_VS, NOTE_FS);
     UF = uni(fieldP, ['uRes', 'uScale', 'uT', 'uDrift', 'uN', 'uNote', 'uHand', 'uLabR', 'uLabL', 'uToneR', 'uToneL', 'uHeat']);
     US = uni(screenP, ['uTex', 'uSize', 'uDpr', 'uW', 'uLeft', 'uBW', 'uLane', 'uGrid', 'uGrid2', 'uNBar', 'uNBeat', 'uBar', 'uBeat']);
-    UN = uni(noteP, ['uRes', 'uDpr', 'uBg', 'uSize']);
+    UN = uni(noteP, ['uRes', 'uDpr', 'uBg', 'uSize', 'uBgGain', 'uBgTint']);
     quadVao = gl.createVertexArray(); gl.bindVertexArray(quadVao);
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
@@ -395,7 +397,7 @@
     if (o.inst.length) {
       gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.useProgram(noteP);
-      gl.uniform2f(UN.uRes, w, h); gl.uniform1f(UN.uDpr, dpr); gl.uniform1i(UN.uBg, 0); gl.uniform2f(UN.uSize, cw, ch);
+      gl.uniform2f(UN.uRes, w, h); gl.uniform1f(UN.uDpr, dpr); gl.uniform1i(UN.uBg, 0); gl.uniform2f(UN.uSize, cw, ch); gl.uniform1f(UN.uBgGain, 1); gl.uniform1f(UN.uBgTint, 0);
       gl.bindVertexArray(noteVao);
       gl.bindBuffer(gl.ARRAY_BUFFER, instBuf);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(o.inst), gl.DYNAMIC_DRAW);
@@ -738,9 +740,12 @@
   }
 
   /* ------------------------------------------------------------------ the keys
-     A struck key wears one of the roll's notes, sounding, drawn by the roll's own note shader
-     (NOTE_VS, NOTE_FS) over the key as it is drawn, the key showing through it as the roll's
-     light does through a note: the white keys' before the black keys are drawn over them, the
+     A struck key wears one of the roll's notes, as it looks while it falls, drawn by the roll's
+     own note shader (NOTE_VS, NOTE_FS) over the key as it is drawn. On the roll a note is lit by
+     the light field behind it, the hand's colour; behind a key is the key, so the shader sees the
+     key tinted by the hand's colour, at half its brightness (uBgTint 1, uBgGain 0.5; 0 and 1 on
+     the roll): a white key comes out the hand's colour as vivid as the falling notes, a black key
+     dark, the seams between still bending through. The white keys' notes before the black keys are drawn over them, the
      black keys' after. On a canvas of the keyboard's own (the roll's is the roll's size); without
      WebGL 2, a flat fill of the hand's colour */
   let kgl = null, kglc = null, kFailed = false, keyP = null, UK = null, keyVao = null, keyBuf = null, keyTex = null;
@@ -765,7 +770,7 @@
         return p;
       };
       keyP = prog(NOTE_VS, NOTE_FS);
-      UK = Object.fromEntries(['uRes', 'uDpr', 'uBg', 'uSize'].map((n) => [n, g.getUniformLocation(keyP, n)]));
+      UK = Object.fromEntries(['uRes', 'uDpr', 'uBg', 'uSize', 'uBgGain', 'uBgTint'].map((n) => [n, g.getUniformLocation(keyP, n)]));
       keyVao = g.createVertexArray(); g.bindVertexArray(keyVao);
       g.bindBuffer(g.ARRAY_BUFFER, g.createBuffer());
       g.bufferData(g.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), g.STATIC_DRAW);
@@ -793,7 +798,7 @@
     g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, g.RGBA, g.UNSIGNED_BYTE, c.canvas);
     g.pixelStorei(g.UNPACK_FLIP_Y_WEBGL, false);
     g.useProgram(keyP); g.disable(g.BLEND);
-    g.uniform2f(UK.uRes, w, h); g.uniform1f(UK.uDpr, cw / w); g.uniform1i(UK.uBg, 0); g.uniform2f(UK.uSize, cw, ch);
+    g.uniform2f(UK.uRes, w, h); g.uniform1f(UK.uDpr, cw / w); g.uniform1i(UK.uBg, 0); g.uniform2f(UK.uSize, cw, ch); g.uniform1f(UK.uBgGain, 0.5); g.uniform1f(UK.uBgTint, 1);
     g.bindVertexArray(keyVao); g.bindBuffer(g.ARRAY_BUFFER, keyBuf);
     g.bufferData(g.ARRAY_BUFFER, new Float32Array(inst), g.DYNAMIC_DRAW);
     g.drawArraysInstanced(g.TRIANGLE_STRIP, 0, 4, inst.length / 14);
@@ -852,7 +857,7 @@
       const k = lit.get(WHITE_MIDI[i]);
       if (!k) continue;
       const x = (i - left) * W, hc = hands[k[0]];
-      if (glass) inst.push(...noteOf(x + hair, TOP, W - hair, h - TOP, false, hc, true, 1 - k[1]));
+      if (glass) inst.push(...noteOf(x + hair, TOP, W - hair, h - TOP, false, hc, false, 1 - k[1]));
       else { c.globalAlpha = 0.85 * k[1]; c.fillStyle = css(hc.key); whitePath(x); c.fill(); c.globalAlpha = 1; }
     }
     if (inst.length) { keysGlass(c, w, h, inst); inst.length = 0; }
@@ -874,7 +879,7 @@
       c.fillStyle = face; rr(c, x + side, -4, bw - side * 2, bh - slope + 4, 0, 1.5); c.fill();
       c.fillStyle = 'rgba(255,255,255,0.10)'; c.fillRect(x + side, bh - slope - hair, bw - side * 2, hair);
       if (k && !glass) { c.globalAlpha = k[1]; c.fillStyle = css(hands[k[0]].key); rr(c, x, -4, bw, bh + 4, 0, 2); c.fill(); c.globalAlpha = 1; }
-      else if (k) inst.push(...noteOf(x, TOP, bw, bh - TOP, true, hands[k[0]], true, 1 - k[1]));
+      else if (k) inst.push(...noteOf(x, TOP, bw, bh - TOP, true, hands[k[0]], false, 1 - k[1]));
     }
     if (inst.length) keysGlass(c, w, h, inst);
     /* the line between the roll and the keys, over the black keys' tops too */
