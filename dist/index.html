@@ -784,13 +784,15 @@
   .row .aside svg { width: 16px; height: 16px; color: var(--t1); opacity: var(--o-inactive); }
   @media (min-width: 632px) { .rows.cols .row::before { display: none; } }   /* two columns of 300 px fit from here */
 
-  /* flat pressed and hover states for content: a wash over the surface, nothing scales */
-  :is(.card, .tile, .row, .btn)::after {
+  /* flat pressed and hover states for content: a wash over the surface, nothing scales. Not on
+     Continue's cards: their own opacity follows their place on the shelf, and a wash over that
+     only muddied it */
+  :is(.tile, .row, .btn)::after {
     content: ""; position: absolute; z-index: -1; inset: 0; border-radius: inherit;
     background: var(--cf); opacity: 0; transition: opacity var(--dur-press) ease-out; pointer-events: none;
   }
-  :is(.card, .tile, .row, .btn)[data-pressed="true"]::after { opacity: 1; }
-  @media (hover: hover) { :is(.card, .tile, .row, .btn):hover::after { opacity: var(--o-inactive); } }
+  :is(.tile, .row, .btn)[data-pressed="true"]::after { opacity: 1; }
+  @media (hover: hover) { :is(.tile, .row, .btn):hover::after { opacity: var(--o-inactive); } }
   .row:is(:hover, [data-pressed="true"])::before, .row:is(:hover, [data-pressed="true"]) + .row::before { opacity: 0; }
 
   /* Explore: the heading and its tabs pin under the back button (or an edge from the top on wide
