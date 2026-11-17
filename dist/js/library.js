@@ -1432,8 +1432,9 @@
      half where the next card out stops. On a phone, past the screen's edge, half at three
      quarters of a card (a card stopped at the side shows a quarter); once the column has stopped
      growing, past the column's edge, half one card and a gap out (the first stop in the margin).
-     It dims as the square of that distance, so slowly as it starts to leave and faster as it
-     goes, on past half to nothing. A card in full view is not dimmed at all.
+     It dims along the smooth step over twice that distance (flat where it starts, every
+     derivative continuous): slowly as it starts to leave, half at the stop, on to nothing. A card
+     in full view is not dimmed at all.
 
      The browser runs it, as an animation whose time is the card's place in the shelf (CSS
      scroll-driven animations: a view timeline), so it moves with the scroll itself, on the same
@@ -1443,12 +1444,12 @@
 
      Over that the edges fade: two black layers beside the shelf, still while it scrolls (on the
      black page the same as fading it out, and nothing in the scrolling shelf to paint again),
-     how dark falling as the square of the way in from the screen's edge, to half there. A side
+     half black at the screen's edge and clear inward along the smooth ramp (index.html). A side
      shows as far as there is more to scroll that way, fully once that is its whole span, so at
      rest the first card is left as it is, and the last at the end. Over the margins once the
      column has stopped growing, else over where a quarter card shows at a side */
   const TIMED = !!(window.CSS && CSS.supports('animation-timeline: view(x 0px)'));
-  const dimAt = (d, x) => { const out = Math.max(0, d.lo - x, x + d.c - d.hi), u = out / d.half; return Math.max(0, 1 - 0.5 * u * u); };
+  const dimAt = (d, x) => { const out = Math.max(0, d.lo - x, x + d.c - d.hi); return 1 - FB.smoothStep(out / d.half / 2); };
   const dimSheet = document.head.appendChild(document.createElement('style'));
   const dimMade = new Map();
   /* the keyframes for a layout: over the view timeline's cover range, from the card's left edge at
@@ -1748,32 +1749,31 @@
       for (const [x0, x1, k] of [[0, d.spanL, d.kl], [root.width, root.width - d.spanR, d.kr]]) {
         if (!k) continue;
         const g = ctx.createLinearGradient(x0, 0, x1, 0);
-        for (let i = 0; i <= 8; i++) { const e = 1 - i / 8; g.addColorStop(i / 8, 'rgba(0,0,0,' + (k * 0.5 * e * e).toFixed(3) + ')'); }
+        for (let i = 0; i <= 32; i++) g.addColorStop(i / 32, 'rgba(0,0,0,' + (k * 0.5 * FB.smoothRamp(1 - i / 32)).toFixed(4) + ')');
         ctx.fillStyle = g;
         ctx.fillRect(Math.min(x0, x1), y, Math.abs(x1 - x0), sf.h);
       }
     }
     /* black from `black` to `clear`, through the given stops ([position 0-1, how much shows]), as
        the CSS masks and covers do */
-    const fade = (black, clear, fromTop, stops = [], floor = 0) => {
+    /* the top and bottom fades as index.html .lib-fade draws them: black from `black` to `clear`
+       (where the old fades ended), the smooth step over 1.49 times that, centred on its middle */
+    const fade = (black, clear, fromTop, floor = 0) => {
       const k = 1 - floor;   // how black the black end is: a floor of 0.5 leaves half showing
-      const g = ctx.createLinearGradient(0, black, 0, clear);
-      g.addColorStop(0, 'rgba(0,0,0,' + k + ')');
-      for (const [at, shows] of stops) g.addColorStop(at, 'rgba(0,0,0,' + k * (1 - shows) + ')');
-      g.addColorStop(1, 'rgba(0,0,0,0)');
+      const span = clear - black, a = black - span * 0.245, b = black + span * 1.245;
+      const g = ctx.createLinearGradient(0, a, 0, b);
+      for (let i = 0; i <= 32; i++) g.addColorStop(i / 32, 'rgba(0,0,0,' + (k * (1 - FB.smoothStep(i / 32))).toFixed(4) + ')');
       ctx.fillStyle = g;
-      ctx.fillRect(0, Math.min(black, clear), root.width, Math.abs(clear - black));
+      ctx.fillRect(0, Math.min(a, b), root.width, Math.abs(b - a));
       ctx.fillStyle = 'rgba(0,0,0,' + k + ')';
-      if (fromTop) ctx.fillRect(0, 0, root.width, black); else ctx.fillRect(0, black, root.width, root.height - black);
+      if (fromTop) { if (a > 0) ctx.fillRect(0, 0, root.width, a); } else ctx.fillRect(0, a, root.width, root.height - a);
     };
     if (L.viewer) return;
-    /* the same smooth S as the CSS mask (index.html .lib-scroll), read from it as it changes */
-    const S_CURVE = [[0.25, 0.156], [0.5, 0.5], [0.75, 0.844]];
     /* the fade as applyFade last set it; where it reaches black (the top edge) is read once per layout */
     if (geo.topBlack === undefined) geo.topBlack = parseFloat(getComputedStyle(el.fadeTop).getPropertyValue('--top-black')) || 0;
-    if (fadeShown.span > 0) fade(geo.topBlack, geo.topBlack + fadeShown.span, true, S_CURVE, fadeShown.floor);
+    if (fadeShown.span > 0) fade(geo.topBlack, geo.topBlack + fadeShown.span, true, fadeShown.floor);
     const bar = el.bottom.getBoundingClientRect();
-    if (bar.height) fade(bar.bottom - root.top, bar.top - 64 - root.top, false, S_CURVE);
+    if (bar.height) fade(bar.bottom - root.top, bar.top - 64 - root.top, false);
   }
   /* from 872 px the back button sits beside the column (index.html .library) */
   const WIDE = window.matchMedia('(min-width: 872px)');

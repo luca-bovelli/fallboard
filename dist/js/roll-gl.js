@@ -38,6 +38,15 @@
   const NOTES = 48, HEAT_N = 256, HEAT_ROWS = 16, HEAT_STEP = 40, FIELD_RES = 0.6, RELEASE = 0.06;
   const STILL = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  /* The app's fades (here, and js/library.js, index.html): curves whose every derivative is
+     continuous, so a fade has no start, end or crease the eye can find. The smooth step, 0 to 1
+     over [0, 1], flat at both ends; the smooth ramp, 0 at 0 and 1 at 1, flat where it starts */
+  const smoothStep = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : 1 / (1 + Math.exp(1 / t - 1 / (1 - t))));
+  const smoothRamp = (t) => (t <= 0 ? 0 : Math.exp(1.45 * (1 - 1 / t)));
+  FB.smoothStep = smoothStep; FB.smoothRamp = smoothRamp;
+  const SMOOTH_GLSL = `
+    float smoothStep(float t) { return t <= 0.0 ? 0.0 : t >= 1.0 ? 1.0 : 1.0 / (1.0 + exp(1.0 / t - 1.0 / (1.0 - t))); }
+    float smoothRamp(float t) { return t <= 0.0 ? 0.0 : exp(1.45 * (1.0 - 1.0 / t)); }`;
 
   /* ------------------------------------------------------------------ colour (OKLab) */
   const lin = (v) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
@@ -508,6 +517,7 @@
     out vec4 o;
     vec3 dec(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
     vec3 enc(vec3 c) { return mix(c * 12.92, 1.055 * pow(max(c, 0.0), vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
+    ${SMOOTH_GLSL}
     void main() {
       vec2 fc = gl_FragCoord.xy, uv = vec2(fc.x / uSize.x, 1.0 - fc.y / uSize.y);
       /* the cover's fields as CSS lays them: an ellipse each, solid to its stop, then fading out,
@@ -518,8 +528,9 @@
         float d = length((uv - uRect[i].xy) / uRect[i].zw), st = uCol[i].a;
         col = mix(col, uCol[i].rgb, clamp(1.0 - (d - st) / (1.0 - st), 0.0, 1.0));
       }
-      /* the roll's light, added, from none at the top to all of it 0.8 of the way down */
-      vec3 roll = dec(texture(uRoll, fc / uSize).rgb) * smoothstep(0.0, 0.8, uv.y);
+      /* the roll's light, added, from none at the top to all of it 0.8 of the way down (the smooth
+         step, spread as the smoothstep it replaced, over -0.145 to 0.945) */
+      vec3 roll = dec(texture(uRoll, fc / uSize).rgb) * smoothStep((uv.y + 0.145) / 1.09);
       float ink = 1.0 - exp(-2.5 * dot(roll, vec3(0.2126, 0.7152, 0.0722)));   // in ink (uInk.a): as much as there is light
       vec3 rgb = uInk.a > 0.5 ? mix(dec(col), dec(uInk.rgb), ink * 0.85) : dec(col) + roll;
       o = vec4(enc(min(rgb, 1.0)), 1.0);
@@ -586,10 +597,11 @@
     precision highp float;
     uniform sampler2D uTex; uniform vec2 uSize; uniform vec2 uDir; uniform float uMost, uReach;
     out vec4 o;
+    ${SMOOTH_GLSL}
     void main() {
       vec2 fc = gl_FragCoord.xy;
       float k = clamp(1.0 - (uSize.y - fc.y) / uReach, 0.0, 1.0);
-      float sigma = uMost * k * k;
+      float sigma = uMost * smoothRamp(k);
       if (sigma < 0.35) { o = vec4(texture(uTex, fc / uSize).rgb, 1.0); return; }
       vec3 acc = vec3(0.0); float sum = 0.0;
       for (int i = -12; i <= 12; i++) {
@@ -695,9 +707,10 @@
       }
     }
     /* the fallboard's shadow, then the light on the struck white keys over it */
-    const sh = c.createLinearGradient(0, TOP, 0, TOP + 9);
-    sh.addColorStop(0, 'rgba(0,0,0,0.16)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
-    c.fillStyle = sh; c.fillRect(0, TOP, w, 9);
+    /* (the smooth step, spread as the 9 px linear fade it replaced, over 3.4 px above to 12.4 below) */
+    const sh = c.createLinearGradient(0, TOP - 3.42, 0, TOP + 12.42);
+    for (let i = 0; i <= 16; i++) sh.addColorStop(i / 16, 'rgba(0,0,0,' + (0.16 * (1 - smoothStep(i / 16))).toFixed(4) + ')');
+    c.fillStyle = sh; c.fillRect(0, TOP, w, 12.42);
     for (let i = i0; i <= i1; i++) {
       const k = lit.get(WHITE_MIDI[i]);
       if (!k) continue;

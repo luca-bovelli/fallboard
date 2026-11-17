@@ -550,8 +550,12 @@
      edge: the search bar's bottom, the back button's top. The fades are black layers over the
      content (.lib-fade) and under the glass: on a black page that is the same as fading the
      content out, and it lets glass that sits in the page (Explore's pinned tabs) rise above them
-     with the rest of the glass. They follow a smooth S (smoothstep, sampled at quarters: 16 %,
-     50 %, 84 %), so they have no visible start or end line. The bottom one runs 64 px above the
+     with the rest of the glass. Every fade in the app follows a curve whose every derivative is
+     continuous, so it has no start, end or crease the eye can find, even over a bright cover: the
+     smooth step 1 / (1 + e^(1/t − 1/(1−t))), flat at both ends, drawn through 33 stops. These two
+     keep the spread they had as a smoothstep through five stops: the step runs over 1.49 times
+     their span, centred where they were half way, so it is 99 % black where they reached black
+     and fully black a little beyond, under the glass. The bottom one runs 64 px above the
      bar, so what passes behind the field is dim enough for its text to read. The top one
      (library.js setFade) is the top bar's depth (button and edge, 60 px) while the page is at its
      top, so it never reaches the page's heading, and grows to twice that over the first 60 px of
@@ -578,22 +582,78 @@
   }
   .lib-fade { position: absolute; z-index: 3; left: 0; right: 0; pointer-events: none; }
   .lib-fade.top {
-    top: 0; height: calc(var(--top-black) + var(--top-span));
+    top: 0; height: calc(var(--top-black) + var(--top-span) * 1.245);
     --k: calc(1 - var(--top-floor));
     background: linear-gradient(to bottom,
-      rgb(0 0 0 / var(--k)) var(--top-black),
-      rgb(0 0 0 / calc(var(--k) * 0.844)) calc(var(--top-black) + var(--top-span) * 0.25),
+      rgb(0 0 0 / calc(var(--k) * 1)) calc(var(--top-black) + var(--top-span) * -0.245),
+      rgb(0 0 0 / calc(var(--k) * 1)) calc(var(--top-black) + var(--top-span) * -0.1984),
+      rgb(0 0 0 / calc(var(--k) * 1)) calc(var(--top-black) + var(--top-span) * -0.1519),
+      rgb(0 0 0 / calc(var(--k) * 0.9999)) calc(var(--top-black) + var(--top-span) * -0.1053),
+      rgb(0 0 0 / calc(var(--k) * 0.9989)) calc(var(--top-black) + var(--top-span) * -0.0587),
+      rgb(0 0 0 / calc(var(--k) * 0.9946)) calc(var(--top-black) + var(--top-span) * -0.0122),
+      rgb(0 0 0 / calc(var(--k) * 0.9837)) calc(var(--top-black) + var(--top-span) * 0.0344),
+      rgb(0 0 0 / calc(var(--k) * 0.9641)) calc(var(--top-black) + var(--top-span) * 0.0809),
+      rgb(0 0 0 / calc(var(--k) * 0.935)) calc(var(--top-black) + var(--top-span) * 0.1275),
+      rgb(0 0 0 / calc(var(--k) * 0.897)) calc(var(--top-black) + var(--top-span) * 0.1741),
+      rgb(0 0 0 / calc(var(--k) * 0.8514)) calc(var(--top-black) + var(--top-span) * 0.2206),
+      rgb(0 0 0 / calc(var(--k) * 0.7998)) calc(var(--top-black) + var(--top-span) * 0.2672),
+      rgb(0 0 0 / calc(var(--k) * 0.744)) calc(var(--top-black) + var(--top-span) * 0.3137),
+      rgb(0 0 0 / calc(var(--k) * 0.6851)) calc(var(--top-black) + var(--top-span) * 0.3603),
+      rgb(0 0 0 / calc(var(--k) * 0.6243)) calc(var(--top-black) + var(--top-span) * 0.4069),
+      rgb(0 0 0 / calc(var(--k) * 0.5624)) calc(var(--top-black) + var(--top-span) * 0.4534),
       rgb(0 0 0 / calc(var(--k) * 0.5)) calc(var(--top-black) + var(--top-span) * 0.5),
-      rgb(0 0 0 / calc(var(--k) * 0.156)) calc(var(--top-black) + var(--top-span) * 0.75),
+      rgb(0 0 0 / calc(var(--k) * 0.4376)) calc(var(--top-black) + var(--top-span) * 0.5466),
+      rgb(0 0 0 / calc(var(--k) * 0.3757)) calc(var(--top-black) + var(--top-span) * 0.5931),
+      rgb(0 0 0 / calc(var(--k) * 0.3149)) calc(var(--top-black) + var(--top-span) * 0.6397),
+      rgb(0 0 0 / calc(var(--k) * 0.256)) calc(var(--top-black) + var(--top-span) * 0.6863),
+      rgb(0 0 0 / calc(var(--k) * 0.2002)) calc(var(--top-black) + var(--top-span) * 0.7328),
+      rgb(0 0 0 / calc(var(--k) * 0.1486)) calc(var(--top-black) + var(--top-span) * 0.7794),
+      rgb(0 0 0 / calc(var(--k) * 0.103)) calc(var(--top-black) + var(--top-span) * 0.8259),
+      rgb(0 0 0 / calc(var(--k) * 0.065)) calc(var(--top-black) + var(--top-span) * 0.8725),
+      rgb(0 0 0 / calc(var(--k) * 0.0359)) calc(var(--top-black) + var(--top-span) * 0.9191),
+      rgb(0 0 0 / calc(var(--k) * 0.0163)) calc(var(--top-black) + var(--top-span) * 0.9656),
+      rgb(0 0 0 / calc(var(--k) * 0.0054)) calc(var(--top-black) + var(--top-span) * 1.0122),
+      rgb(0 0 0 / calc(var(--k) * 0.0011)) calc(var(--top-black) + var(--top-span) * 1.0587),
+      rgb(0 0 0 / calc(var(--k) * 0.0001)) calc(var(--top-black) + var(--top-span) * 1.1053),
+      rgb(0 0 0 / calc(var(--k) * 0)) calc(var(--top-black) + var(--top-span) * 1.1519),
+      rgb(0 0 0 / calc(var(--k) * 0)) calc(var(--top-black) + var(--top-span) * 1.1984),
       transparent 100%);
   }
   .lib-fade.bottom {
-    bottom: var(--kb); height: calc(var(--bottom-black) + var(--bottom-span));
+    bottom: var(--kb); height: calc(var(--bottom-black) + var(--bottom-span) * 1.245);
     background: linear-gradient(to top,
-      #000 var(--bottom-black),
-      rgb(0 0 0 / 0.844) calc(var(--bottom-black) + var(--bottom-span) * 0.25),
+      rgb(0 0 0 / 1) calc(var(--bottom-black) + var(--bottom-span) * -0.245),
+      rgb(0 0 0 / 1) calc(var(--bottom-black) + var(--bottom-span) * -0.1984),
+      rgb(0 0 0 / 1) calc(var(--bottom-black) + var(--bottom-span) * -0.1519),
+      rgb(0 0 0 / 0.9999) calc(var(--bottom-black) + var(--bottom-span) * -0.1053),
+      rgb(0 0 0 / 0.9989) calc(var(--bottom-black) + var(--bottom-span) * -0.0587),
+      rgb(0 0 0 / 0.9946) calc(var(--bottom-black) + var(--bottom-span) * -0.0122),
+      rgb(0 0 0 / 0.9837) calc(var(--bottom-black) + var(--bottom-span) * 0.0344),
+      rgb(0 0 0 / 0.9641) calc(var(--bottom-black) + var(--bottom-span) * 0.0809),
+      rgb(0 0 0 / 0.935) calc(var(--bottom-black) + var(--bottom-span) * 0.1275),
+      rgb(0 0 0 / 0.897) calc(var(--bottom-black) + var(--bottom-span) * 0.1741),
+      rgb(0 0 0 / 0.8514) calc(var(--bottom-black) + var(--bottom-span) * 0.2206),
+      rgb(0 0 0 / 0.7998) calc(var(--bottom-black) + var(--bottom-span) * 0.2672),
+      rgb(0 0 0 / 0.744) calc(var(--bottom-black) + var(--bottom-span) * 0.3137),
+      rgb(0 0 0 / 0.6851) calc(var(--bottom-black) + var(--bottom-span) * 0.3603),
+      rgb(0 0 0 / 0.6243) calc(var(--bottom-black) + var(--bottom-span) * 0.4069),
+      rgb(0 0 0 / 0.5624) calc(var(--bottom-black) + var(--bottom-span) * 0.4534),
       rgb(0 0 0 / 0.5) calc(var(--bottom-black) + var(--bottom-span) * 0.5),
-      rgb(0 0 0 / 0.156) calc(var(--bottom-black) + var(--bottom-span) * 0.75),
+      rgb(0 0 0 / 0.4376) calc(var(--bottom-black) + var(--bottom-span) * 0.5466),
+      rgb(0 0 0 / 0.3757) calc(var(--bottom-black) + var(--bottom-span) * 0.5931),
+      rgb(0 0 0 / 0.3149) calc(var(--bottom-black) + var(--bottom-span) * 0.6397),
+      rgb(0 0 0 / 0.256) calc(var(--bottom-black) + var(--bottom-span) * 0.6863),
+      rgb(0 0 0 / 0.2002) calc(var(--bottom-black) + var(--bottom-span) * 0.7328),
+      rgb(0 0 0 / 0.1486) calc(var(--bottom-black) + var(--bottom-span) * 0.7794),
+      rgb(0 0 0 / 0.103) calc(var(--bottom-black) + var(--bottom-span) * 0.8259),
+      rgb(0 0 0 / 0.065) calc(var(--bottom-black) + var(--bottom-span) * 0.8725),
+      rgb(0 0 0 / 0.0359) calc(var(--bottom-black) + var(--bottom-span) * 0.9191),
+      rgb(0 0 0 / 0.0163) calc(var(--bottom-black) + var(--bottom-span) * 0.9656),
+      rgb(0 0 0 / 0.0054) calc(var(--bottom-black) + var(--bottom-span) * 1.0122),
+      rgb(0 0 0 / 0.0011) calc(var(--bottom-black) + var(--bottom-span) * 1.0587),
+      rgb(0 0 0 / 0.0001) calc(var(--bottom-black) + var(--bottom-span) * 1.1053),
+      rgb(0 0 0 / 0) calc(var(--bottom-black) + var(--bottom-span) * 1.1519),
+      rgb(0 0 0 / 0) calc(var(--bottom-black) + var(--bottom-span) * 1.1984),
       transparent 100%);
     transition: bottom var(--dur-keyboard) var(--ease);
   }
@@ -634,14 +694,15 @@
   }
   .shelf::-webkit-scrollbar { display: none; }
   /* the shelf's dimming and edges (library.js dimShelf): each card's opacity an animation on its
-     place in the shelf (a view timeline), and two black layers beside the shelf, how dark falling
-     as the square of the way in from the screen's edge, to half there */
+     place in the shelf (a view timeline), and two black layers beside the shelf, half black at the
+     screen's edge and clear inward along the smooth ramp e^(1.45 (1 − 1/t)): flat where it starts,
+     as dark in all as the square it replaced */
   .shelf .card-item { will-change: opacity; }
   .shelf.timed .card-item { animation: var(--dim) linear both; animation-timeline: view(x 0px); }
   .shelf-wrap { position: relative; }
   .shelf-edge { position: absolute; z-index: 1; opacity: 0; pointer-events: none; will-change: opacity; }
-  .shelf-edge.l { background: linear-gradient(to right, rgb(0 0 0 / 0.5000) 0.0%, rgb(0 0 0 / 0.3828) 12.5%, rgb(0 0 0 / 0.2813) 25.0%, rgb(0 0 0 / 0.1953) 37.5%, rgb(0 0 0 / 0.1250) 50.0%, rgb(0 0 0 / 0.0703) 62.5%, rgb(0 0 0 / 0.0313) 75.0%, rgb(0 0 0 / 0.0078) 87.5%, rgb(0 0 0 / 0.0000) 100.0%); }
-  .shelf-edge.r { background: linear-gradient(to left, rgb(0 0 0 / 0.5000) 0.0%, rgb(0 0 0 / 0.3828) 12.5%, rgb(0 0 0 / 0.2813) 25.0%, rgb(0 0 0 / 0.1953) 37.5%, rgb(0 0 0 / 0.1250) 50.0%, rgb(0 0 0 / 0.0703) 62.5%, rgb(0 0 0 / 0.0313) 75.0%, rgb(0 0 0 / 0.0078) 87.5%, rgb(0 0 0 / 0.0000) 100.0%); }
+  .shelf-edge.l { background: linear-gradient(to right, rgb(0 0 0 / 0.5) 0%, rgb(0 0 0 / 0.4772) 3.125%, rgb(0 0 0 / 0.4539) 6.25%, rgb(0 0 0 / 0.4304) 9.375%, rgb(0 0 0 / 0.4065) 12.5%, rgb(0 0 0 / 0.3823) 15.625%, rgb(0 0 0 / 0.3578) 18.75%, rgb(0 0 0 / 0.3332) 21.875%, rgb(0 0 0 / 0.3084) 25%, rgb(0 0 0 / 0.2835) 28.125%, rgb(0 0 0 / 0.2587) 31.25%, rgb(0 0 0 / 0.2339) 34.375%, rgb(0 0 0 / 0.2095) 37.5%, rgb(0 0 0 / 0.1854) 40.625%, rgb(0 0 0 / 0.1619) 43.75%, rgb(0 0 0 / 0.1391) 46.875%, rgb(0 0 0 / 0.1173) 50%, rgb(0 0 0 / 0.0967) 53.125%, rgb(0 0 0 / 0.0775) 56.25%, rgb(0 0 0 / 0.0601) 59.375%, rgb(0 0 0 / 0.0446) 62.5%, rgb(0 0 0 / 0.0314) 65.625%, rgb(0 0 0 / 0.0206) 68.75%, rgb(0 0 0 / 0.0123) 71.875%, rgb(0 0 0 / 0.0065) 75%, rgb(0 0 0 / 0.0028) 78.125%, rgb(0 0 0 / 0.0009) 81.25%, rgb(0 0 0 / 0.0002) 84.375%, rgb(0 0 0 / 0) 87.5%, rgb(0 0 0 / 0) 90.625%, rgb(0 0 0 / 0) 93.75%, rgb(0 0 0 / 0) 96.875%, rgb(0 0 0 / 0) 100%); }
+  .shelf-edge.r { background: linear-gradient(to left, rgb(0 0 0 / 0.5) 0%, rgb(0 0 0 / 0.4772) 3.125%, rgb(0 0 0 / 0.4539) 6.25%, rgb(0 0 0 / 0.4304) 9.375%, rgb(0 0 0 / 0.4065) 12.5%, rgb(0 0 0 / 0.3823) 15.625%, rgb(0 0 0 / 0.3578) 18.75%, rgb(0 0 0 / 0.3332) 21.875%, rgb(0 0 0 / 0.3084) 25%, rgb(0 0 0 / 0.2835) 28.125%, rgb(0 0 0 / 0.2587) 31.25%, rgb(0 0 0 / 0.2339) 34.375%, rgb(0 0 0 / 0.2095) 37.5%, rgb(0 0 0 / 0.1854) 40.625%, rgb(0 0 0 / 0.1619) 43.75%, rgb(0 0 0 / 0.1391) 46.875%, rgb(0 0 0 / 0.1173) 50%, rgb(0 0 0 / 0.0967) 53.125%, rgb(0 0 0 / 0.0775) 56.25%, rgb(0 0 0 / 0.0601) 59.375%, rgb(0 0 0 / 0.0446) 62.5%, rgb(0 0 0 / 0.0314) 65.625%, rgb(0 0 0 / 0.0206) 68.75%, rgb(0 0 0 / 0.0123) 71.875%, rgb(0 0 0 / 0.0065) 75%, rgb(0 0 0 / 0.0028) 78.125%, rgb(0 0 0 / 0.0009) 81.25%, rgb(0 0 0 / 0.0002) 84.375%, rgb(0 0 0 / 0) 87.5%, rgb(0 0 0 / 0) 90.625%, rgb(0 0 0 / 0) 93.75%, rgb(0 0 0 / 0) 96.875%, rgb(0 0 0 / 0) 100%); }
   .shelf .card-item { scroll-snap-align: start; }
   .shelf .card-item:last-child { scroll-snap-align: end; }
   @media (min-width: 872px) {
@@ -761,9 +822,10 @@
   .hero { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
   .hero-glow {
     position: absolute; z-index: -1; left: calc(-1 * var(--col-l)); right: calc(-1 * var(--col-r));
-    top: calc(-1 * (var(--lib-top) + var(--control) + var(--edge))); height: calc(100% + 120px);
+    top: calc(-1 * (var(--lib-top) + var(--control) + var(--edge))); height: calc((100% + 120px) * 1.25);
     background: var(--mesh); filter: blur(70px) saturate(1.2); opacity: 0.5; pointer-events: none;
-    -webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent); mask-image: linear-gradient(to bottom, #000 35%, transparent);
+    --glow-fade: linear-gradient(to bottom, rgb(0 0 0 / 1) 8.24%, rgb(0 0 0 / 1) 11.1%, rgb(0 0 0 / 1) 13.96%, rgb(0 0 0 / 0.9999) 16.82%, rgb(0 0 0 / 0.9989) 19.68%, rgb(0 0 0 / 0.9946) 22.54%, rgb(0 0 0 / 0.9837) 25.4%, rgb(0 0 0 / 0.9641) 28.26%, rgb(0 0 0 / 0.935) 31.12%, rgb(0 0 0 / 0.897) 33.98%, rgb(0 0 0 / 0.8514) 36.84%, rgb(0 0 0 / 0.7998) 39.7%, rgb(0 0 0 / 0.744) 42.56%, rgb(0 0 0 / 0.6851) 45.42%, rgb(0 0 0 / 0.6243) 48.28%, rgb(0 0 0 / 0.5624) 51.14%, rgb(0 0 0 / 0.5) 54%, rgb(0 0 0 / 0.4376) 56.86%, rgb(0 0 0 / 0.3757) 59.72%, rgb(0 0 0 / 0.3149) 62.58%, rgb(0 0 0 / 0.256) 65.44%, rgb(0 0 0 / 0.2002) 68.3%, rgb(0 0 0 / 0.1486) 71.16%, rgb(0 0 0 / 0.103) 74.02%, rgb(0 0 0 / 0.065) 76.88%, rgb(0 0 0 / 0.0359) 79.74%, rgb(0 0 0 / 0.0163) 82.6%, rgb(0 0 0 / 0.0054) 85.46%, rgb(0 0 0 / 0.0011) 88.32%, rgb(0 0 0 / 0.0001) 91.18%, rgb(0 0 0 / 0) 94.04%, rgb(0 0 0 / 0) 96.9%, rgb(0 0 0 / 0) 99.76%);
+    -webkit-mask-image: var(--glow-fade); mask-image: var(--glow-fade);
   }
   .hero .cover { width: min(100%, var(--cover-l)); border-radius: 12px; box-shadow: 0 30px 90px rgb(0 0 0 / 0.55); }
   .hero-text { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
