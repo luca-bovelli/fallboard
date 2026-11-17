@@ -315,7 +315,7 @@
     const look = FB.pieceLook(r) || FB.pieceLook(r, true);
     /* the cover's hands, as the player takes them once the catalogue is in; its fields, for the
        card to draw */
-    r = { ...r, hands: look.hands, cover: { fields: look.fields, base: look.base, ink: look.ink } };
+    r = { ...r, hands: look.hands, cover: { fields: look.fields, base: look.base } };
     b.style.setProperty('--mesh', look.mesh);
     b.style.setProperty('--ink', look.ink);
     b.dataset.base = look.base;
