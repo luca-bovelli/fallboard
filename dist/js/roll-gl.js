@@ -495,23 +495,121 @@
      starts and the end; js/app.js rollOf) as the player shows them as it begins: on the player's
      keys, the first notes landing on the card's bottom edge, where the keyboard would be, the rest
      rising to 0.2 of its height from the top, lit in the piece's hands' colours (r.hands), with no
-     grid. It is light on black, added to the card's cover (index.html .card), fading out toward
-     the top and blurred more and more as it goes (blurTop). Still: a card's noise does not move.
-     Drawn into the card's 2D canvas; false without WebGL 2 or the piece's colours. */
-  /* what a card's cover deepens to at its bottom (index.html .card .shade), where its notes are:
-     the cover's base colour at lightness 0.2, a yellow turned toward amber as it deepens (a deep
-     yellow is olive) */
-  function deep(hex) {
-    const [, C, h] = toLch(hexLin(hex));
-    let deg = (h * 180) / Math.PI;
-    deg -= 30 * Math.max(0, 1 - Math.abs(deg - 95) / 30);
-    return css(lch(0.2, clamp(C, 0.03, 0.09), (deg * Math.PI) / 180));
+     grid, blurred more and more toward the top (blurTop). Then the card's cover (r.cover, its
+     colour fields as js/library.js meshOf lays them out), deepening toward the bottom (COVER_FS),
+     and the roll's light added to it, fading out toward the top. Still: a card's noise does not
+     move. Drawn into the card's 2D canvas; false without WebGL 2 or the piece's colours.
+
+     The cover deepens to one shade (deepOf), at lightness 0.25: the most vivid the screen can
+     show there of the cover's colour that keeps the most of its own chroma when that dark. Reds,
+     purples and blues stay vivid when dark; oranges, yellows, greens and cyans cannot (a dark
+     yellow is olive, a dark orange brown), so a citrus cover deepens to its pink, a cream one to
+     its green ink. Each point turns toward that shade in OKLab, its hue and chroma ahead of its
+     lightness, so a yellow passes through orange and red while still light, never through olive. */
+  const DEEP_L = 0.25;
+  /* the most chroma the screen shows at lightness L and hue h (radians) */
+  function maxChroma(L, h) {
+    let lo = 0, hi = 0.4;
+    for (let i = 0; i < 16; i++) { const c = (lo + hi) / 2; if (fromLab([L, c * Math.cos(h), c * Math.sin(h)]).every((v) => v >= -1e-4 && v <= 1 + 1e-4)) lo = c; else hi = c; }
+    return lo;
+  }
+  /* a cover's shade: [OKLab, css] (look: js/library.js FB.pieceLook) */
+  const deepMade = new Map();
+  function deepOf(look) {
+    const all = [look.base, ...look.fields.map((m) => m.c), look.ink, ...look.hands], key = all.join();
+    if (!deepMade.has(key)) {
+      let best = null;
+      for (const hex of all) {
+        const [, C, h] = toLch(hexLin(hex)), most = maxChroma(DEEP_L, h), keeps = Math.min(C, most);
+        if (!best || keeps > best.keeps) best = { keeps, most, h };
+      }
+      const rgb = lch(DEEP_L, best.most * 0.9, best.h);
+      deepMade.set(key, { lab: toLab(rgb), css: css(rgb) });
+    }
+    return deepMade.get(key);
+  }
+  const COVER_FS = `#version 300 es
+    precision highp float;
+    uniform sampler2D uRoll; uniform vec2 uSize;
+    uniform vec3 uBase; uniform int uN; uniform vec4 uRect[4]; uniform vec4 uCol[4]; uniform vec3 uDeep;
+    out vec4 o;
+    vec3 dec(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
+    vec3 enc(vec3 c) { return mix(c * 12.92, 1.055 * pow(max(c, 0.0), vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
+    vec3 linLab(vec3 c) {
+      float l = pow(0.4122214708 * c.r + 0.5363325363 * c.g + 0.0514459929 * c.b, 1.0 / 3.0);
+      float m = pow(0.2119034982 * c.r + 0.6806995451 * c.g + 0.1073969566 * c.b, 1.0 / 3.0);
+      float s = pow(0.0883024619 * c.r + 0.2817188376 * c.g + 0.6299787005 * c.b, 1.0 / 3.0);
+      return vec3(0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s);
+    }
+    vec3 labLin(vec3 c) {
+      float l = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z, m = c.x - 0.1055613458 * c.y - 0.0638541728 * c.z, s = c.x - 0.0894841775 * c.y - 1.291485548 * c.z;
+      l = l * l * l; m = m * m * m; s = s * s * s;
+      return vec3(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s);
+    }
+    bool shown(vec3 c) { return all(greaterThanEqual(c, vec3(-1e-4))) && all(lessThanEqual(c, vec3(1.0001))); }
+    /* the most chroma the screen shows at lightness L along the unit hue direction d */
+    float mostChroma(float L, vec2 d) {
+      float lo = 0.0, hi = 0.4;
+      for (int k = 0; k < 12; k++) { float mid = 0.5 * (lo + hi); if (shown(labLin(vec3(L, d * mid)))) lo = mid; else hi = mid; }
+      return lo;
+    }
+    /* the same, averaged over lightness L ± 0.12: the most a hue shows peaks at one lightness and
+       falls off in straight lines either side, and chroma that followed that peak drew a crease,
+       a band across the card, where the lines meet */
+    float softChroma(float L, vec2 d) {
+      float s = 0.0;
+      for (int k = -2; k <= 2; k++) s += mostChroma(clamp(L + float(k) * 0.06, 0.0, 1.0), d);
+      return min(s / 5.0, mostChroma(L, d));
+    }
+    void main() {
+      vec2 fc = gl_FragCoord.xy, uv = vec2(fc.x / uSize.x, 1.0 - fc.y / uSize.y);
+      /* the cover's fields as CSS lays them: an ellipse each, solid to its stop, then fading out,
+         the first over the rest, over the base; in sRGB as the browser composites them */
+      vec3 col = uBase;
+      for (int i = 3; i >= 0; i--) {
+        if (i >= uN) continue;
+        float d = length((uv - uRect[i].xy) / uRect[i].zw), st = uCol[i].a;
+        col = mix(col, uCol[i].rgb, clamp(1.0 - (d - st) / (1.0 - st), 0.0, 1.0));
+      }
+      /* deepening: lightness eased from 8% of the way down to the bottom; hue and chroma ahead of
+         it. Chroma goes as a share of the most the screen shows at each lightness and hue, from
+         the point's own share to the shade's (0.9), so a vivid colour stays as vivid as it can be
+         all the way down and a pale one passes through no grey */
+      float t = smoothstep(0.08, 1.0, uv.y), th = 1.0 - (1.0 - t) * (1.0 - t);
+      vec3 lab = linLab(dec(col));
+      float c0 = length(lab.yz);
+      vec2 d0 = c0 > 1e-5 ? lab.yz / c0 : vec2(0.0), dd = normalize(uDeep.yz);
+      float share = c0 > 1e-5 ? min(1.0, c0 / max(softChroma(lab.x, d0), 1e-4)) : 0.0;
+      vec2 dir = mix(lab.yz, uDeep.yz, th);
+      dir = length(dir) > 1e-5 ? normalize(dir) : dd;
+      float L = mix(lab.x, uDeep.x, t);
+      float C = mix(c0, mix(share, 0.85, th) * softChroma(L, dir), th);   // the cover's own at the top
+      vec3 rgb = labLin(vec3(L, dir * min(C, mostChroma(L, dir))));
+      /* the roll's light, added, from none at the top to all of it 0.8 of the way down */
+      rgb = clamp(rgb, 0.0, 1.0) + dec(texture(uRoll, fc / uSize).rgb) * smoothstep(0.0, 0.8, uv.y);
+      o = vec4(enc(min(rgb, 1.0)), 1.0);
+    }`;
+  let coverP = null, UC = null;
+  const hexRgb = (hex) => { const n = parseInt(hex.slice(1), 16); return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]; };
+  /* the cover under the roll on the screen (the roll copied away first) */
+  function cover(cw, ch, look) {
+    if (!coverP) { coverP = compile(QUAD_VS, COVER_FS); UC = uni(coverP, ['uRoll', 'uSize', 'uBase', 'uN', 'uRect', 'uCol', 'uDeep']); }
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, sceneTex);
+    gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGB, 0, 0, cw, ch, 0);
+    const n = Math.min(4, look.fields.length), rect = new Float32Array(16), col = new Float32Array(16);
+    look.fields.slice(0, n).forEach((m, i) => { rect.set([m.x / 100, m.y / 100, m.w / 100, m.h / 100], i * 4); col.set([...hexRgb(m.c), m.stop / 100], i * 4); });
+    gl.useProgram(coverP); gl.disable(gl.BLEND); gl.bindVertexArray(quadVao); gl.viewport(0, 0, cw, ch);
+    gl.uniform1i(UC.uRoll, 0); gl.uniform2f(UC.uSize, cw, ch);
+    gl.uniform3fv(UC.uBase, hexRgb(look.base)); gl.uniform1i(UC.uN, n);
+    gl.uniform4fv(UC.uRect, rect); gl.uniform4fv(UC.uCol, col); gl.uniform3fv(UC.uDeep, look.deep);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.bindVertexArray(null);
   }
   let whiteAt = null;   // how many white keys lie below each key, from A0
   const CARD_GRID = { lane: '#000000', grid: '#000000', 'grid-2': '#000000' };   // a card's roll has no grid
   function thumb(cv, r) {
     const hands = handsOf(r.hands);
-    if (!hands || !r.roll || !r.roll.notes.length || !ready()) return false;
+    if (!hands || !r.cover || !r.roll || !r.roll.notes.length || !ready()) return false;
     const w = cv.clientWidth, H = cv.clientHeight;
     if (!w || !H) return true;
     if (!whiteAt) { whiteAt = new Int16Array(128); for (let m = 21, n = 0; m < 128; m++) { whiteAt[m] = n; if (!FB.isBlack(m)) n++; } }
@@ -535,16 +633,12 @@
     heatPx.fill(0);
     draw({ cw: Math.round(w * dpr), ch: Math.round(h * dpr), w, h, dpr, T: 12, hands, inst, fieldNotes, bars: [], beats: [], W, left, bw, theme: CARD_GRID });
     blurTop(Math.round(w * dpr), Math.round(h * dpr), Math.round(H * 0.6 * dpr), 6 * dpr);
+    cover(Math.round(w * dpr), Math.round(h * dpr), r.cover);
     cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr);
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.drawImage(glc, 0, 0, w, h);
-    /* faded out toward the top: the card adds this light to its cover (index.html .card .roll),
-       so black is nothing there, and fading to black fades it out. Eased in and out, from none at
-       the top to all of it at 0.8 of the way down */
-    const reach = H * 0.8, fade = c.createLinearGradient(0, 0, 0, reach);
-    for (let i = 0; i <= 10; i++) { const u = i / 10; fade.addColorStop(u, `rgba(0,0,0,${(1 - u * u * (3 - 2 * u)).toFixed(3)})`); }
-    c.fillStyle = fade; c.fillRect(0, 0, w, reach);
+    cv.classList.add('whole');   // the cover is in it: not added to the CSS one (index.html .card .roll.whole)
     return true;
   }
   /* A progressive blur over a card's top, where its name is (a card is drawn once, so it can
@@ -707,7 +801,7 @@
   }
 
   FB.rollGL = {
-    roll, keys, thumb, deep, flat, colours,
+    roll, keys, thumb, deepOf, flat, colours,
     /* the field moves on its own (the noise), so the roll wants frames while it shows */
     get moving() { return !STILL && !failed && !lost && !!gl; },
   };

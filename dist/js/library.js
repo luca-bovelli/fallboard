@@ -298,10 +298,11 @@
     rowsLeft = [];
   }
 
-  /* a recent piece: a square card on its cover's colour fields (--mesh), deepening toward the
-     bottom to a dark shade of the cover (--deep, js/roll-gl.js deep), its opening rising from the
-     bottom edge as in the player, as light added to the cover and fading out toward the top; its
-     name at the top in the cover's ink; the composer under the card */
+  /* a recent piece: a square card on its cover's colour fields, deepening toward the bottom to a
+     deep, vivid shade of the cover, its opening rising from the bottom edge as in the player, as
+     light added to the cover and fading out toward the top (all drawn by js/roll-gl.js thumb; the
+     CSS --mesh and --deep stand in until it has, or without WebGL 2); its name at the top in the
+     cover's ink; the composer under the card */
   function cardItem(b, title, under) {
     const item = make('div', 'card-item');
     b.appendChild(make('span', 'shade'));
@@ -314,10 +315,13 @@
   function card(r) {
     const b = button('card', undefined, () => { FB.app.open(r.open, r); close(); }, 'cover');
     const look = FB.pieceLook(r) || FB.pieceLook(r, true);
-    r = { ...r, hands: look.hands };   // the cover's, as the player takes them once the catalogue is in
+    const deep = FB.rollGL && FB.rollGL.deepOf(look);
+    /* the cover's hands, as the player takes them once the catalogue is in; its fields and the
+       shade it deepens to, for the card to draw */
+    r = { ...r, hands: look.hands, cover: deep && { fields: look.fields, base: look.base, deep: deep.lab } };
     b.style.setProperty('--mesh', look.mesh);
     b.style.setProperty('--ink', look.ink);
-    if (FB.rollGL) b.style.setProperty('--deep', FB.rollGL.deep(look.base));
+    if (deep) b.style.setProperty('--deep', deep.css);
     b.dataset.base = look.base;
     b.dataset.field = look.field;
     const cv = make('canvas', 'roll', undefined, 'img');
@@ -434,10 +438,12 @@
      shape and place, over the base colour */
   function meshOf(p, pick) {
     const fields = p[1].filter((c, i) => i < 3 || pick(3)).map((c) => {
-      const w = 45 + pick(65), h = 35 + pick(65);
-      return `radial-gradient(ellipse ${w}% ${h}% at ${pick(101)}% ${pick(101)}%, ${c} 0, ${c} ${pick(18)}%, transparent 100%)`;
+      const w = 45 + pick(65), h = 35 + pick(65), x = pick(101), y = pick(101), stop = pick(18);
+      return { c, w, h, x, y, stop };
     });
-    return fields.join(', ') + ', ' + p[0];
+    /* as CSS, and as numbers for a card, which draws its cover itself (js/roll-gl.js thumb) */
+    const css = fields.map((m) => `radial-gradient(ellipse ${m.w}% ${m.h}% at ${m.x}% ${m.y}%, ${m.c} 0, ${m.c} ${m.stop}%, transparent 100%)`).join(', ') + ', ' + p[0];
+    return { css, fields, base: p[0] };
   }
 
   /* ------------------------------------------------------------------ ornaments
@@ -621,7 +627,7 @@
       } else e = L.data.byId.get(id.replace(/^cat:/, ''));
     }
     const { p, mesh } = lookOf(e ? albumOf(e) : { id, own: true });
-    return { hands: p[4], mesh, ink: p[2], base: p[0], field: p[1][0] };
+    return { hands: p[4], mesh: mesh.css, fields: mesh.fields, ink: p[2], base: p[0], field: p[1][0] };
   };
   function makeCover(e) {
     const album = albumOf(e);
@@ -629,7 +635,7 @@
     const { pick, layout, p, face, mesh } = lookOf(album);
     const c = make('span', 'cover cv-' + layout, undefined, 'cover');
     c.setAttribute('aria-hidden', 'true');
-    c.style.setProperty('--mesh', mesh);
+    c.style.setProperty('--mesh', mesh.css);
     c.style.setProperty('--ink', p[2]);
     c.style.setProperty('--line', p[3]);
     c.style.setProperty('--face', FACE[face][0]);
@@ -1598,7 +1604,7 @@
       if (!it.styled) styleOf(it);
       if (it.kind === 'canvas') {
         if (!it.n.width) continue;
-        if (it.add) ctx.globalCompositeOperation = 'lighter';
+        if (it.add && !it.n.classList.contains('whole')) ctx.globalCompositeOperation = 'lighter';
         ctx.drawImage(it.n, x, y, w, h);
         ctx.globalCompositeOperation = 'source-over';
         continue;

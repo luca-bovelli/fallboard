@@ -631,12 +631,13 @@
   .shelf.fitted { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); overflow: visible; margin-inline: 0; padding-inline: 0; }
   .shelf.fitted .card-item { width: auto; }
   .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-w), 1fr)); gap: 12px; }
-  /* a card: a square on its cover's colour fields (--mesh), the piece's name at the top in the
-     cover's ink (--ink), the cover deepening toward the bottom, eased, to a dark shade of itself
-     (--deep, js/roll-gl.js deep), where the piece's opening rises from the bottom edge as in the
-     player: light added to the cover, so its black is nothing, fading out toward the top
-     (library.js card, drawThumb). A faint light rim holds the square against the black page. The
-     composer under it, on the page itself */
+  /* a card: a square on its cover's colour fields, the piece's name at the top in the cover's ink
+     (--ink), the cover deepening toward the bottom to a deep, vivid shade of itself, where the
+     piece's opening rises from the bottom edge as in the player: light added to the cover, fading
+     out toward the top. js/roll-gl.js thumb draws all of it into the card's canvas (.roll.whole);
+     until it has, and without WebGL 2, the CSS below stands in: the cover's fields (--mesh), an
+     overlay deepening to its shade (--deep), the flat roll added to them (plus-lighter). A faint
+     light rim holds the square against the black page. The composer under it, on the page */
   .card-item { flex: none; width: var(--card-w); min-width: 0; display: flex; flex-direction: column; gap: 8px; scroll-snap-align: start; }
   .cards .card-item { width: auto; }
   .card {
@@ -650,6 +651,7 @@
       color-mix(in oklab, var(--deep, #000) 50%, transparent) 54%, color-mix(in oklab, var(--deep, #000) 84.4%, transparent) 77%, var(--deep, #000) 100%);
   }
   .card .roll { position: absolute; inset: 0; z-index: -1; display: block; width: 100%; height: 100%; mix-blend-mode: screen; mix-blend-mode: plus-lighter; }
+  .card .roll.whole { mix-blend-mode: normal; }   /* drawn with its cover (js/roll-gl.js thumb) */
   .card .title {
     position: absolute; top: 0; left: 0; right: 0; padding: 12px 12px 0; font-size: var(--fs-m); font-weight: 600; line-height: 1.25;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
