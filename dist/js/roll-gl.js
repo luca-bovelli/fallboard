@@ -26,8 +26,8 @@
 
    The keys: a white keyboard, neutral, below a black line, each white key a rounded rectangle, so
    black dents show between them at the top and bottom, with hairline seams between. A struck key
-   wears a slab of glass of its hand's colour, as vivid as it can be at a middle lightness: the
-   roll's notes made transparent, bending the key under them near their edges. Keys light
+   wears one of the roll's notes, sounding, drawn by the roll's own note shader over the key, the
+   key showing through it. Keys light
    fully the moment a note starts and go dark within 60 ms of its end. The hands' icons
    (--hand-r, --hand-l) and the sounding notes in the score (--note-r, --note-l) take the hands'
    colours. */
@@ -126,7 +126,7 @@
       note: srgb(rgb), rim: srgb(lift(rgb, 0.55)),      // a glass note's tint and its rim light
       score: lift(rgb, 0.3),                            // a sounding note in the score, on its dark paper
       lab: toLab(lch(0.5, Math.min(0.22, C * 1.5), h)), // the field's colour, at lightness 0.5
-      key: vivid(kL), keyRim: vivid(kL + 0.08),
+      key: vivid(kL),
     };
   }
 
@@ -243,7 +243,7 @@
      the middle near the edges as a thick pane bends it; the tint is deep, so the slab is its hand's
      colour even over black; the light is in the rim, a hairline fading inward within a few pixels,
      and at the foot where the note begins. vA: tint, and how deep (notes on black keys sit a little
-     deeper); vB: rim colour; vParm: corner radius, sounding now */
+     deeper); vB: rim colour, and how far it has faded (a key's release); vParm: corner radius, sounding now */
   const NOTE_FS = `#version 300 es
     precision highp float;
     in vec2 vP; in vec2 vHalf; in vec4 vA; in vec4 vB; in vec2 vParm;
@@ -253,7 +253,7 @@
     float box(vec2 p, vec2 b, float r) { vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
     void main() {
       float d = box(vP, vHalf, min(vParm.x, min(vHalf.x, vHalf.y)));
-      float cov = clamp(0.5 - d * uDpr, 0.0, 1.0), hot = vParm.y, inner = max(-d, 0.0), fromFoot = vHalf.y - vP.y;
+      float cov = clamp(0.5 - d * uDpr, 0.0, 1.0) * (1.0 - vB.a), hot = vParm.y, inner = max(-d, 0.0), fromFoot = vHalf.y - vP.y;
       vec2 gr = vec2(dFdx(d), dFdy(d));
       vec2 nrm = length(gr) > 1e-5 ? normalize(gr) : vec2(0.0);
       vec3 behind = pow(texture(uBg, (gl_FragCoord.xy - nrm * 11.0 * exp(-inner / 3.5) * uDpr) / uSize).rgb, vec3(2.2));
@@ -404,7 +404,7 @@
     gl.bindVertexArray(null);
   }
   /* a note's 14 numbers for the notes pass */
-  const noteOf = (x, y, w, h, black, hc, hot) => [x, y, w, h, hc.note[0], hc.note[1], hc.note[2], black ? 0.88 : 1, hc.rim[0], hc.rim[1], hc.rim[2], 0, Math.min(6, w * 0.32), hot ? 1 : 0];
+  const noteOf = (x, y, w, h, black, hc, hot, faded = 0) => [x, y, w, h, hc.note[0], hc.note[1], hc.note[2], black ? 0.88 : 1, hc.rim[0], hc.rim[1], hc.rim[2], faded, Math.min(6, w * 0.32), hot ? 1 : 0];
 
   /* ------------------------------------------------------------------ the roll */
   function roll(env, disp, live) {
@@ -540,13 +540,13 @@
      index 1.46. A ray from the eye enters the front, crosses the solid and leaves at its back, so
      near the edge what lies under the card (its cover and the roll's light) is bent inward; Fresnel
      loss at both faces, normalised so the flat middle is the cover as it is; the controls' rim
-     light (0.14) along the top and bottom edges. No coating: the controls' grey would dull the
+     light along the top and bottom edges, stronger than the controls' (0.5 to their 0.2). No coating: the controls' grey would dull the
      cover. Functions as js/glass.js writes them. */
   const GLASS_FS = `#version 300 es
     precision highp float;
     uniform sampler2D uScene; uniform vec2 uSize; uniform vec4 rectangle; uniform float corner;
     out vec4 o;
-    const float shapeSoftness = 0.5, capFlatness = 0.8, lightScale = 0.04, ior = 1.46, backgroundGap = 0.0, rimGain = 0.14;
+    const float shapeSoftness = 0.5, capFlatness = 0.8, lightScale = 0.04, ior = 1.46, backgroundGap = 0.0, rimGain = 0.5;
     vec3 dec(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
     vec3 enc(vec3 c) { return mix(c * 12.92, 1.055 * pow(max(c, 0.0), vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
     float squircleHinge(float q, float e) { float root = sqrt(q * q + e * e); return q < 0.0 ? e * e / max(root - q, 0.00000001) : q + root; }
@@ -683,7 +683,9 @@
     draw({ cw: Math.round(w * dpr), ch: Math.round(h * dpr), w, h, dpr, T: 12, hands, inst, fieldNotes, bars: [], beats: [], W, left, bw, theme: CARD_GRID });
     blurTop(Math.round(w * dpr), Math.round(h * dpr), Math.round(H * 0.6 * dpr), 6 * dpr);
     cover(Math.round(w * dpr), Math.round(h * dpr), r.cover);
-    glassOver(Math.round(w * dpr), Math.round(h * dpr), ((cv.parentNode && cv.parentNode._sqR) || 18) * dpr);
+    /* the glass's corner, bevel and height: the card's corner radius (before the squircle lowers it) */
+    const card = cv.parentNode, corner = card._sqR !== undefined ? card._sqR : parseFloat(getComputedStyle(card).borderTopLeftRadius) || 0;
+    glassOver(Math.round(w * dpr), Math.round(h * dpr), corner * dpr);
     cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr);
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -736,71 +738,11 @@
   }
 
   /* ------------------------------------------------------------------ the keys
-     A struck key wears a slab of glass of its hand's colour, the roll's notes made transparent:
-     laid over the key, the same shape (a white key's less its neighbours' black keys, as much of
-     it as shows), bending what lies under it toward its middle near its edges and losing light
-     there to reflection as js/glass.js counts it (Fresnel, index 1.46), as vivid as the
-     hand's colour can be at a middle lightness, filtering a white key to that colour and glowing
-     it over a black one, with the roll's hairline of light round its rim. Drawn by WebGL 2 on a
-     canvas of the keyboard's own, over the keyboard drawn plainly; without it, a flat fill */
-  const KEY_VS = `#version 300 es
-    layout(location = 0) in vec2 aCorner; layout(location = 1) in vec4 iRect; layout(location = 2) in vec4 iTint; layout(location = 3) in vec4 iRim;
-    layout(location = 4) in vec4 iCut; layout(location = 5) in vec2 iParm;
-    uniform vec2 uRes;
-    out vec2 vP; out vec2 vHalf; out vec4 vTint; out vec4 vRim; out vec4 vCut; out vec2 vParm;
-    void main() {
-      vec2 size = iRect.zw + 2.0, px = iRect.xy - 1.0 + aCorner * size;
-      vP = (aCorner - 0.5) * size; vHalf = iRect.zw * 0.5; vTint = iTint; vRim = iRim; vCut = iCut; vParm = iParm;
-      gl_Position = vec4(px.x / uRes.x * 2.0 - 1.0, 1.0 - px.y / uRes.y * 2.0, 0.0, 1.0);
-    }`;
-  /* vTint: the hand's colour and how much of it the glass passes (a white key filtered to it);
-     vRim: the rim's colour, and how much is left of the key's light (the release); vCut: a white
-     key's neighbouring black keys, left and right, as x ranges from the key's left edge; vParm:
-     the corner's radius, whether it is a black key. uCutH: how far the black keys reach below a
-     white key's top */
-  const KEY_FS = `#version 300 es
-    precision highp float;
-    in vec2 vP; in vec2 vHalf; in vec4 vTint; in vec4 vRim; in vec4 vCut; in vec2 vParm;
-    uniform float uDpr; uniform sampler2D uBg; uniform vec2 uSize; uniform float uCutH;
-    out vec4 o;
-    ${COMMON}
-    float box(vec2 p, vec2 b, float r) { vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
-    float smax(float a, float b, float k) { float h = max(k - abs(a - b), 0.0) / k; return max(a, b) + h * h * k * 0.25; }
-    /* js/glass.js's: the share of light a face reflects, at the cosine of its angle to the ray */
-    float dielectricFresnel(float cosine, float incidentIOR, float transmittedIOR) {
-      float c = clamp(abs(cosine), 0.0, 1.0), eta = incidentIOR / transmittedIOR;
-      float k = 1.0 - eta * eta * (1.0 - c * c);
-      if (k <= 0.0) return 1.0;
-      float ct = sqrt(k);
-      float rs = (incidentIOR * c - transmittedIOR * ct) / max(incidentIOR * c + transmittedIOR * ct, 0.000001);
-      float rp = (transmittedIOR * c - incidentIOR * ct) / max(transmittedIOR * c + incidentIOR * ct, 0.000001);
-      return 0.5 * (rs * rs + rp * rp);
-    }
-    void main() {
-      float d = box(vP, vHalf, min(vParm.x, min(vHalf.x, vHalf.y)));
-      if (vParm.y < 0.5) for (int i = 0; i < 2; i++) {
-        vec2 cut = i == 0 ? vCut.xy : vCut.zw;
-        if (cut.y <= cut.x) continue;
-        vec2 half_ = vec2((cut.y - cut.x) * 0.5 + 1.5, (uCutH + 9.5) * 0.5);
-        vec2 mid = vec2((cut.x + cut.y) * 0.5 - vHalf.x, -vHalf.y - 8.0 + half_.y);
-        d = smax(d, -box(vP - mid, half_, 2.0), 2.5);
-      }
-      float a = clamp(0.5 - d * uDpr, 0.0, 1.0) * vRim.a, inner = max(-d, 0.0);
-      vec2 gr = vec2(dFdx(d), dFdy(d));
-      vec2 nrm = length(gr) > 1e-5 ? normalize(gr) : vec2(0.0);
-      vec3 behind = pow(texture(uBg, (gl_FragCoord.xy - nrm * 7.0 * exp(-inner / 3.0) * uDpr) / uSize).rgb, vec3(2.2));
-      vec3 tone = pow(vTint.rgb, vec3(2.2)), lite = pow(vRim.rgb, vec3(2.2));
-      float lum = dot(behind, vec3(0.2126, 0.7152, 0.0722));
-      /* the slab's face, tilting over a bevel a few pixels wide at its edge: what it lets through
-         after reflecting at the face and again leaving it (index 1.46), as js/glass.js counts it,
-         the flat middle letting through all of the key */
-      vec3 face = normalize(vec3(nrm * 2.0 * exp(-inner / 2.5), 1.0));
-      float r = dielectricFresnel(face.z, 1.0, 1.46), f0 = 0.0350;
-      float pass = (1.0 - r) * (1.0 - r) / ((1.0 - f0) * (1.0 - f0));
-      vec3 col = behind * mix(vec3(1.0), tone, vTint.a) * pass + tone * 0.8 * (1.0 - lum);
-      col += lite * (exp(-inner / 0.8) * 0.55 + exp(-inner / 4.0) * 0.12);
-      o = vec4((enc(col) + (hash(gl_FragCoord.xy) - 0.5) * 0.012) * a, a);
-    }`;
+     A struck key wears one of the roll's notes, sounding, drawn by the roll's own note shader
+     (NOTE_VS, NOTE_FS) over the key as it is drawn, the key showing through it as the roll's
+     light does through a note: the white keys' before the black keys are drawn over them, the
+     black keys' after. On a canvas of the keyboard's own (the roll's is the roll's size); without
+     WebGL 2, a flat fill of the hand's colour */
   let kgl = null, kglc = null, kFailed = false, keyP = null, UK = null, keyVao = null, keyBuf = null, keyTex = null;
   /* the keys' own WebGL 2 (the roll's canvas is the roll's size); false while it cannot be had */
   function keysReady() {
@@ -822,14 +764,14 @@
         if (!g.getProgramParameter(p, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(p));
         return p;
       };
-      keyP = prog(KEY_VS, KEY_FS);
-      UK = Object.fromEntries(['uRes', 'uDpr', 'uBg', 'uSize', 'uCutH'].map((n) => [n, g.getUniformLocation(keyP, n)]));
+      keyP = prog(NOTE_VS, NOTE_FS);
+      UK = Object.fromEntries(['uRes', 'uDpr', 'uBg', 'uSize'].map((n) => [n, g.getUniformLocation(keyP, n)]));
       keyVao = g.createVertexArray(); g.bindVertexArray(keyVao);
       g.bindBuffer(g.ARRAY_BUFFER, g.createBuffer());
       g.bufferData(g.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), g.STATIC_DRAW);
       g.enableVertexAttribArray(0); g.vertexAttribPointer(0, 2, g.FLOAT, false, 0, 0);
       keyBuf = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, keyBuf);
-      [[1, 4, 0], [2, 4, 16], [3, 4, 32], [4, 4, 48], [5, 2, 64]].forEach(([loc, size, off]) => { g.enableVertexAttribArray(loc); g.vertexAttribPointer(loc, size, g.FLOAT, false, 72, off); g.vertexAttribDivisor(loc, 1); });
+      [[1, 4, 0], [2, 4, 16], [3, 4, 32], [4, 2, 48]].forEach(([loc, size, off]) => { g.enableVertexAttribArray(loc); g.vertexAttribPointer(loc, size, g.FLOAT, false, 56, off); g.vertexAttribDivisor(loc, 1); });
       g.bindVertexArray(null);
       keyTex = g.createTexture(); g.bindTexture(g.TEXTURE_2D, keyTex);
       for (const [k, v] of [[g.TEXTURE_MIN_FILTER, g.LINEAR], [g.TEXTURE_MAG_FILTER, g.LINEAR], [g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE], [g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE]]) g.texParameteri(g.TEXTURE_2D, k, v);
@@ -841,8 +783,8 @@
       return false;
     }
   }
-  /* the glass over the keyboard as drawn on c (w x h css px), its slabs inst (18 numbers each) */
-  function keysGlass(c, w, h, inst, cutH) {
+  /* notes over the keyboard as drawn on c so far (w x h css px), inst as noteOf makes them */
+  function keysGlass(c, w, h, inst) {
     const g = kgl, cw = c.canvas.width, ch = c.canvas.height;
     if (kglc.width !== cw || kglc.height !== ch) { kglc.width = cw; kglc.height = ch; }
     g.viewport(0, 0, cw, ch); g.clearColor(0, 0, 0, 0); g.clear(g.COLOR_BUFFER_BIT);
@@ -851,10 +793,10 @@
     g.texImage2D(g.TEXTURE_2D, 0, g.RGBA, g.RGBA, g.UNSIGNED_BYTE, c.canvas);
     g.pixelStorei(g.UNPACK_FLIP_Y_WEBGL, false);
     g.useProgram(keyP); g.disable(g.BLEND);
-    g.uniform2f(UK.uRes, w, h); g.uniform1f(UK.uDpr, cw / w); g.uniform1i(UK.uBg, 0); g.uniform2f(UK.uSize, cw, ch); g.uniform1f(UK.uCutH, cutH);
+    g.uniform2f(UK.uRes, w, h); g.uniform1f(UK.uDpr, cw / w); g.uniform1i(UK.uBg, 0); g.uniform2f(UK.uSize, cw, ch);
     g.bindVertexArray(keyVao); g.bindBuffer(g.ARRAY_BUFFER, keyBuf);
     g.bufferData(g.ARRAY_BUFFER, new Float32Array(inst), g.DYNAMIC_DRAW);
-    g.drawArraysInstanced(g.TRIANGLE_STRIP, 0, 4, inst.length / 18);
+    g.drawArraysInstanced(g.TRIANGLE_STRIP, 0, 4, inst.length / 14);
     g.bindVertexArray(null);
     c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(kglc, 0, 0); c.restore();
   }
@@ -904,17 +846,16 @@
     const sh = c.createLinearGradient(0, TOP - 3.42, 0, TOP + 12.42);
     for (let i = 0; i <= 16; i++) sh.addColorStop(i / 16, 'rgba(0,0,0,' + (0.16 * (1 - smoothStep(i / 16))).toFixed(4) + ')');
     c.fillStyle = sh; c.fillRect(0, TOP, w, 12.42);
-    /* the struck keys' glass, over the keyboard once it is drawn; without WebGL 2 a flat fill of the
-       hand's colour, the white keys' now, under the black keys */
+    /* the struck white keys' notes, before the black keys are drawn over them */
     const glass = lit.size && keysReady(), inst = [];
     for (let i = i0; i <= i1; i++) {
-      const m = WHITE_MIDI[i], k = lit.get(m);
+      const k = lit.get(WHITE_MIDI[i]);
       if (!k) continue;
       const x = (i - left) * W, hc = hands[k[0]];
-      if (!glass) { c.globalAlpha = 0.85 * k[1]; c.fillStyle = css(hc.key); whitePath(x); c.fill(); c.globalAlpha = 1; continue; }
-      const cutOf = (n) => (n >= 21 && n <= 108 && FB.isBlack(n) ? [keyX(n) - x - hair, keyX(n) - x - hair + bw] : [0, 0]);
-      inst.push(x + hair, TOP, W - hair, h - TOP, ...srgb(hc.key), 0.9, ...srgb(hc.keyRim), k[1], ...cutOf(m - 1), ...cutOf(m + 1), rad, 0);
+      if (glass) inst.push(...noteOf(x + hair, TOP, W - hair, h - TOP, false, hc, true, 1 - k[1]));
+      else { c.globalAlpha = 0.85 * k[1]; c.fillStyle = css(hc.key); whitePath(x); c.fill(); c.globalAlpha = 1; }
     }
+    if (inst.length) { keysGlass(c, w, h, inst); inst.length = 0; }
     /* the black keys: a soft shadow on the white keys, a dark top face lifting a little toward the
        front, a hairline where it meets the front slope */
     const side = Math.min(1.4, bw * 0.12), dpr = c.canvas.width / Math.max(1, w);
@@ -933,9 +874,9 @@
       c.fillStyle = face; rr(c, x + side, -4, bw - side * 2, bh - slope + 4, 0, 1.5); c.fill();
       c.fillStyle = 'rgba(255,255,255,0.10)'; c.fillRect(x + side, bh - slope - hair, bw - side * 2, hair);
       if (k && !glass) { c.globalAlpha = k[1]; c.fillStyle = css(hands[k[0]].key); rr(c, x, -4, bw, bh + 4, 0, 2); c.fill(); c.globalAlpha = 1; }
-      else if (k) inst.push(x, TOP, bw, bh - TOP, ...srgb(hands[k[0]].key), 0.9, ...srgb(hands[k[0]].keyRim), k[1], 0, 0, 0, 0, 2, 1);
+      else if (k) inst.push(...noteOf(x, TOP, bw, bh - TOP, true, hands[k[0]], true, 1 - k[1]));
     }
-    if (inst.length) keysGlass(c, w, h, inst, bh - TOP);
+    if (inst.length) keysGlass(c, w, h, inst);
     /* the line between the roll and the keys, over the black keys' tops too */
     c.fillStyle = '#000'; c.fillRect(0, 0, w, TOP);
     return true;
