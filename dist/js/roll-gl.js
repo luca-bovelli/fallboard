@@ -406,7 +406,7 @@
     gl.bindVertexArray(null);
   }
   /* a note's 14 numbers for the notes pass */
-  const noteOf = (x, y, w, h, black, hc, hot, faded = 0) => [x, y, w, h, hc.note[0], hc.note[1], hc.note[2], black ? 0.88 : 1, hc.rim[0], hc.rim[1], hc.rim[2], faded, Math.min(6, w * 0.32), hot ? 1 : 0];
+  const noteOf = (x, y, w, h, black, hc, hot, faded = 0, corner = Math.min(6, w * 0.32)) => [x, y, w, h, hc.note[0], hc.note[1], hc.note[2], black ? 0.88 : 1, hc.rim[0], hc.rim[1], hc.rim[2], faded, corner, hot ? 1 : 0];
 
   /* ------------------------------------------------------------------ the roll */
   function roll(env, disp, live) {
@@ -540,9 +540,10 @@
      over the whole card, under its name: a squircle in plan (the card's own corner, softness 1/2),
      its edge rising over the corner's radius to a cap that is mostly flat (capFlatness 0.8),
      index 1.46. A ray from the eye enters the front, crosses the solid and leaves at its back, so
-     near the edge what lies under the card (its cover and the roll's light) is bent inward; Fresnel
-     loss at both faces, normalised so the flat middle is the cover as it is; the controls' rim
-     light along the top and bottom edges (0.2, as the controls). No coating: the controls' grey would dull the
+     near the edge what lies under the card (its cover and the roll's light) is bent inward, none of
+     it dimmed (no loss to reflection: it read as a dark rim); the controls' rim
+     light along the top and bottom edges (0.2, as the controls), brightening the cover in its own
+     colour rather than adding white. No coating: the controls' grey would dull the
      cover. Functions as js/glass.js writes them. */
   const GLASS_FS = `#version 300 es
     precision highp float;
@@ -605,27 +606,20 @@
       float airTravel = max(0.0, (-corner - backgroundGap - exitPoint.z) / leaving.z);
       return exitPoint.xy + leaving.xy * airTravel - p;
     }
-    float dielectricFresnel(float cosine, float incidentIOR, float transmittedIOR) {
-      float c = clamp(abs(cosine), 0.0, 1.0), eta = incidentIOR / transmittedIOR;
-      float k = 1.0 - eta * eta * (1.0 - c * c);
-      if (k <= 0.0) return 1.0;
-      float ct = sqrt(k);
-      float rs = (incidentIOR * c - transmittedIOR * ct) / max(incidentIOR * c + transmittedIOR * ct, 0.000001);
-      float rp = (transmittedIOR * c - incidentIOR * ct) / max(transmittedIOR * c + incidentIOR * ct, 0.000001);
-      return 0.5 * (rs * rs + rp * rp);
-    }
     void main() {
       vec2 fc = gl_FragCoord.xy, p = vec2(fc.x, uSize.y - fc.y) - uSize * 0.5;   // from the middle, y down, as js/glass.js
       vec3 normal, lightingNormal; float dist, height;
       surface(p, dist, normal, lightingNormal, height);
       float tir; vec3 inside, backNormal;
       vec2 bend = displacement(p, normal, height, tir, inside, backNormal);
-      float frontR = dielectricFresnel(normal.z, 1.0, ior), rearR = tir > 0.5 ? 1.0 : dielectricFresnel(dot(inside, -backNormal), ior, 1.0);
-      float f0 = (ior - 1.0) / (ior + 1.0); f0 *= f0;
-      vec2 q = p + bend;
-      vec3 behind = dec(texture(uScene, clamp(vec2(q.x + uSize.x * 0.5, uSize.y * 0.5 - q.y) / uSize, 0.0, 1.0)).rgb);
-      vec3 col = tir < 0.5 ? behind * (1.0 - frontR) * (1.0 - rearR) / ((1.0 - f0) * (1.0 - f0)) : vec3(0.0);
-      col += vec3(rimGain * abs(lightingNormal.y) * (1.0 - abs(lightingNormal.x)));
+      /* what lies under the card, bent; no darkening where the glass turns steep (the controls' loss
+         to reflection there, which their coating hides, read as a dark rim), and where the light
+         would turn back inside the glass, the cover unbent */
+      vec2 q = p + (tir > 0.5 ? vec2(0.0) : bend);
+      vec3 col = dec(texture(uScene, clamp(vec2(q.x + uSize.x * 0.5, uSize.y * 0.5 - q.y) / uSize, 0.0, 1.0)).rgb);
+      /* the controls' rim, as light of the cover's own colour: added white it greyed the colour where
+         the bevel turns the corner (the controls' grey coating hides that) */
+      col *= 1.0 + 2.5 * rimGain * abs(lightingNormal.y) * (1.0 - abs(lightingNormal.x));
       o = vec4(enc(col), 1.0);
     }`;
   let glassP = null, UG = null;
@@ -745,8 +739,9 @@
      the light field behind it, the hand's colour; behind a key is the key, so the shader sees the
      key tinted by the hand's colour, at half its brightness (uBgTint 1, uBgGain 0.5; 0 and 1 on
      the roll): a white key comes out the hand's colour as vivid as the falling notes, a black key
-     dark, the seams between still bending through. The white keys' notes before the black keys are drawn over them, the
-     black keys' after. On a canvas of the keyboard's own (the roll's is the roll's size); without
+     dark, the seams between still bending through. Each in its key's own shape: a white key's
+     rounded corners; a black key's from under the black line, so only its bottom corners (2 px)
+     round. The white keys' notes before the black keys are drawn over them, the black keys' after. On a canvas of the keyboard's own (the roll's is the roll's size); without
      WebGL 2, a flat fill of the hand's colour */
   let kgl = null, kglc = null, kFailed = false, keyP = null, UK = null, keyVao = null, keyBuf = null, keyTex = null;
   /* the keys' own WebGL 2 (the roll's canvas is the roll's size); false while it cannot be had */
@@ -857,7 +852,7 @@
       const k = lit.get(WHITE_MIDI[i]);
       if (!k) continue;
       const x = (i - left) * W, hc = hands[k[0]];
-      if (glass) inst.push(...noteOf(x + hair, TOP, W - hair, h - TOP, false, hc, false, 1 - k[1]));
+      if (glass) inst.push(...noteOf(x + hair, TOP, W - hair, h - TOP, false, hc, false, 1 - k[1], rad));
       else { c.globalAlpha = 0.85 * k[1]; c.fillStyle = css(hc.key); whitePath(x); c.fill(); c.globalAlpha = 1; }
     }
     if (inst.length) { keysGlass(c, w, h, inst); inst.length = 0; }
@@ -879,7 +874,7 @@
       c.fillStyle = face; rr(c, x + side, -4, bw - side * 2, bh - slope + 4, 0, 1.5); c.fill();
       c.fillStyle = 'rgba(255,255,255,0.10)'; c.fillRect(x + side, bh - slope - hair, bw - side * 2, hair);
       if (k && !glass) { c.globalAlpha = k[1]; c.fillStyle = css(hands[k[0]].key); rr(c, x, -4, bw, bh + 4, 0, 2); c.fill(); c.globalAlpha = 1; }
-      else if (k) inst.push(...noteOf(x, TOP, bw, bh - TOP, true, hands[k[0]], false, 1 - k[1]));
+      else if (k) inst.push(...noteOf(x, 0, bw, bh, true, hands[k[0]], false, 1 - k[1], 2));
     }
     if (inst.length) keysGlass(c, w, h, inst);
     /* the line between the roll and the keys, over the black keys' tops too */

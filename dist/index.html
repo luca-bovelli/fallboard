@@ -100,7 +100,7 @@
     --fs-card: 18px;
     --fs-field: 16px;
     --r-card: 18px;
-    --r-continue: 32px;      /* a Continue card's corner, and so its glass's bevel and height (js/roll-gl.js GLASS_FS) */
+    --r-continue: calc(var(--control) / 2);   /* a Continue card's and a page's big cover's corner, the round buttons' and the search bar's; a card's glass's bevel and height (js/roll-gl.js GLASS_FS) */
     --content-max: 720px;    /* the library's column stops growing here (see .library) */
     --cover-s: 44px;         /* a cover in a list */
     --cover-l: 420px;        /* a cover heading a piece's or a work's page, at most */
@@ -831,7 +831,7 @@
     -webkit-mask-image: var(--glow-fade); mask-image: var(--glow-fade);
   }
   .hero-art { display: block; width: min(100%, var(--cover-l)); filter: drop-shadow(0 30px 90px rgb(0 0 0 / 0.55)); }
-  .hero .cover { display: block; width: 100%; border-radius: 12px; }
+  .hero .cover { display: block; width: 100%; border-radius: var(--r-continue); }
   .hero-text { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
   .hero-text h1 { margin: 0; font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; text-wrap: balance; }
   .hero-text p { margin: 0; font-size: var(--fs-m); color: var(--t2); }
