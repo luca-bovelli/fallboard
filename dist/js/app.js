@@ -1434,14 +1434,42 @@
   syncSegs();
   syncPlayBtn();
   resize();
-  /* reopen the last piece; on a first visit open the library over the first built-in piece */
+  /* A file shared to the installed app from Android's share sheet: the service worker (sw.js)
+     keeps it and opens the app at ./?shared=1; it is opened here, and let go */
+  async function openShared() {
+    try {
+      const cache = await caches.open('fallboard-share'), key = new URL('shared-score', location.href).href, res = await cache.match(key);
+      if (!res) return false;
+      await cache.delete(key);
+      const name = decodeURIComponent(res.headers.get('x-name') || 'Shared score.musicxml');
+      await openFile(new File([await res.blob()], name, { type: res.headers.get('content-type') || '' }));
+      return !!S.score;
+    } catch (e) { return false; }
+  }
+  /* reopen the last piece; on a first visit open the library over the first built-in piece; a
+     shared file instead of either */
   {
     const o = store.get();
     const last = o.last && (o.recent || []).find((r) => r.id === o.last);
     const fallback = () => loadBuiltin(BUILTINS[0]);
-    if (last) Promise.resolve(openWhat(last.open, last)).then(() => { if (!S.score) fallback(); }, fallback);
+    const reopen = () => (last ? Promise.resolve(openWhat(last.open, last)).then(() => { if (!S.score) fallback(); }, fallback) : fallback());
+    if (new URLSearchParams(location.search).has('shared')) {
+      history.replaceState(history.state, '', location.pathname + location.hash);
+      openShared().then((ok) => { if (!ok) reopen(); });
+    } else if (last) reopen();
     else { fallback(); FB.app.firstVisit = !(o.recent || []).length; }
   }
+  /* a MusicXML file opened with the installed app (a computer's "Open with"; the manifest's
+     file_handlers): opened, over the library if it was showing */
+  if ('launchQueue' in window) {
+    window.launchQueue.setConsumer(async (params) => {
+      if (!params.files || !params.files.length) return;
+      try { await openFile(await params.files[0].getFile()); if (FB.library && FB.library.isOpen()) FB.library.close(); } catch (e) { /* not a file it could read */ }
+    });
+  }
+  /* offline: the service worker (sw.js), on the deployed site only (a local preview shows the
+     files as they are) */
+  if ('serviceWorker' in navigator && window.FB_VERSION) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
   FB.debug = { S, G, R, seek, play, pause, step, notation, piano, openFile, glass: () => [glassTop, glassFoot] };
 })();

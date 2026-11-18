@@ -1,0 +1,134 @@
+/* The app's icons, drawn by the app itself: a few bars of music opened in the player, its
+   controls hidden, the roll's lit glass notes falling onto the lit keys, caught in a square and
+   saved at every size the platforms ask for. Also the plain black launch screens iOS shows while
+   an installed Fallboard starts.
+
+     node tools/icons.js            (needs Chrome; CHROME=<path> to name it)
+
+   Writes dist/icons/: icon-<size>.png (any purpose), maskable-512.png (the same scene with room
+   round it for Android's masks), apple-touch-icon.png (180, no transparency: iOS rounds it),
+   favicon-32.png, favicon-16.png, and splash-<w>x<h>.png for the iPhones and iPads in SPLASH. */
+'use strict';
+const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.join(__dirname, '..');
+const OUT = process.env.ICON_OUT || path.join(ROOT, 'dist', 'icons');
+const PORT = 5197;
+const CHROME = process.env.CHROME || [
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser',
+].find((p) => fs.existsSync(p));
+/* the palette comes from the file's name, as an upload's does (js/library.js FB.pieceLook): this
+   name gives orchid: violet and pink */
+const NAME = process.env.ICON_NAME || 'Fallboard 5.musicxml';
+/* a left-hand C under a right hand rising E G B D, each entering half a second after the last and
+   held, at 120 bpm: a staircase of notes reaching up the frame (divisions: 2 to a quarter) */
+const NOTES = [['C', 4, 0, 8, 2], ['E', 4, 0, 4, 1], ['G', 4, 2, 6, 1], ['B', 4, 4, 6, 1], ['D', 5, 6, 8, 1]];
+function scoreXml() {
+  let pos = 0;
+  const body = NOTES.map(([step, oct, at, dur, staff], i) => {
+    const move = at < pos ? `<backup><duration>${pos - at}</duration></backup>` : at > pos ? `<forward><duration>${at - pos}</duration></forward>` : '';
+    pos = at + dur;
+    return move + `<note><pitch><step>${step}</step><octave>${oct}</octave></pitch><duration>${dur}</duration><voice>${i + 1}</voice><staff>${staff}</staff></note>`;
+  }).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="3.1"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+<part id="P1"><measure number="1"><attributes><divisions>2</divisions><time><beats>8</beats><beat-type>4</beat-type></time><staves>2</staves>
+<clef number="1"><sign>G</sign><line>2</line></clef><clef number="2"><sign>F</sign><line>4</line></clef></attributes>
+<sound tempo="120"/>
+${body}
+</measure></part></score-partwise>`;
+}
+const XML = scoreXml();
+
+const SIZES = [16, 32, 180, 192, 512];
+/* iOS launch screens, portrait (and landscape for iPads): [css width, css height, scale] */
+const SPLASH = [
+  [440, 956, 3], [402, 874, 3], [430, 932, 3], [393, 852, 3], [428, 926, 3], [390, 844, 3], [414, 896, 3], [375, 812, 3], [414, 896, 2], [375, 667, 2], [320, 568, 2],
+  [1032, 1376, 2], [1024, 1366, 2], [834, 1210, 2], [834, 1194, 2], [820, 1180, 2], [834, 1112, 2], [810, 1080, 2], [768, 1024, 2], [744, 1133, 2],
+];
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+/* a PNG of one colour, written here and deflated hard (a browser's encoder left a black screen
+   at 100 KB; this, a few) */
+function solidPng(w, h, [r, g, b]) {
+  const zlib = require('zlib');
+  const row = Buffer.alloc(1 + w * 3);
+  for (let x = 0; x < w; x++) row.set([r, g, b], 1 + x * 3);
+  const raw = Buffer.concat(Array.from({ length: h }, () => row));
+  const chunk = (type, data) => {
+    const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+    const body = Buffer.concat([Buffer.from(type), data]), crc = Buffer.alloc(4); crc.writeUInt32BE(zlib.crc32(body));
+    return Buffer.concat([len, body, crc]);
+  };
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr.set([8, 2, 0, 0, 0], 8);
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
+}
+
+(async () => {
+  if (!CHROME) throw new Error('no Chrome found: set CHROME');
+  fs.mkdirSync(OUT, { recursive: true });
+  const server = spawn(process.execPath, [path.join(ROOT, 'dev-server.js')], { env: { ...process.env, PORT: String(PORT) }, stdio: 'ignore' });
+  const prof = fs.mkdtempSync(path.join(require('os').tmpdir(), 'fb-icons-'));
+  const chrome = spawn(CHROME, ['--headless=new', '--remote-debugging-port=9227', `--user-data-dir=${prof}`, '--window-size=600,600', 'about:blank'], { stdio: 'ignore' });
+  try {
+    let targets = null;
+    for (let i = 0; i < 60 && !targets; i++) { await sleep(200); try { targets = await (await fetch('http://127.0.0.1:9227/json')).json(); } catch (e) { /* not up yet */ } }
+    const ws = new WebSocket(targets.find((t) => t.type === 'page').webSocketDebuggerUrl);
+    await new Promise((r) => ws.addEventListener('open', r));
+    let id = 0; const pending = new Map();
+    ws.addEventListener('message', (e) => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } });
+    const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
+    const run = async (expr) => { const r = await send('Runtime.evaluate', { expression: `(async () => { ${expr} })()`, awaitPromise: true, returnByValue: true }); if (r.result.exceptionDetails) throw new Error(JSON.stringify(r.result.exceptionDetails).slice(0, 400)); return r.result.result.value; };
+    const shot = async (file, clip) => fs.writeFileSync(file, Buffer.from((await send('Page.captureScreenshot', { format: 'png', clip })).result.data, 'base64'));
+    await send('Page.enable'); await send('Runtime.enable');
+
+    /* the scene: a square player, 512 css px at 2x, its controls hidden (their room kept, black) */
+    await send('Emulation.setDeviceMetricsOverride', { width: 512, height: 512, deviceScaleFactor: 2, mobile: false });
+    await send('Page.navigate', { url: `http://localhost:${PORT}/` });
+    await sleep(2500);
+    await run(`
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      for (let i = 0; i < 80 && !(window.FB && FB.debug && FB.debug.S.score); i++) await wait(100);
+      if (FB.library && FB.library.isOpen()) FB.library.close();
+      const st = document.createElement('style');
+      st.textContent = '.top, .rail, .progress, #liveBtn, .toast, .status, #library, .scrub { visibility: hidden !important; }';
+      document.head.appendChild(st);
+      await FB.debug.openFile(new File([${JSON.stringify(XML)}], ${JSON.stringify(NAME)}, { type: 'application/xml' }));
+      for (let i = 0; i < 80 && !(FB.debug.S.meta && FB.debug.S.meta.id === 'file:${NAME}' && FB.debug.S.meta.hands); i++) await wait(100);
+      for (const n of FB.debug.S.score.notes) n.name = '';                       // no names on the notes
+      document.getElementById('kbd').getContext('2d').fillText = () => {};      // nor octaves on the keys
+      await wait(600);
+      FB.debug.seek(0.12); await wait(400); FB.debug.seek(0.121); await wait(1200);
+      return FB.debug.S.meta.id;`);
+    const big = path.join(OUT, 'scene-1024.png');
+    await shot(big);
+
+    /* every size, and the maskable one, made from the scene by the browser (a canvas, smoothed) */
+    const scene = 'data:image/png;base64,' + fs.readFileSync(big).toString('base64');
+    const make = async (size, pad) => Buffer.from(await run(`
+      const img = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = ${JSON.stringify(scene)}; });
+      const c = document.createElement('canvas'); c.width = c.height = ${size}; const x = c.getContext('2d');
+      x.fillStyle = '#000'; x.fillRect(0, 0, ${size}, ${size}); x.imageSmoothingQuality = 'high';
+      const inset = ${size} * ${pad}; x.drawImage(img, inset, inset, ${size} - 2 * inset, ${size} - 2 * inset);
+      return c.toDataURL('image/png').split(',')[1];`), 'base64');
+    for (const size of SIZES) fs.writeFileSync(path.join(OUT, size <= 32 ? `favicon-${size}.png` : size === 180 ? 'apple-touch-icon.png' : `icon-${size}.png`), await make(size, 0));
+    fs.writeFileSync(path.join(OUT, 'maskable-512.png'), await make(512, 0.1));   // Android's masks keep the middle 80 %
+    fs.unlinkSync(big);
+
+    /* the launch screens: the app's black page, nothing on it, as a native app's launch screen
+       shows the screen it opens to before anything is in it */
+    for (const [w, h, k] of SPLASH) {
+      for (const [W, H] of w >= 744 ? [[w, h], [h, w]] : [[w, h]]) {
+        fs.writeFileSync(path.join(OUT, `splash-${W * k}x${H * k}.png`), solidPng(W * k, H * k, [0, 0, 0]));
+      }
+    }
+    ws.close();
+    console.log('icons and launch screens in dist/icons');
+  } finally {
+    chrome.kill(); server.kill();
+    setTimeout(() => { try { fs.rmSync(prof, { recursive: true, force: true }); } catch (e) { /* in use a moment longer */ } }, 1000);
+  }
+})().catch((e) => { console.error(e); process.exit(1); });

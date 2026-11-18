@@ -29,7 +29,7 @@
   const el = {
     lib: $('library'), scroll: $('libScroll'), page: $('libPage'),
     back: $('libBack'), scopes: $('libScopes'),
-    more: $('libMore'), menu: $('libMenu'), share: $('libShare'), shareNote: $('libShareNote'), upload: $('libUpload'),
+    more: $('libMore'), menu: $('libMenu'), share: $('libShare'), shareNote: $('libShareNote'), upload: $('libUpload'), install: $('libInstall'),
     bottom: $('libBottom'), search: $('libSearch'), query: $('libQuery'), clear: $('libClear'),
     menuBtn: $('menuBtn'), file: $('fileInput'), title: $('libTitle'), fadeTop: $('libFadeTop'),
   };
@@ -1269,8 +1269,8 @@
   }
   /* ------------------------------------------------------------------ the ellipsis menu
      The top right holds a menu of what can be done where you are: on every page, uploading a
-     score of your own (a MusicXML or .mxl file); on a composer's, a work's or a piece's page (and
-     their lists), sharing a link to it first. */
+     score of your own (a MusicXML or .mxl file), and installing the app where the browser offers
+     to; on a composer's, a work's or a piece's page (and their lists), sharing a link to it first. */
   function viewName() {
     const d = L.data, top = L.stack[L.stack.length - 1];
     if (!d || !top.id) return 'Fallboard library';
@@ -1293,6 +1293,19 @@
   el.more.addEventListener('click', (e) => { e.stopPropagation(); if (el.menu.hidden) openMenu(); else closeMenu(); });
   document.addEventListener('pointerdown', (e) => { if (!el.menu.hidden && !el.menu.contains(e.target) && !el.more.contains(e.target)) closeMenu(); });
   el.upload.addEventListener('click', () => { closeMenu(); FB.app.upload(); });
+  /* Install: where the browser offers to install the app (Android; Chrome and Edge on a computer)
+     and it is not installed yet. Its own offer still shows as it would; this keeps it at hand.
+     Safari has none: its Share sheet adds the app to the home screen */
+  let installOffer = null;
+  addEventListener('beforeinstallprompt', (e) => { installOffer = e; el.install.hidden = false; });
+  addEventListener('appinstalled', () => { installOffer = null; el.install.hidden = true; });
+  el.install.addEventListener('click', async () => {
+    closeMenu();
+    if (!installOffer) return;
+    const offer = installOffer;
+    installOffer = null; el.install.hidden = true;
+    try { await offer.prompt(); } catch (e) { /* already answered */ }
+  });
   el.share.addEventListener('click', async () => {
     const url = location.href, text = viewName();
     try {

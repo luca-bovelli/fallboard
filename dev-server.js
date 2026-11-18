@@ -9,6 +9,7 @@ const types = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.json': 'application/json',
   '.musicxml': 'application/xml', '.xml': 'application/xml', '.svg': 'image/svg+xml',
   '.mp3': 'audio/mpeg', '.wasm': 'application/wasm', '.txt': 'text/plain; charset=utf-8',
+  '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2', '.css': 'text/css',
 };
 
 http.createServer((req, res) => {

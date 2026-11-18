@@ -1,0 +1,46 @@
+{
+  "id": "./",
+  "name": "Fallboard",
+  "short_name": "Fallboard",
+  "description": "Learn piano pieces from falling notes, the keys and the sheet music, from a library of thousands of scores or your own MusicXML.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "categories": ["music", "education"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Library", "url": "./#library", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Continue", "description": "The pieces you opened lately", "url": "./#library/recent", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
+  ],
+  "file_handlers": [
+    {
+      "action": "./",
+      "accept": {
+        "application/vnd.recordare.musicxml+xml": [".musicxml"],
+        "application/vnd.recordare.musicxml": [".mxl"],
+        "application/xml": [".xml"]
+      }
+    }
+  ],
+  "share_target": {
+    "action": "./share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        { "name": "score", "accept": ["application/vnd.recordare.musicxml+xml", "application/vnd.recordare.musicxml", "application/xml", "text/xml", ".musicxml", ".mxl", ".xml"] }
+      ]
+    }
+  },
+  "launch_handler": { "client_mode": ["navigate-existing", "auto"] }
+}
