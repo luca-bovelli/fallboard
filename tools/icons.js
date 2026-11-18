@@ -1,7 +1,7 @@
 /* The app's icons, drawn by the app itself: a few bars of music opened in the player and drawn
-   as the library draws a Continue card (js/roll-gl.js thumb): the cover's colour fields, the
-   notes' light added to them, the card's glass over both, its edge on the outline iOS cuts the
-   icon to; saved at every size the platforms ask for. Also the plain black launch screens iOS
+   as the library draws a Continue card (js/roll-gl.js thumb), the cover's colour fields and the
+   notes' light added to them, over the player's keys from C to B, unlit; the card's glass over
+   both (glassOn), its edge on the outline iOS cuts the icon to; saved at every size the platforms ask for. Also the plain black launch screens iOS
    shows while an installed Fallboard starts.
 
      node tools/icons.js            (needs Chrome; CHROME=<path> to name it)
@@ -40,11 +40,12 @@ const NOTES = [
   ['G4', 58, 20, 1], ...[53, 57, 61, 65, 69, 73, 77].map((t) => ['A#4', t, 3, 1]), ['F#4', 48, 8, 1],
 ];
 const AT = 3.33;
-/* the card: SIDE css px, a phone's Continue card, drawn at the scale that makes it 1024 px; its
-   corner (and the glass's bevel and height) CORNER of its side, where the cards' squircle
-   (softness 1/2) lies within 0.2 px at 180 px of iOS's icon mask, a continuous corner of 0.2237
-   of the side; END: the hundredths of a second from its bottom edge to 0.2 from its top */
-const SIDE = 160, CORNER = 0.1935, END = 72;
+/* the icon: SIDE css px, a phone's Continue card, drawn at the scale that makes it 1024 px, the
+   keys the bottom KEYS css px of it (a third; 352 px), the card's roll above them; its corner
+   (and the glass's bevel and height) CORNER of its side, where the cards' squircle (softness
+   1/2) lies within 0.2 px at 180 px of iOS's icon mask, a continuous corner of 0.2237 of the
+   side; END: the hundredths of a second from the keys up to 0.2 from the top */
+const SIDE = 160, KEYS = 55, CORNER = 0.1935, END = 72;
 function scoreXml() {
   let pos = 0;
   const body = NOTES.map(([name, at, dur, staff], i) => {
@@ -101,34 +102,57 @@ function solidPng(w, h, [r, g, b]) {
     const run = async (expr) => { const r = await send('Runtime.evaluate', { expression: `(async () => { ${expr} })()`, awaitPromise: true, returnByValue: true }); if (r.result.exceptionDetails) throw new Error(JSON.stringify(r.result.exceptionDetails).slice(0, 400)); return r.result.result.value; };
     await send('Page.enable'); await send('Runtime.enable');
 
-    /* the score opened in the player, for its notes and the palette its name gives */
-    await send('Emulation.setDeviceMetricsOverride', { width: 400, height: 400, deviceScaleFactor: 1, mobile: false });
+    /* the player at the card's width and scale, its controls hidden, its keys KEYS css px tall:
+       the score opened in it, for its notes, its keys and the palette its name gives */
+    await send('Emulation.setDeviceMetricsOverride', { width: SIDE, height: 400, deviceScaleFactor: 1024 / SIDE, mobile: false });
     await send('Page.navigate', { url: `http://localhost:${PORT}/` });
     await sleep(2500);
     const [glass, flat] = await run(`
       const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       for (let i = 0; i < 80 && !(window.FB && FB.debug && FB.debug.S.score && FB.rollGL); i++) await wait(100);
       if (FB.library && FB.library.isOpen()) FB.library.close();
+      /* the keys as they are at rest, none lit: the light is the roll's */
+      const keys = FB.rollGL.keys;
+      FB.rollGL.keys = (env, held) => keys({ ...env, S: { ...env.S, score: null } }, new Map());
+      const st = document.createElement('style');
+      st.textContent = '.top, .progress, #liveBtn, .toast, .status, #library, .scrub { visibility: hidden !important; } .rail { display: none !important; } .kbd-wrap { height: ${KEYS}px !important; }';
+      document.head.appendChild(st);
       await FB.debug.openFile(new File([${JSON.stringify(XML)}], ${JSON.stringify(NAME)}, { type: 'application/xml' }));
       for (let i = 0; i < 80 && !(FB.debug.S.meta && FB.debug.S.meta.id === 'file:${NAME}' && FB.debug.S.meta.hands); i++) await wait(100);
-      /* a Continue card of it (js/library.js card, js/roll-gl.js thumb): the notes from AT on, those
-         sounding then landing on the bottom edge, END hundredths of a second up to 0.2 from the top */
+      window.dispatchEvent(new Event('resize')); await wait(300);
+      /* the keys from C4 to B4 across the card (C4 is white key 23 from A0), held there, no names */
+      const G = FB.debug.G;
+      G.manual = true; G.holdUntil = Infinity;
+      G.W = G.tW = G.width / 7; G.left = G.tLeft = 23;
+      const kbd = document.getElementById('kbd');
+      kbd.getContext('2d').fillText = () => {};
+      FB.debug.seek(${AT}); await wait(800);
+      /* the roll: a Continue card of the score (js/library.js card, js/roll-gl.js thumb) across the
+         same keys, the notes from AT on, those sounding then landing on its bottom edge, the keys'
+         top; END hundredths of a second up to 0.2 from its top */
       const meta = FB.debug.S.meta, look = FB.pieceLook(meta) || FB.pieceLook(meta, true), notes = [];
       for (const n of FB.debug.S.score.notes.slice().sort((p, q) => p.t0 - q.t0)) {
         if (n.t1 <= ${AT}) continue;
         notes.push(Math.round(Math.max(0, n.t0 - ${AT}) * 100), Math.max(4, Math.round((n.t1 - Math.max(n.t0, ${AT})) * 100)), n.midi, n.hand);
       }
-      const card = (withGlass) => {
-        const box = document.createElement('div'), cv = document.createElement('canvas');
-        box.style.cssText = 'position: fixed; left: 0; top: 0; z-index: 99; width: ${SIDE}px; height: ${SIDE}px; border-radius: ${CORNER * SIDE}px';
-        cv.style.cssText = 'display: block; width: 100%; height: 100%';
-        box.appendChild(cv); document.body.appendChild(box);
-        FB.rollGL.thumb(cv, { hands: look.hands, cover: { fields: look.fields, base: look.base, ink: look.inkNotes && look.ink }, roll: { end: ${END}, bars: [], notes }, dpr: 1024 / ${SIDE}, glass: withGlass });
-        const url = cv.toDataURL('image/png').split(',')[1];
-        box.remove();
-        return url;
-      };
-      return [card(true), card(false)];`);
+      const cv = document.createElement('canvas');
+      cv.style.cssText = 'position: fixed; left: 0; top: 0; z-index: 99; width: ${SIDE}px; height: ${SIDE - KEYS}px';
+      document.body.appendChild(cv);
+      FB.rollGL.thumb(cv, { hands: look.hands, cover: { fields: look.fields, base: look.base, ink: look.inkNotes && look.ink }, roll: { end: ${END}, bars: [], notes }, span: [23, 30], dpr: 1024 / ${SIDE}, glass: false });
+      /* the card over the keys, 1024 px (the player draws its keys at 3x at most, 480 px across:
+         as good as 1:1 at the largest icon, 512); then the card's glass over it, and the keys
+         again, in front of the glass: under it the bevel swelled the outer black keys and
+         mirrored the others along the bottom edge. The bottom bevel lies wholly in the keys'
+         third, so the glass shows over the roll, along its top and sides */
+      const c = document.createElement('canvas'); c.width = c.height = 1024;
+      const x = c.getContext('2d');
+      x.imageSmoothingQuality = 'high';
+      const keysOn = () => x.drawImage(kbd, 0, cv.height, 1024, 1024 - cv.height);
+      x.drawImage(cv, 0, 0); keysOn();
+      const flat = c.toDataURL('image/png').split(',')[1];
+      FB.rollGL.glassOn(c, ${CORNER} * 1024);
+      keysOn();
+      return [c.toDataURL('image/png').split(',')[1], flat];`);
 
     /* every size, made from the two by the browser (a canvas, smoothed): for iOS, opaque, square, the
        glass's edge on the outline it is cut to; elsewhere cut to that outline, the rest clear; for

@@ -513,8 +513,9 @@
      (r.cover.ink, the cream classic edition), as its ink instead, as much ink as there is light.
      Still: a card's noise does not move. Drawn into
      the card's 2D canvas; false without WebGL 2 or the piece's colours. The app's icon is one
-     (tools/icons.js), drawn at its own scale (r.dpr) and, for Android's launchers, which crop it
-     to shapes of their own, without the glass (r.glass false). */
+     (tools/icons.js), drawn at its own scale (r.dpr), across the white keys it names (r.span:
+     from the first's left edge to the last's, counted from A0, so the keys drawn under it line
+     up), and without the glass (r.glass false), which glassOn lays over it and its keys. */
   const COVER_FS = `#version 300 es
     precision highp float;
     uniform sampler2D uRoll; uniform vec2 uSize;
@@ -627,11 +628,16 @@
       o = vec4(enc(col), 1.0);
     }`;
   let glassP = null, UG = null;
-  /* the glass over what is on the screen (copied away first) */
-  function glassOver(cw, ch, corner) {
+  /* the glass over what is on the screen (copied away first), or over a picture (src, a canvas
+     cw x ch) */
+  function glassOver(cw, ch, corner, src) {
     if (!glassP) { glassP = compile(QUAD_VS, GLASS_FS); UG = uni(glassP, ['uScene', 'uSize', 'rectangle', 'corner']); }
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, sceneTex);
-    gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGB, 0, 0, cw, ch, 0);
+    if (src) {   // its rows the screen's way up, as a copy of the screen has them
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    } else gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGB, 0, 0, cw, ch, 0);
     gl.useProgram(glassP); gl.disable(gl.BLEND); gl.bindVertexArray(quadVao); gl.viewport(0, 0, cw, ch);
     gl.uniform1i(UG.uScene, 0); gl.uniform2f(UG.uSize, cw, ch); gl.uniform4f(UG.rectangle, 0, 0, cw, ch); gl.uniform1f(UG.corner, corner);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -665,7 +671,7 @@
     const dpr = r.dpr || Math.min(2, window.devicePixelRatio || 1), h = H, top = Math.round(H * 0.2), roll = r.roll, t = roll.notes;
     let lo = 127, hi = 0;
     for (let i = 0; i < t.length; i += 4) { lo = Math.min(lo, t[i + 2]); hi = Math.max(hi, t[i + 2]); }
-    const left = whiteAt[clamp(lo, 21, 108)] - 1.5, W = w / (whiteAt[clamp(hi, 21, 108)] + 2.5 - left), bw = W * 0.58;
+    const left = r.span ? r.span[0] : whiteAt[clamp(lo, 21, 108)] - 1.5, W = w / ((r.span ? r.span[1] : whiteAt[clamp(hi, 21, 108)] + 2.5) - left), bw = W * 0.58;
     const keyX = (m) => (FB.isBlack(m) ? (whiteAt[m] - left) * W - bw / 2 : (whiteAt[m] - left) * W);
     const yOf = (cs) => h - (cs / roll.end) * (h - top), inset = Math.min(1.5, W * 0.07);
     const inst = [], fieldNotes = [];
@@ -691,6 +697,17 @@
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.drawImage(glc, 0, 0, w, h);
     cv.classList.add('whole');   // the cover is in it: not added to the CSS one (index.html .card .roll.whole)
+    return true;
+  }
+  /* a card's glass over a picture of its own (a 2D canvas, in device px; corner in device px):
+     the app's icon, a card with the keys under it (tools/icons.js) */
+  function glassOn(cv, corner) {
+    if (!ready()) return false;
+    const cw = cv.width, ch = cv.height;
+    if (glc.width !== cw || glc.height !== ch) { glc.width = cw; glc.height = ch; }
+    if (!sceneTex) sceneTex = texture(1, 1, null);
+    glassOver(cw, ch, corner, cv);
+    cv.getContext('2d').drawImage(glc, 0, 0);
     return true;
   }
   /* A progressive blur over a card's top, where its name is (a card is drawn once, so it can
@@ -887,7 +904,7 @@
   }
 
   FB.rollGL = {
-    roll, keys, thumb, flat, colours,
+    roll, keys, thumb, glassOn, flat, colours,
     /* the field moves on its own (the noise), so the roll wants frames while it shows */
     get moving() { return !STILL && !failed && !lost && !!gl; },
     /* WebGL 2 cannot be had here (a lost context is not failed: it comes back) */
