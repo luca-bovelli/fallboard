@@ -10,6 +10,22 @@
   // three stops either side of normal speed, so 100% sits in the middle of the slider
   const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
+  /* An installed app on iOS draws under the status bar but takes the screen to be shorter by it,
+     so a page of 100% ended that far above the bottom, black under the controls. Where it runs
+     installed (navigator.standalone: iOS alone has it) across the whole screen (not an iPad's
+     split view), the page is the screen's height (--app-h, index.html). Elsewhere 100% is right */
+  function sizeApp() {
+    const portrait = window.matchMedia('(orientation: portrait)').matches;
+    const long = Math.max(screen.width, screen.height), short = Math.min(screen.width, screen.height);
+    const sw = portrait ? short : long, sh = portrait ? long : short;
+    const whole = navigator.standalone === true && Math.abs(window.innerWidth - sw) < 2 && sh - window.innerHeight > 8;
+    if (whole) document.documentElement.style.setProperty('--app-h', sh + 'px');
+    else document.documentElement.style.removeProperty('--app-h');
+  }
+  sizeApp();
+  window.addEventListener('resize', sizeApp);
+  window.addEventListener('orientationchange', () => setTimeout(sizeApp, 300));
+
   const BUILTINS = [
     { id: 'chopin-op23', file: 'ballade-op23', title: 'Ballade No. 1 in G minor', composer: 'Frédéric Chopin, Op. 23' },
     { id: 'rachmaninoff-op3-2', file: 'rach-cs', title: 'Prelude in C♯ minor', composer: 'Sergei Rachmaninoff, Op. 3 No. 2' },

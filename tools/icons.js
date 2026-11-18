@@ -24,9 +24,9 @@ const CHROME = process.env.CHROME || [
 /* the palette comes from the file's name, as an upload's does (js/library.js FB.pieceLook): this
    name gives orchid: violet and pink */
 const NAME = process.env.ICON_NAME || 'Fallboard 5.musicxml';
-/* a left-hand C under a right hand rising E G B D, each entering half a second after the last and
-   held, at 120 bpm: a staircase of notes reaching up the frame (divisions: 2 to a quarter) */
-const NOTES = [['C', 4, 0, 8, 2], ['E', 4, 0, 4, 1], ['G', 4, 2, 6, 1], ['B', 4, 4, 6, 1], ['D', 5, 6, 8, 1]];
+/* one octave, C4 to B4: a C major chord landing, the left hand's C held longest, the right hand's
+   E and G under it, and a B still falling above them (divisions: 2 to a quarter, 120 bpm) */
+const NOTES = [['C', 4, 0, 16, 2], ['E', 4, 0, 10, 1], ['G', 4, 0, 6, 1], ['B', 4, 4, 12, 1]];
 function scoreXml() {
   let pos = 0;
   const body = NOTES.map(([step, oct, at, dur, staff], i) => {
@@ -85,8 +85,9 @@ function solidPng(w, h, [r, g, b]) {
     const shot = async (file, clip) => fs.writeFileSync(file, Buffer.from((await send('Page.captureScreenshot', { format: 'png', clip })).result.data, 'base64'));
     await send('Page.enable'); await send('Runtime.enable');
 
-    /* the scene: a square player, 512 css px at 2x, its controls hidden (their room kept, black) */
-    await send('Emulation.setDeviceMetricsOverride', { width: 512, height: 512, deviceScaleFactor: 2, mobile: false });
+    /* the scene: a square player, 256 css px at 4x (1024 px): the roll's light, rims and glow are
+       sized in css px, so at a phone's scale they keep the weight they have on a phone */
+    await send('Emulation.setDeviceMetricsOverride', { width: 256, height: 256, deviceScaleFactor: 4, mobile: false });
     await send('Page.navigate', { url: `http://localhost:${PORT}/` });
     await sleep(2500);
     await run(`
@@ -94,14 +95,21 @@ function solidPng(w, h, [r, g, b]) {
       for (let i = 0; i < 80 && !(window.FB && FB.debug && FB.debug.S.score); i++) await wait(100);
       if (FB.library && FB.library.isOpen()) FB.library.close();
       const st = document.createElement('style');
-      st.textContent = '.top, .rail, .progress, #liveBtn, .toast, .status, #library, .scrub { visibility: hidden !important; }';
+      /* the controls hidden, the rail under the keys gone (the keys sit on the icon's bottom edge),
+         the keys a third of the icon */
+      st.textContent = '.top, .progress, #liveBtn, .toast, .status, #library, .scrub { visibility: hidden !important; } .rail { display: none !important; } .kbd-wrap { height: 34vh !important; }';
       document.head.appendChild(st);
       await FB.debug.openFile(new File([${JSON.stringify(XML)}], ${JSON.stringify(NAME)}, { type: 'application/xml' }));
       for (let i = 0; i < 80 && !(FB.debug.S.meta && FB.debug.S.meta.id === 'file:${NAME}' && FB.debug.S.meta.hands); i++) await wait(100);
       for (const n of FB.debug.S.score.notes) n.name = '';                       // no names on the notes
+      window.dispatchEvent(new Event('resize')); await wait(300);
+      /* the keys from C4 to B4 across the icon, held there (C4 is white key 23 from A0) */
+      const G = FB.debug.G;
+      G.manual = true; G.holdUntil = Infinity;
+      G.W = G.tW = G.width / 7; G.left = G.tLeft = 23;
       document.getElementById('kbd').getContext('2d').fillText = () => {};      // nor octaves on the keys
       await wait(600);
-      FB.debug.seek(0.12); await wait(400); FB.debug.seek(0.121); await wait(1200);
+      FB.debug.seek(0.15); await wait(400); FB.debug.seek(0.151); await wait(1500);
       return FB.debug.S.meta.id;`);
     const big = path.join(OUT, 'scene-1024.png');
     await shot(big);
