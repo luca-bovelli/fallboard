@@ -24,26 +24,32 @@ const CHROME = process.env.CHROME || [
 /* the palette comes from the file's name, as an upload's does (js/library.js FB.pieceLook): this
    name gives orchid: violet and pink */
 const NAME = process.env.ICON_NAME || 'Fallboard 5.musicxml';
-/* one octave, C4 to B4: a C major chord held, the left hand's C, the right hand's E and G, and a
-   B still falling beside them ([step, octave, start, length, staff]; divisions: 2 to a quarter,
-   120 bpm, so 0.25 s each). The scene is caught at AT seconds: the chord has sounded long enough
-   for the keys' heat to be full, the light standing above them as it does in play */
-const NOTES = [['C', 4, 0, 32, 2], ['E', 4, 0, 32, 1], ['G', 4, 0, 32, 1], ['B', 4, 14, 18, 1]];
-const AT = 3.3;
+/* one octave, C4 to B4, its outer keys left unplayed, balanced by weight rather than mirrored:
+   left of the middle the left hand's E, held, the one tall light, and a short C# high above;
+   right of it the right hand's lighter notes, a G falling, an A# repeated in eighths, an F#
+   sounding at the keys. No two notes overlap. [note, start, length, staff], in sixteenths of a
+   second (divisions 8 to a quarter, 120 bpm). The scene is caught at AT seconds, long enough
+   into the E for its key's heat to be full, its light standing above it as it does in play */
+const DIV = 8;
+const NOTES = [
+  ['E4', 0, 80, 2], ['C#4', 61, 4, 2],
+  ['G4', 58, 20, 1], ...[53, 57, 61, 65, 69, 73, 77].map((t) => ['A#4', t, 3, 1]), ['F#4', 48, 8, 1],
+];
+const AT = 3.33;
 /* the scene's size in css px: an octave of 20 px keys (a phone's, js/app.js MIN_W..), the
    keyboard a third of the square, the roll as tall as a phone's (its light reaches up from the
    keys in proportion to the roll's height), its foot the square's top two thirds */
 const SIDE = 140, TALL = 560;
 function scoreXml() {
   let pos = 0;
-  const body = NOTES.map(([step, oct, at, dur, staff], i) => {
+  const body = NOTES.map(([name, at, dur, staff], i) => {
     const move = at < pos ? `<backup><duration>${pos - at}</duration></backup>` : at > pos ? `<forward><duration>${at - pos}</duration></forward>` : '';
     pos = at + dur;
-    return move + `<note><pitch><step>${step}</step><octave>${oct}</octave></pitch><duration>${dur}</duration><voice>${i + 1}</voice><staff>${staff}</staff></note>`;
+    return move + `<note><pitch><step>${name[0]}</step>${name[1] === '#' ? '<alter>1</alter>' : ''}<octave>${name.slice(-1)}</octave></pitch><duration>${dur}</duration><voice>${i + 1}</voice><staff>${staff}</staff></note>`;
   }).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="3.1"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
-<part id="P1"><measure number="1"><attributes><divisions>2</divisions><time><beats>16</beats><beat-type>4</beat-type></time><staves>2</staves>
+<part id="P1"><measure number="1"><attributes><divisions>${DIV}</divisions><time><beats>${Math.ceil(Math.max(...NOTES.map((n) => n[1] + n[2])) / DIV)}</beats><beat-type>4</beat-type></time><staves>2</staves>
 <clef number="1"><sign>G</sign><line>2</line></clef><clef number="2"><sign>F</sign><line>4</line></clef></attributes>
 <sound tempo="120"/>
 ${body}
@@ -100,7 +106,7 @@ function solidPng(w, h, [r, g, b]) {
     await sleep(2500);
     await run(`
       const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-      for (let i = 0; i < 80 && !(window.FB && FB.debug && FB.debug.S.score); i++) await wait(100);
+      for (let i = 0; i < 80 && !(window.FB && FB.debug && FB.debug.S.score && FB.rollGL); i++) await wait(100);
       if (FB.library && FB.library.isOpen()) FB.library.close();
       /* the keys as they are at rest, none lit: the light is the roll's */
       const keys = FB.rollGL.keys;
