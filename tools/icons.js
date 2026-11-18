@@ -1,6 +1,6 @@
 /* The app's icons, drawn by the app itself: a few bars of music opened in the player, its
-   controls hidden, every key white, the roll's lit glass notes falling onto the lit keys, the
-   foot of a phone's roll caught in a square and saved at every size the platforms ask for. Also
+   controls hidden, the roll's lit glass notes falling onto the keys (unlit), the foot of a
+   phone's roll caught in a square and saved at every size the platforms ask for. Also
    the plain black launch screens iOS shows while an installed Fallboard starts.
 
      node tools/icons.js            (needs Chrome; CHROME=<path> to name it)
@@ -102,7 +102,9 @@ function solidPng(w, h, [r, g, b]) {
       const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       for (let i = 0; i < 80 && !(window.FB && FB.debug && FB.debug.S.score); i++) await wait(100);
       if (FB.library && FB.library.isOpen()) FB.library.close();
-      FB.rollGL.whiteKeys();
+      /* the keys as they are at rest, none lit: the light is the roll's */
+      const keys = FB.rollGL.keys;
+      FB.rollGL.keys = (env, held) => keys({ ...env, S: { ...env.S, score: null } }, new Map());
       const st = document.createElement('style');
       /* the controls hidden, the rail under the keys gone (the keys sit on the icon's bottom edge),
          the keys a third of the icon */

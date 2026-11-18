@@ -802,11 +802,6 @@
     g.bindVertexArray(null);
     c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(kglc, 0, 0); c.restore();
   }
-  /* the black keys' colours: the body (top, front), the top face (back, middle, middle pressed,
-     front) and the hairline where the face meets the front slope. The app's icon has every key
-     white (tools/icons.js: whiteKeys), the black keys standing out by their shadow alone */
-  let blackKeys = { body: ['#1d1d1d', '#101010'], face: ['#202020', '#262626', '#2e2e2e', '#303030'], line: 'rgba(255,255,255,0.10)' };
-  const WHITE_BLACK_KEYS = { body: ['#fbfbfb', '#eeeeee'], face: ['#fdfdfd', '#f6f6f6', '#ececec', '#f1f1f1'], line: 'rgba(0,0,0,0.06)' };
   function keys(env, held) {
     const { S, G, kc: c, WHITE_MIDI, N_WHITE, BLACK_H, BLACK_W, keyX, pressed, rr, UI_FONT, EPS } = env;
     const w = G.width, h = G.height, W = G.W, left = G.left, bw = W * BLACK_W;
@@ -865,8 +860,8 @@
     if (inst.length) { keysGlass(c, w, h, inst); inst.length = 0; }
     /* the black keys: a soft shadow on the white keys, a dark top face lifting a little toward the
        front, a hairline where it meets the front slope */
-    const side = Math.min(1.4, bw * 0.12), dpr = c.canvas.width / Math.max(1, w), K = blackKeys;
-    const body = c.createLinearGradient(0, 0, 0, bh); body.addColorStop(0, K.body[0]); body.addColorStop(1, K.body[1]);
+    const side = Math.min(1.4, bw * 0.12), dpr = c.canvas.width / Math.max(1, w);
+    const body = c.createLinearGradient(0, 0, 0, bh); body.addColorStop(0, '#1d1d1d'); body.addColorStop(1, '#101010');
     const mLo = WHITE_MIDI[i0], mHi = WHITE_MIDI[i1];
     for (let m = Math.max(22, mLo - 1); m <= Math.min(106, mHi + 1); m++) {
       if (!FB.isBlack(m)) continue;
@@ -877,9 +872,9 @@
       c.fillStyle = body; rr(c, x, -4, bw, bh + 4, 0, 2); c.fill();
       c.restore();
       const face = c.createLinearGradient(0, 0, 0, bh - slope);
-      face.addColorStop(0, K.face[0]); face.addColorStop(0.75, K.face[pressed.has(m) ? 2 : 1]); face.addColorStop(1, K.face[3]);
+      face.addColorStop(0, '#202020'); face.addColorStop(0.75, pressed.has(m) ? '#2e2e2e' : '#262626'); face.addColorStop(1, '#303030');
       c.fillStyle = face; rr(c, x + side, -4, bw - side * 2, bh - slope + 4, 0, 1.5); c.fill();
-      c.fillStyle = K.line; c.fillRect(x + side, bh - slope - hair, bw - side * 2, hair);
+      c.fillStyle = 'rgba(255,255,255,0.10)'; c.fillRect(x + side, bh - slope - hair, bw - side * 2, hair);
       if (k && !glass) { c.globalAlpha = k[1]; c.fillStyle = css(hands[k[0]].key); rr(c, x, -4, bw, bh + 4, 0, 2); c.fill(); c.globalAlpha = 1; }
       else if (k) inst.push(...noteOf(x, 0, bw, bh, true, hands[k[0]], false, 1 - k[1], 2));
     }
@@ -891,7 +886,6 @@
 
   FB.rollGL = {
     roll, keys, thumb, flat, colours,
-    whiteKeys() { blackKeys = WHITE_BLACK_KEYS; },
     /* the field moves on its own (the noise), so the roll wants frames while it shows */
     get moving() { return !STILL && !failed && !lost && !!gl; },
     /* WebGL 2 cannot be had here (a lost context is not failed: it comes back) */
