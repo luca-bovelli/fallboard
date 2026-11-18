@@ -1,7 +1,7 @@
 /* The app's icons, drawn by the app itself: a few bars of music opened in the player, its
-   controls hidden, the roll's lit glass notes falling onto the lit keys, caught in a square and
-   saved at every size the platforms ask for. Also the plain black launch screens iOS shows while
-   an installed Fallboard starts.
+   controls hidden, every key white, the roll's lit glass notes falling onto the lit keys, the
+   foot of a phone's roll caught in a square and saved at every size the platforms ask for. Also
+   the plain black launch screens iOS shows while an installed Fallboard starts.
 
      node tools/icons.js            (needs Chrome; CHROME=<path> to name it)
 
@@ -24,9 +24,16 @@ const CHROME = process.env.CHROME || [
 /* the palette comes from the file's name, as an upload's does (js/library.js FB.pieceLook): this
    name gives orchid: violet and pink */
 const NAME = process.env.ICON_NAME || 'Fallboard 5.musicxml';
-/* one octave, C4 to B4: a C major chord landing, the left hand's C held longest, the right hand's
-   E and G under it, and a B still falling above them (divisions: 2 to a quarter, 120 bpm) */
-const NOTES = [['C', 4, 0, 16, 2], ['E', 4, 0, 10, 1], ['G', 4, 0, 6, 1], ['B', 4, 4, 12, 1]];
+/* one octave, C4 to B4: a C major chord held, the left hand's C, the right hand's E and G, and a
+   B still falling beside them ([step, octave, start, length, staff]; divisions: 2 to a quarter,
+   120 bpm, so 0.25 s each). The scene is caught at AT seconds: the chord has sounded long enough
+   for the keys' heat to be full, the light standing above them as it does in play */
+const NOTES = [['C', 4, 0, 32, 2], ['E', 4, 0, 32, 1], ['G', 4, 0, 32, 1], ['B', 4, 14, 18, 1]];
+const AT = 3.3;
+/* the scene's size in css px: an octave of 20 px keys (a phone's, js/app.js MIN_W..), the
+   keyboard a third of the square, the roll as tall as a phone's (its light reaches up from the
+   keys in proportion to the roll's height), its foot the square's top two thirds */
+const SIDE = 140, TALL = 560;
 function scoreXml() {
   let pos = 0;
   const body = NOTES.map(([step, oct, at, dur, staff], i) => {
@@ -36,7 +43,7 @@ function scoreXml() {
   }).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="3.1"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
-<part id="P1"><measure number="1"><attributes><divisions>2</divisions><time><beats>8</beats><beat-type>4</beat-type></time><staves>2</staves>
+<part id="P1"><measure number="1"><attributes><divisions>2</divisions><time><beats>16</beats><beat-type>4</beat-type></time><staves>2</staves>
 <clef number="1"><sign>G</sign><line>2</line></clef><clef number="2"><sign>F</sign><line>4</line></clef></attributes>
 <sound tempo="120"/>
 ${body}
@@ -85,19 +92,21 @@ function solidPng(w, h, [r, g, b]) {
     const shot = async (file, clip) => fs.writeFileSync(file, Buffer.from((await send('Page.captureScreenshot', { format: 'png', clip })).result.data, 'base64'));
     await send('Page.enable'); await send('Runtime.enable');
 
-    /* the scene: a square player, 256 css px at 4x (1024 px): the roll's light, rims and glow are
-       sized in css px, so at a phone's scale they keep the weight they have on a phone */
-    await send('Emulation.setDeviceMetricsOverride', { width: 256, height: 256, deviceScaleFactor: 4, mobile: false });
+    /* the scene: a player SIDE css px wide and TALL high, at the scale that makes SIDE 1024 px.
+       The roll's light, rims and glow are sized in css px, so they keep the weight they have on
+       a phone, and the noise in the light the size it has there */
+    await send('Emulation.setDeviceMetricsOverride', { width: SIDE, height: TALL, deviceScaleFactor: 1024 / SIDE, mobile: false });
     await send('Page.navigate', { url: `http://localhost:${PORT}/` });
     await sleep(2500);
     await run(`
       const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       for (let i = 0; i < 80 && !(window.FB && FB.debug && FB.debug.S.score); i++) await wait(100);
       if (FB.library && FB.library.isOpen()) FB.library.close();
+      FB.rollGL.whiteKeys();
       const st = document.createElement('style');
       /* the controls hidden, the rail under the keys gone (the keys sit on the icon's bottom edge),
          the keys a third of the icon */
-      st.textContent = '.top, .progress, #liveBtn, .toast, .status, #library, .scrub { visibility: hidden !important; } .rail { display: none !important; } .kbd-wrap { height: 34vh !important; }';
+      st.textContent = '.top, .progress, #liveBtn, .toast, .status, #library, .scrub { visibility: hidden !important; } .rail { display: none !important; } .kbd-wrap { height: ${0.34 * SIDE}px !important; }';
       document.head.appendChild(st);
       await FB.debug.openFile(new File([${JSON.stringify(XML)}], ${JSON.stringify(NAME)}, { type: 'application/xml' }));
       for (let i = 0; i < 80 && !(FB.debug.S.meta && FB.debug.S.meta.id === 'file:${NAME}' && FB.debug.S.meta.hands); i++) await wait(100);
@@ -109,10 +118,10 @@ function solidPng(w, h, [r, g, b]) {
       G.W = G.tW = G.width / 7; G.left = G.tLeft = 23;
       document.getElementById('kbd').getContext('2d').fillText = () => {};      // nor octaves on the keys
       await wait(600);
-      FB.debug.seek(0.15); await wait(400); FB.debug.seek(0.151); await wait(1500);
+      FB.debug.seek(${AT}); await wait(400); FB.debug.seek(${AT + 0.001}); await wait(1500);
       return FB.debug.S.meta.id;`);
     const big = path.join(OUT, 'scene-1024.png');
-    await shot(big);
+    await shot(big, { x: 0, y: TALL - SIDE, width: SIDE, height: SIDE, scale: 1 });   // the square at the foot
 
     /* every size, and the maskable one, made from the scene by the browser (a canvas, smoothed) */
     const scene = 'data:image/png;base64,' + fs.readFileSync(big).toString('base64');
