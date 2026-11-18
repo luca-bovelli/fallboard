@@ -20,7 +20,10 @@
 <meta name="apple-mobile-web-app-title" content="Fallboard">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- an opaque status bar, the page below it: under a see-through one (black-translucent) iOS 26
+     sizes an installed app's view short by the status bar and paints nothing in the strip it
+     leaves at the screen's foot (WebKit bug 301108) -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1320x2868.png">
 <link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1206x2622.png">
@@ -186,6 +189,7 @@
   /* ---------- page ---------- */
   html {
     height: 100%; background: var(--bg);
+    padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
     scroll-padding-top: env(safe-area-inset-top, 0px);
     touch-action: pan-x pan-y;
   }
@@ -201,14 +205,7 @@
   [hidden]:not([hidden=until-found i]) { display: none !important; }
   button { font: inherit; color: inherit; margin: 0; }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-  /* the player, and the library over it: layers fixed to the screen's top, --app-h tall where
-     the page falls short of the screen (an installed app on iOS, js/app.js sizeApp), the page
-     itself never taller than its viewport, so there is nothing for iOS to scroll */
-  .app {
-    position: fixed; inset: 0 0 auto 0; height: var(--app-h, 100%);
-    padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
-    display: flex; flex-direction: column;
-  }
+  .app { height: 100%; display: flex; flex-direction: column; }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
   /* ---------- the music ---------- */
@@ -536,7 +533,7 @@
   /* the menu stops an edge short of the bottom of the screen and scrolls inside */
   .menu-content {
     position: relative; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: none;
-    max-height: calc(var(--app-h, 100dvh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - var(--edge) - var(--control) - var(--gap) - 12px - var(--edge));
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - var(--edge) - var(--control) - var(--gap) - 12px - var(--edge));
   }
   .menu-content::-webkit-scrollbar { display: none; }
   :is(.deck, .library) .menu > .glass-refraction { filter: var(--glass-read); }
@@ -562,7 +559,7 @@
      field reads clearly. Colour keeps its meaning: a piece's two cover colours are its hands, red is a mark
      (where you left off; a piece still without its own score); surfaces are the roll's greys. */
   .library {
-    position: fixed; inset: 0 0 auto 0; height: var(--app-h, 100%); z-index: 30; overflow: hidden;
+    position: fixed; inset: 0; z-index: 30; overflow: hidden;
     background: var(--bg); color: var(--t1);
     --c1: var(--t1); --c2: var(--t2); --cf: var(--fill);
     --lib-top: calc(env(safe-area-inset-top, 0px) + var(--edge));
@@ -924,7 +921,7 @@
      below that point, so the page can always scroll until the heading pins. The tabs are glass,
      the same control the search shows at the top; behind the heading the page is black, fading
      out across the tabs so the list shows through them. */
-  .explore { min-height: calc(var(--app-h, 100dvh) - var(--stick) - var(--page-pb)); }
+  .explore { min-height: calc(100dvh - var(--stick) - var(--page-pb)); }
   .explore-mark { height: 0; margin-bottom: -12px; }   /* where the tabs sit in the page (library.js pinCheck) */
   /* above the fades (z-index 3), with the rest of the glass: the page has no stacking context of
      its own, so this counts in the library's */
@@ -979,7 +976,7 @@
   /* the sheet music full screen: one page at a time, as large as fits between the controls */
   .viewer { position: absolute; inset: 0; z-index: 8; background: var(--bg); animation: lib-in var(--dur-move) var(--ease); }
   .viewer-pages {
-    --vp-w: min(calc(100vw - 2 * var(--edge)), calc((var(--app-h, 100dvh) - 2 * (var(--lib-top) + var(--control) + var(--edge))) * 210 / 297));
+    --vp-w: min(calc(100vw - 2 * var(--edge)), calc((100dvh - 2 * (var(--lib-top) + var(--control) + var(--edge))) * 210 / 297));
     position: absolute; inset: 0; display: flex; align-items: center; column-gap: 24px; overflow-x: auto; overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory; scrollbar-width: none; padding-inline: calc((100vw - var(--vp-w)) / 2);
   }
