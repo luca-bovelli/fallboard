@@ -1,13 +1,17 @@
-/* The app's icons, drawn by the app itself: a few bars of music opened in the player, its
-   controls hidden, the roll's lit glass notes falling onto the keys (unlit), the foot of a
-   phone's roll caught in a square and saved at every size the platforms ask for. Also
-   the plain black launch screens iOS shows while an installed Fallboard starts.
+/* The app's icons, drawn by the app itself: a few bars of music opened in the player and drawn
+   as the library draws a Continue card (js/roll-gl.js thumb): the cover's colour fields, the
+   notes' light added to them, the card's glass over both, its edge on the outline iOS cuts the
+   icon to; saved at every size the platforms ask for. Also the plain black launch screens iOS
+   shows while an installed Fallboard starts.
 
      node tools/icons.js            (needs Chrome; CHROME=<path> to name it)
 
-   Writes dist/icons/: icon-<size>.png (any purpose), maskable-512.png (the same scene with room
-   round it for Android's masks), apple-touch-icon.png (180, no transparency: iOS rounds it),
-   favicon-32.png, favicon-16.png, and splash-<w>x<h>.png for the iPhones and iPads in SPLASH. */
+   Writes dist/icons/: apple-touch-icon.png (180, square and opaque: iOS cuts it to its outline,
+   where the glass's edge is), icon-<size>.png and favicon-<size>.png (any purpose: cut to that
+   outline, clear outside), maskable-512.png (Android: the card without its glass, edge to edge,
+   since each launcher cuts it to a shape of its own, a circle, a squircle, a rounded square,
+   and an edge drawn for one would be cut through by the others), and splash-<w>x<h>.png for the
+   iPhones and iPads in SPLASH. ICON_SCENES=1 also keeps the two 1024 px cards. */
 'use strict';
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -28,18 +32,19 @@ const NAME = process.env.ICON_NAME || 'Fallboard 5.musicxml';
    left of the middle the left hand's E, held, the one tall light, and a short C# high above;
    right of it the right hand's lighter notes, a G falling, an A# repeated in eighths, an F#
    sounding at the keys. No two notes overlap. [note, start, length, staff], in sixteenths of a
-   second (divisions 8 to a quarter, 120 bpm). The scene is caught at AT seconds, long enough
-   into the E for its key's heat to be full, its light standing above it as it does in play */
+   second (divisions 8 to a quarter, 120 bpm). The card starts at AT seconds, the notes sounding
+   then landing on its bottom edge */
 const DIV = 8;
 const NOTES = [
   ['E4', 0, 80, 2], ['C#4', 61, 4, 2],
   ['G4', 58, 20, 1], ...[53, 57, 61, 65, 69, 73, 77].map((t) => ['A#4', t, 3, 1]), ['F#4', 48, 8, 1],
 ];
 const AT = 3.33;
-/* the scene's size in css px: an octave of 20 px keys (a phone's, js/app.js MIN_W..), the
-   keyboard a third of the square, the roll as tall as a phone's (its light reaches up from the
-   keys in proportion to the roll's height), its foot the square's top two thirds */
-const SIDE = 140, TALL = 560;
+/* the card: SIDE css px, a phone's Continue card, drawn at the scale that makes it 1024 px; its
+   corner (and the glass's bevel and height) CORNER of its side, where the cards' squircle
+   (softness 1/2) lies within 0.2 px at 180 px of iOS's icon mask, a continuous corner of 0.2237
+   of the side; END: the hundredths of a second from its bottom edge to 0.2 from its top */
+const SIDE = 160, CORNER = 0.1935, END = 72;
 function scoreXml() {
   let pos = 0;
   const body = NOTES.map(([name, at, dur, staff], i) => {
@@ -57,7 +62,6 @@ ${body}
 }
 const XML = scoreXml();
 
-const SIZES = [16, 32, 180, 192, 512];
 /* iOS launch screens, portrait (and landscape for iPads): [css width, css height, scale] */
 const SPLASH = [
   [440, 956, 3], [402, 874, 3], [430, 932, 3], [393, 852, 3], [428, 926, 3], [390, 844, 3], [414, 896, 3], [375, 812, 3], [414, 896, 2], [375, 667, 2], [320, 568, 2],
@@ -95,53 +99,66 @@ function solidPng(w, h, [r, g, b]) {
     ws.addEventListener('message', (e) => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } });
     const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
     const run = async (expr) => { const r = await send('Runtime.evaluate', { expression: `(async () => { ${expr} })()`, awaitPromise: true, returnByValue: true }); if (r.result.exceptionDetails) throw new Error(JSON.stringify(r.result.exceptionDetails).slice(0, 400)); return r.result.result.value; };
-    const shot = async (file, clip) => fs.writeFileSync(file, Buffer.from((await send('Page.captureScreenshot', { format: 'png', clip })).result.data, 'base64'));
     await send('Page.enable'); await send('Runtime.enable');
 
-    /* the scene: a player SIDE css px wide and TALL high, at the scale that makes SIDE 1024 px.
-       The roll's light, rims and glow are sized in css px, so they keep the weight they have on
-       a phone, and the noise in the light the size it has there */
-    await send('Emulation.setDeviceMetricsOverride', { width: SIDE, height: TALL, deviceScaleFactor: 1024 / SIDE, mobile: false });
+    /* the score opened in the player, for its notes and the palette its name gives */
+    await send('Emulation.setDeviceMetricsOverride', { width: 400, height: 400, deviceScaleFactor: 1, mobile: false });
     await send('Page.navigate', { url: `http://localhost:${PORT}/` });
     await sleep(2500);
-    await run(`
+    const [glass, flat] = await run(`
       const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       for (let i = 0; i < 80 && !(window.FB && FB.debug && FB.debug.S.score && FB.rollGL); i++) await wait(100);
       if (FB.library && FB.library.isOpen()) FB.library.close();
-      /* the keys as they are at rest, none lit: the light is the roll's */
-      const keys = FB.rollGL.keys;
-      FB.rollGL.keys = (env, held) => keys({ ...env, S: { ...env.S, score: null } }, new Map());
-      const st = document.createElement('style');
-      /* the controls hidden, the rail under the keys gone (the keys sit on the icon's bottom edge),
-         the keys a third of the icon */
-      st.textContent = '.top, .progress, #liveBtn, .toast, .status, #library, .scrub { visibility: hidden !important; } .rail { display: none !important; } .kbd-wrap { height: ${0.34 * SIDE}px !important; }';
-      document.head.appendChild(st);
       await FB.debug.openFile(new File([${JSON.stringify(XML)}], ${JSON.stringify(NAME)}, { type: 'application/xml' }));
       for (let i = 0; i < 80 && !(FB.debug.S.meta && FB.debug.S.meta.id === 'file:${NAME}' && FB.debug.S.meta.hands); i++) await wait(100);
-      for (const n of FB.debug.S.score.notes) n.name = '';                       // no names on the notes
-      window.dispatchEvent(new Event('resize')); await wait(300);
-      /* the keys from C4 to B4 across the icon, held there (C4 is white key 23 from A0) */
-      const G = FB.debug.G;
-      G.manual = true; G.holdUntil = Infinity;
-      G.W = G.tW = G.width / 7; G.left = G.tLeft = 23;
-      document.getElementById('kbd').getContext('2d').fillText = () => {};      // nor octaves on the keys
-      await wait(600);
-      FB.debug.seek(${AT}); await wait(400); FB.debug.seek(${AT + 0.001}); await wait(1500);
-      return FB.debug.S.meta.id;`);
-    const big = path.join(OUT, 'scene-1024.png');
-    await shot(big, { x: 0, y: TALL - SIDE, width: SIDE, height: SIDE, scale: 1 });   // the square at the foot
+      /* a Continue card of it (js/library.js card, js/roll-gl.js thumb): the notes from AT on, those
+         sounding then landing on the bottom edge, END hundredths of a second up to 0.2 from the top */
+      const meta = FB.debug.S.meta, look = FB.pieceLook(meta) || FB.pieceLook(meta, true), notes = [];
+      for (const n of FB.debug.S.score.notes.slice().sort((p, q) => p.t0 - q.t0)) {
+        if (n.t1 <= ${AT}) continue;
+        notes.push(Math.round(Math.max(0, n.t0 - ${AT}) * 100), Math.max(4, Math.round((n.t1 - Math.max(n.t0, ${AT})) * 100)), n.midi, n.hand);
+      }
+      const card = (withGlass) => {
+        const box = document.createElement('div'), cv = document.createElement('canvas');
+        box.style.cssText = 'position: fixed; left: 0; top: 0; z-index: 99; width: ${SIDE}px; height: ${SIDE}px; border-radius: ${CORNER * SIDE}px';
+        cv.style.cssText = 'display: block; width: 100%; height: 100%';
+        box.appendChild(cv); document.body.appendChild(box);
+        FB.rollGL.thumb(cv, { hands: look.hands, cover: { fields: look.fields, base: look.base, ink: look.inkNotes && look.ink }, roll: { end: ${END}, bars: [], notes }, dpr: 1024 / ${SIDE}, glass: withGlass });
+        const url = cv.toDataURL('image/png').split(',')[1];
+        box.remove();
+        return url;
+      };
+      return [card(true), card(false)];`);
 
-    /* every size, and the maskable one, made from the scene by the browser (a canvas, smoothed) */
-    const scene = 'data:image/png;base64,' + fs.readFileSync(big).toString('base64');
-    const make = async (size, pad) => Buffer.from(await run(`
-      const img = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = ${JSON.stringify(scene)}; });
+    /* every size, made from the two by the browser (a canvas, smoothed): for iOS, opaque, square, the
+       glass's edge on the outline it is cut to; elsewhere cut to that outline, the rest clear; for
+       Android's masks the card without its glass, edge to edge */
+    const uri = (b64) => JSON.stringify('data:image/png;base64,' + b64);
+    const make = async (b64, size, cut) => Buffer.from(await run(`
+      const img = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = ${uri(b64)}; });
       const c = document.createElement('canvas'); c.width = c.height = ${size}; const x = c.getContext('2d');
-      x.fillStyle = '#000'; x.fillRect(0, 0, ${size}, ${size}); x.imageSmoothingQuality = 'high';
-      const inset = ${size} * ${pad}; x.drawImage(img, inset, inset, ${size} - 2 * inset, ${size} - 2 * inset);
+      x.imageSmoothingQuality = 'high';
+      if (${cut}) {
+        /* the squircle, as js/library.js squirclePath traces it: along each axis a smooth hinge
+           (softness 1/2), the outline where the two add to 1, traced by rays from the middle */
+        const hinge = (q, e) => { const root = Math.sqrt(q * q + e * e); return q < 0 ? (e * e) / Math.max(root - q, 1e-8) : q + root; };
+        const axis = (v, half, r) => { const e = r * 0.5, cc = half - r, vp = hinge(v - cc, e), vm = hinge(-v - cc, e), v0 = hinge(-cc, e), eP = hinge(r, e), eM = hinge(r - 2 * half, e); return Math.max(0, ((vp - v0) * (vp + v0) + (vm - v0) * (vm + v0)) / ((eP - v0) * (eP + v0) + (eM - v0) * (eM + v0))); };
+        const half = ${size} / 2, r = ${CORNER} * ${size}, p = new Path2D();
+        for (let i = 0; i <= 720; i++) {
+          const a = (i / 720) * 2 * Math.PI, dx = Math.cos(a), dy = Math.sin(a);
+          let lo = 0, hi = half * 1.5;
+          for (let k = 0; k < 40; k++) { const t = (lo + hi) / 2; if (axis(t * dx, half, r) + axis(t * dy, half, r) < 1) lo = t; else hi = t; }
+          if (i) p.lineTo(half + lo * dx, half + lo * dy); else p.moveTo(half + lo * dx, half + lo * dy);
+        }
+        p.closePath(); x.clip(p);
+      }
+      x.drawImage(img, 0, 0, ${size}, ${size});
       return c.toDataURL('image/png').split(',')[1];`), 'base64');
-    for (const size of SIZES) fs.writeFileSync(path.join(OUT, size <= 32 ? `favicon-${size}.png` : size === 180 ? 'apple-touch-icon.png' : `icon-${size}.png`), await make(size, 0));
-    fs.writeFileSync(path.join(OUT, 'maskable-512.png'), await make(512, 0.1));   // Android's masks keep the middle 80 %
-    fs.unlinkSync(big);
+    fs.writeFileSync(path.join(OUT, 'apple-touch-icon.png'), await make(glass, 180, false));
+    for (const size of [16, 32]) fs.writeFileSync(path.join(OUT, `favicon-${size}.png`), await make(glass, size, true));
+    for (const size of [192, 512]) fs.writeFileSync(path.join(OUT, `icon-${size}.png`), await make(glass, size, true));
+    fs.writeFileSync(path.join(OUT, 'maskable-512.png'), await make(flat, 512, false));
+    if (process.env.ICON_SCENES) { fs.writeFileSync(path.join(OUT, 'scene-glass.png'), Buffer.from(glass, 'base64')); fs.writeFileSync(path.join(OUT, 'scene-flat.png'), Buffer.from(flat, 'base64')); }
 
     /* the launch screens: the app's black page, nothing on it, as a native app's launch screen
        shows the screen it opens to before anything is in it */

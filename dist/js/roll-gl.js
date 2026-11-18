@@ -512,7 +512,9 @@
      it in linear light, fading out toward the top, and the card's glass over both (GLASS_FS); on a cover too pale for that light to show
      (r.cover.ink, the cream classic edition), as its ink instead, as much ink as there is light.
      Still: a card's noise does not move. Drawn into
-     the card's 2D canvas; false without WebGL 2 or the piece's colours. */
+     the card's 2D canvas; false without WebGL 2 or the piece's colours. The app's icon is one
+     (tools/icons.js), drawn at its own scale (r.dpr) and, for Android's launchers, which crop it
+     to shapes of their own, without the glass (r.glass false). */
   const COVER_FS = `#version 300 es
     precision highp float;
     uniform sampler2D uRoll; uniform vec2 uSize;
@@ -660,7 +662,7 @@
     const w = cv.clientWidth, H = cv.clientHeight;
     if (!w || !H) return true;
     if (!whiteAt) { whiteAt = new Int16Array(128); for (let m = 21, n = 0; m < 128; m++) { whiteAt[m] = n; if (!FB.isBlack(m)) n++; } }
-    const dpr = Math.min(2, window.devicePixelRatio || 1), h = H, top = Math.round(H * 0.2), roll = r.roll, t = roll.notes;
+    const dpr = r.dpr || Math.min(2, window.devicePixelRatio || 1), h = H, top = Math.round(H * 0.2), roll = r.roll, t = roll.notes;
     let lo = 127, hi = 0;
     for (let i = 0; i < t.length; i += 4) { lo = Math.min(lo, t[i + 2]); hi = Math.max(hi, t[i + 2]); }
     const left = whiteAt[clamp(lo, 21, 108)] - 1.5, W = w / (whiteAt[clamp(hi, 21, 108)] + 2.5 - left), bw = W * 0.58;
@@ -683,7 +685,7 @@
     cover(Math.round(w * dpr), Math.round(h * dpr), r.cover);
     /* the glass's corner, bevel and height: the card's corner radius (before the squircle lowers it) */
     const card = cv.parentNode, corner = card._sqR !== undefined ? card._sqR : parseFloat(getComputedStyle(card).borderTopLeftRadius) || 0;
-    glassOver(Math.round(w * dpr), Math.round(h * dpr), corner * dpr);
+    if (r.glass !== false) glassOver(Math.round(w * dpr), Math.round(h * dpr), corner * dpr);
     cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr);
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
