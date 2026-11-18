@@ -1628,8 +1628,11 @@
      keyboard stays up when focus moves between fields), with its caret.
      The keyboard's height is known only once it is up, so the crop starts with the height it had
      last time (kept per orientation), or a guess, and settles on the real one as iOS reports it.
-     Heights are judged against the layout viewport (clientHeight), which the keyboard leaves
-     alone; window.innerHeight can shrink with it on iOS. */
+     Heights are judged against the library's own height, which the keyboard leaves alone
+     (window.innerHeight can shrink with it on iOS): the layout viewport's in a browser, the
+     screen's in an installed app on iOS, whose viewport falls short of it by the status bar
+     (--app-h, js/app.js sizeApp) while the visual viewport still runs from the screen's top to
+     the keyboard. */
   if (window.visualViewport) {
     const vv = window.visualViewport;
     const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -1638,7 +1641,8 @@
     const typing = () => L.open && field(document.activeElement);
     const portrait = () => (innerWidth < innerHeight ? 'p' : 'l');
     const remembered = () => { try { return JSON.parse(localStorage.getItem('fb.keyboard') || '{}'); } catch (err) { return {}; } };
-    const guess = () => remembered()[portrait()] || Math.round(document.documentElement.clientHeight * (portrait() === 'p' ? 0.45 : 0.55));
+    const tall = () => el.lib.offsetHeight || document.documentElement.clientHeight;
+    const guess = () => remembered()[portrait()] || Math.round(tall() * (portrait() === 'p' ? 0.45 : 0.55));
     let kb = 0;
     const setKb = (px) => {
       px = Math.max(0, Math.round(px));
@@ -1655,7 +1659,7 @@
       /* if iOS slid the page after all, the library goes with it, so its top stays in view; once
          nothing is being typed it is back where it belongs, whatever iOS reports */
       el.lib.style.transform = typing() && vv.offsetTop > 0 ? 'translateY(' + vv.offsetTop + 'px)' : '';
-      const hidden = document.documentElement.clientHeight - vv.height;
+      const hidden = tall() - vv.height;
       if (!typing()) { if (!rising) setKb(0); return; }
       if (hidden > 80) {
         rising = 0;
