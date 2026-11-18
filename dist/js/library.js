@@ -324,22 +324,47 @@
     b.style.setProperty('--ink', look.ink);
     b.dataset.base = look.base;
     b.dataset.field = look.field;
-    const cv = make('canvas', 'roll', undefined, 'img');
-    cv.setAttribute('aria-hidden', 'true');
+    const cv = thumbCanvas(r);
     cv._r = r;
     b.appendChild(cv);
     L.thumbs.push([cv, r]);
     squircle(b);
     return cardItem(b, r.title, r.composer);
   }
+  /* A card's picture is drawn once per piece (as last opened) and size, and its canvas kept and
+     used again whenever the card is: home and Continue's page are made afresh each time they
+     show, and a new canvas for every card every time added up on a phone, which caps the canvas
+     memory a page may hold and leaves the canvases past it blank. The canvases of pieces gone
+     from the list are let go at once (no size: a phone frees their memory then, not later) */
+  const thumbsKept = new Map();   // recent piece's id -> its card's canvas
+  function thumbCanvas(r) {
+    let cv = thumbsKept.get(r.id);
+    if (!cv || cv._at !== r.at) {
+      if (cv) cv.width = cv.height = 0;
+      cv = make('canvas', 'roll', undefined, 'img');
+      cv.setAttribute('aria-hidden', 'true');
+      cv._at = r.at;
+      thumbsKept.set(r.id, cv);
+    }
+    return cv;
+  }
+  function keepThumbs(recent) {
+    const ids = new Set(recent.map((r) => r.id));
+    for (const [id, cv] of thumbsKept) if (!ids.has(id)) { cv.width = cv.height = 0; thumbsKept.delete(id); }
+  }
   /* the opening bars as the player's roll draws them: pitch across, time rising from the
      keyboard's edge at the bottom of the card (the first notes lowest), each hand in its colour,
      bar lines faint. Drawn lit by js/roll-gl.js; this flat one is for browsers without WebGL 2 */
   const ROLL_FLOOR = 1;   // where the first notes land, as a share of the card's height
   function drawThumb(cv, r) {
-    if (FB.rollGL && FB.rollGL.thumb(cv, r)) return;   // lit, as the player draws it; below, the flat roll without WebGL 2
     const w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
-    if (!w || !h) return;
+    if (!w || !h) return;   // not laid out yet: drawn once it is (the library's ResizeObserver)
+    const drawn = w + 'x' + h + '@' + dpr;
+    if (cv._drawn === drawn) return;   // as it is
+    if (FB.rollGL && FB.rollGL.thumb(cv, r)) { cv._drawn = drawn; return; }   // lit, as the player draws it
+    /* below, the flat roll without WebGL 2; kept only if WebGL 2 is not to be had (a lost context
+       comes back, and the card is drawn lit then) */
+    if (!FB.rollGL || FB.rollGL.failed) cv._drawn = drawn;
     cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
     const c = cv.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -788,10 +813,23 @@
     page.appendChild(h);
     return h;
   }
+  /* the cards waiting to be drawn, a few milliseconds of them a frame (all at once, a phone's GPU
+     could stall and drop the context), each on its own, so one that fails leaves the rest */
+  let thumbQueue = [], thumbsBusy = false;
   function flushThumbs() {
-    const list = L.thumbs;
+    for (const t of L.thumbs) if (!thumbQueue.some((q) => q[0] === t[0])) thumbQueue.push(t);
     L.thumbs = [];
-    requestAnimationFrame(() => { for (const [cv, r] of list) drawThumb(cv, r); sceneV++; kick(); });
+    if (!thumbsBusy && thumbQueue.length) { thumbsBusy = true; requestAnimationFrame(nextThumbs); }
+  }
+  function nextThumbs() {
+    const t0 = performance.now();
+    while (thumbQueue.length && performance.now() - t0 < 8) {
+      const [cv, r] = thumbQueue.shift();
+      if (!cv.isConnected) continue;
+      try { drawThumb(cv, r); } catch (e) { console.error('card', r.id, e); }
+    }
+    sceneV++; kick();
+    if (thumbQueue.length) requestAnimationFrame(nextThumbs); else thumbsBusy = false;
   }
 
   function tile(c) {
@@ -853,6 +891,7 @@
       const d = L.data;
       head(page, 'Library', []);
       const recent = FB.app.recents();
+      keepThumbs(recent);
       if (recent.length) {
         const s = section(page, 'Continue', () => push({ view: 'recent' }));
         /* a touch screen swipes through a shelf; a mouse gets one row of cards that fills the
@@ -882,8 +921,9 @@
 
     recent(page) {
       head(page, 'Continue', []);
-      const box = make('div', 'cards');
-      for (const r of FB.app.recents()) box.appendChild(card(r));
+      const box = make('div', 'cards'), recent = FB.app.recents();
+      keepThumbs(recent);
+      for (const r of recent) box.appendChild(card(r));
       page.appendChild(box);
     },
 

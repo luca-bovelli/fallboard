@@ -292,6 +292,8 @@
     return t;
   }
   function init() {
+    /* a context made again (after one was lost) starts without the cards' programs and textures */
+    blurP = coverP = glassP = null; sceneTex = blurTex = blurFbo = null;
     glc = document.createElement('canvas');
     /* a lost context draws the flat roll until it is given back; then everything is made again */
     glc.addEventListener('webglcontextlost', (e) => { e.preventDefault(); gl = null; lost = true; });
@@ -671,7 +673,7 @@
         if (black !== (pass === 1)) continue;
         const x = keyX(m) + (black ? 0 : inset), bwid = black ? bw : W - inset * 2;
         const y1 = yOf(t[i]), bh = Math.max(3, y1 - yOf(t[i] + t[i + 1]) - 1);
-        inst.push(...noteOf(x, y1 - bh, bwid, bh, black, hands[t[i + 3]], t[i] === 0));
+        inst.push(...noteOf(x, y1 - bh, bwid, bh, black, hands[t[i + 3]] || hands[0], t[i] === 0));
         fieldNotes.push([x, y1 - bh, bwid, bh, t[i + 3], y1]);
       }
     }
@@ -886,5 +888,7 @@
     roll, keys, thumb, flat, colours,
     /* the field moves on its own (the noise), so the roll wants frames while it shows */
     get moving() { return !STILL && !failed && !lost && !!gl; },
+    /* WebGL 2 cannot be had here (a lost context is not failed: it comes back) */
+    get failed() { return failed; },
   };
 })();
