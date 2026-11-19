@@ -625,6 +625,13 @@
     --bottom-black: var(--lib-bottom);
     --bottom-span: calc(var(--control) + 64px);
   }
+  /* A page and the fades over it, as one card (library.js lift, move): it moves as one between
+     pages, its fades with it, as iOS 26 keeps a scroll edge to each screen. At rest it is no layer
+     of its own, so what is in it stacks in the library's order: Explore's pinned tabs above the
+     fades, the glass above both. While it moves it is one: the page on top casts a shadow over the
+     one it covers */
+  .lib-card { position: absolute; inset: 0; background: var(--bg); }
+  .lib-card.is-over { box-shadow: -12px 0 40px rgb(0 0 0 / 0.55); }
   .lib-scroll {
     position: absolute; inset: 0 0 var(--kb) 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
     touch-action: pan-y; scrollbar-width: none;
@@ -935,8 +942,9 @@
      out across the tabs so the list shows through them. */
   .explore { min-height: calc(100dvh - var(--stick) - var(--page-pb)); }
   .explore-mark { height: 0; margin-bottom: -12px; }   /* where the tabs sit in the page (library.js pinCheck) */
-  /* above the fades (z-index 3), with the rest of the glass: the page has no stacking context of
-     its own, so this counts in the library's */
+  /* above the fades (z-index 3), with the rest of the glass: neither the page nor its card has a
+     stacking context of its own at rest, so this counts in the library's (and in the card's, with
+     its fades, while it moves) */
   .explore-tabs { position: sticky; top: var(--stick); z-index: 4; }
   /* easing into their place as they pin (library.js pinCheck sets --settle, the scroll range):
      over its first half they fall behind the page, more and more (quadratic in), and over its
@@ -986,7 +994,11 @@
   .carousel-arrow.prev { left: var(--gap); }
   .carousel-arrow.next { right: var(--gap); }
   /* the sheet music full screen: one page at a time, as large as fits between the controls */
-  .viewer { position: absolute; inset: 0; z-index: 8; background: var(--bg); animation: lib-in var(--dur-move) var(--ease); }
+  .viewer { position: absolute; inset: 0; z-index: 8; animation: lib-in var(--dur-move) var(--ease); }
+  /* the black behind the pages: a layer of its own, so it can come up while a page grows out of
+     the preview (library.js openViewer) */
+  .viewer-shade { position: absolute; inset: 0; background: var(--bg); }
+  .viewer-pages .viewer-page { transform-origin: 0 0; }
   .viewer-pages {
     --vp-w: min(calc(100vw - 2 * var(--edge)), calc((100dvh - 2 * (var(--lib-top) + var(--control) + var(--edge))) * 210 / 297));
     position: absolute; inset: 0; display: flex; align-items: center; column-gap: 24px; overflow-x: auto; overscroll-behavior-x: contain;
@@ -1168,9 +1180,11 @@
 
 <!-- the library: flat content in .lib-scroll; the glass layer (.lib-top, .lib-bottom) over it -->
 <div class="library" id="library" role="dialog" aria-modal="true" aria-label="Library" hidden>
-  <div class="lib-scroll" id="libScroll"><div class="lib-page" id="libPage"></div></div>
-  <div class="lib-fade top" id="libFadeTop" aria-hidden="true"></div>
-  <div class="lib-fade bottom" id="libFadeBottom" aria-hidden="true"></div>
+  <div class="lib-card" id="libCard">
+    <div class="lib-scroll" id="libScroll"><div class="lib-page" id="libPage"></div></div>
+    <div class="lib-fade top" id="libFadeTop" aria-hidden="true"></div>
+    <div class="lib-fade bottom" id="libFadeBottom" aria-hidden="true"></div>
+  </div>
   <input type="search" class="lib-proxy" id="libProxy" tabindex="-1" aria-hidden="true" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
 
   <header class="lib-top">

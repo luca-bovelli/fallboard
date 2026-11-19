@@ -27,7 +27,7 @@
   const HOME_RECENTS = 10;
 
   const el = {
-    lib: $('library'), scroll: $('libScroll'), page: $('libPage'),
+    lib: $('library'), card: $('libCard'), scroll: $('libScroll'), page: $('libPage'),
     back: $('libBack'), scopes: $('libScopes'),
     more: $('libMore'), menu: $('libMenu'), share: $('libShare'), shareNote: $('libShareNote'), upload: $('libUpload'), install: $('libInstall'),
     bottom: $('libBottom'), search: $('libSearch'), query: $('libQuery'), clear: $('libClear'),
@@ -1130,8 +1130,14 @@
      A page of the preview opens the pages full screen, one at a time, each as large as the screen
      allows, with the PDF to download in the corner. Swipe, scroll or use the arrows (or the arrow
      keys) to turn pages; the close button, Escape or a swipe back goes back. It is an entry of
-     the history of its own, over its page's (popstate) */
-  function openViewer(e, index) {
+     the history of its own, over its page's (popstate). As iOS's Photos does, the page tapped
+     grows out of its place in the preview to fill the screen as the black comes up behind it,
+     and going back it shrinks into its place again (into the preview's page it was turned to,
+     the strip brought round to it if need be); a page the preview doesn't show fades */
+  const ZOOM_MS = 420;
+  /* the transform that puts box `to` over box `from` (the same shape: A4 at any size) */
+  const over = (from, to) => 'translate(' + (from.left - to.left) + 'px, ' + (from.top - to.top) + 'px) scale(' + from.width / to.width + ')';
+  function openViewer(e, index, from) {
     const job = engraveFor(e);
     closeViewer();
     if (inHistory() && !history.state.viewer) {
@@ -1143,8 +1149,8 @@
     const v = make('div', 'viewer');
     v.setAttribute('role', 'dialog');
     v.setAttribute('aria-label', 'Sheet music: ' + pieceName(e, true));
-    const strip = make('div', 'viewer-pages');
-    v.appendChild(strip);
+    const shade = make('div', 'viewer-shade'), strip = make('div', 'viewer-pages');
+    v.append(shade, strip);
     const shut = button('round glass-material viewer-close', undefined, leaveViewer);
     shut.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
     shut.setAttribute('aria-label', 'Close');
@@ -1155,7 +1161,7 @@
     save.title = 'Download the PDF';
     v.append(shut, save);
     el.lib.appendChild(v);
-    L.viewer = { el: v, strip, arrows: TOUCH.matches ? null : carouselArrows(v, strip) };
+    L.viewer = { el: v, strip, shade, arrows: TOUCH.matches ? null : carouselArrows(v, strip) };
     /* a blank page for each page to come, filled as it is drawn */
     const fill = (i) => {
       if (!v.isConnected) { job.watchers.delete(fill); return; }
@@ -1172,19 +1178,66 @@
     };
     job.watchers.add(fill);
     job.pages.forEach((src, i) => fill(i));
-    requestAnimationFrame(() => { const pg = strip.children[index]; if (pg) strip.scrollLeft = pg.offsetLeft - (strip.clientWidth - pg.offsetWidth) / 2; });
+    const pg = strip.children[index];
+    if (pg) strip.scrollLeft = pg.offsetLeft - (strip.clientWidth - pg.offsetWidth) / 2;
     shut.focus({ preventScroll: true });
-    sceneV++; kick(500);
+    if (pg && from && from.isConnected && !STILL.matches) {
+      const r = from.getBoundingClientRect();
+      if (r.width) {
+        const t = { duration: ZOOM_MS, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' };
+        v.style.animation = 'none';
+        from.style.visibility = 'hidden';   // it is the page growing
+        /* the strip snaps to a page's box as it is drawn: while it grows, it would chase it */
+        strip.style.scrollSnapType = 'none';
+        const big = pg.getBoundingClientRect();
+        /* its corners as the preview's (6 px at its size) to the viewer's (4 px) */
+        const grow = pg.animate([{ transform: over(r, big), borderRadius: 6 * big.width / r.width + 'px' }, { transform: 'none', borderRadius: '4px' }], t);
+        shade.animate([{ opacity: 0 }, { opacity: 1 }], t);
+        /* the controls and the pages beside it come up after it */
+        for (const n of [...v.children, pg.previousElementSibling, pg.nextElementSibling]) if (n && n !== shade && n !== strip) n.animate([{ opacity: 0 }, { opacity: 1 }], { ...t, duration: ZOOM_MS * 0.6, delay: ZOOM_MS * 0.4, fill: 'backwards' });
+        const done = () => { from.style.visibility = ''; strip.style.scrollSnapType = ''; unmeasure(); sceneV++; kick(100); };
+        grow.finished.then(done, done);
+      }
+    }
+    sceneV++; kick(ZOOM_MS + 100);
   }
-  function closeViewer() {
+  /* zoom: back into the preview's page it was turned to (popstate), when one is there to go to */
+  function closeViewer(zoom) {
     if (!L.viewer) return;
-    L.viewer.el.remove();
+    const { el: v, strip, shade } = L.viewer;
     L.viewer = null;
-    sceneV++; kick(300);
+    sceneV++; kick(ZOOM_MS + 100);
+    const box = zoom && !STILL.matches && el.page.querySelector('.pages');
+    const pg = box && strip.firstElementChild ? strip.children[Math.round(strip.scrollLeft / (strip.firstElementChild.offsetWidth + (parseFloat(getComputedStyle(strip).columnGap) || 0)))] : null;
+    const sheets = box ? box.querySelectorAll('.sheet-page:not(.is-waiting)') : [];
+    const to = pg ? sheets[[...strip.children].indexOf(pg)] : null;
+    if (!zoom || STILL.matches) { v.remove(); return; }
+    v.style.pointerEvents = 'none';
+    v.style.animation = 'none';
+    strip.style.scrollSnapType = 'none';   // as it shrinks, the strip would follow it (openViewer)
+    const t = { duration: ZOOM_MS, easing: 'cubic-bezier(0.32, 0.72, 0, 1)', fill: 'forwards' };
+    let at = to && to.getBoundingClientRect();
+    /* the preview's strip brought round to the page, if it is out of sight beside it: to where
+       it would come to rest (its snap, at the strip's start) */
+    if (at && (at.left < 0 || at.right > el.lib.clientWidth)) {
+      box.scrollLeft += at.left - box.getBoundingClientRect().left - (parseFloat(getComputedStyle(box).scrollPaddingLeft) || 0);
+      at = to.getBoundingClientRect();
+    }
+    const view = el.lib.getBoundingClientRect();
+    let end;
+    if (at && at.width && at.bottom > view.top && at.top < view.bottom) {
+      to.style.visibility = 'hidden';
+      const big = pg.getBoundingClientRect();
+      end = pg.animate([{ transform: 'none', borderRadius: '4px' }, { transform: over(at, big), borderRadius: 6 * big.width / at.width + 'px' }], t);
+      shade.animate([{ opacity: 1 }, { opacity: 0 }], t);
+      for (const n of [...v.children, pg.previousElementSibling, pg.nextElementSibling]) if (n && n !== shade && n !== strip) n.animate([{ opacity: 1 }, { opacity: 0 }], { ...t, duration: ZOOM_MS * 0.4 });
+    } else end = v.animate([{ opacity: 1 }, { opacity: 0 }], { ...t, duration: CROSS_MS });
+    const gone = () => { v.remove(); if (to) to.style.visibility = ''; sceneV++; kick(100); };
+    end.finished.then(gone, gone);
   }
   /* back out of it: its entry, if it has one */
   function leaveViewer() {
-    if (history.state && history.state.viewer) { ownStep = true; history.back(); } else closeViewer();
+    if (history.state && history.state.viewer) { ownStep = true; history.back(); } else closeViewer(true);
   }
   function turnViewer(dir) {
     const v = L.viewer;
@@ -1248,7 +1301,7 @@
       if (!job.total) return;
       const sheets = box.querySelectorAll('.sheet-page:not(.is-waiting)');
       for (let k = sheets.length; k < job.total; k++) {
-        const pg = button('sheet-page is-blank', undefined, () => openViewer(e, k));
+        const pg = button('sheet-page is-blank', undefined, () => openViewer(e, k, pg));
         pg.setAttribute('aria-label', 'Page ' + (k + 1) + ', full screen');
         box.insertBefore(pg, waiting.isConnected ? waiting : null);
       }
@@ -1337,12 +1390,14 @@
     page.textContent = '';
     L.thumbs = [];
     const now = L.stack[L.stack.length - 1];
+    shownView = now.view;
     L.query = now.view === 'search' ? now.q || '' : '';
     const searching = !!L.query.trim();
     el.lib.classList.toggle('is-searching', searching);
     el.scopes.hidden = !searching;
     /* a work's or a piece's page has no search bar: the pages that list things are searched from.
-       Going back to one, it fades in with the page */
+       Stepping to or from one, it leaves or comes with its page (move); on a page rising in, it
+       fades in with it */
     const bare = !searching && (now.view === 'work' || now.view === 'piece');
     if (bare !== el.lib.classList.contains('no-search')) {
       el.lib.classList.toggle('no-search', bare);
@@ -1394,14 +1449,125 @@
   const stepsNow = () => (inHistory() ? stepsOf(history.state) : 0);
   /* the player's entry, in place of the library's: the address without the library's part */
   const toPlayer = () => history.replaceState(null, '', location.pathname + location.search);
-  /* show the step on top: its search text in the field, where it was scrolled */
+  /* show the step on top: its search text in the field, where it was scrolled. enter: 'push' or
+     'pop' for a step forward or back between pages on screen (moved to as iOS does, below), true
+     for a page that rises in (the library opening, the catalogue arriving), false for none */
   function show(enter) {
     const top = L.stack[L.stack.length - 1];
+    let how = (enter === 'push' || enter === 'pop') && L.open && !el.lib.hidden ? enter : null;
+    /* starting a search, or leaving it for the page it began on, changes that page in place */
+    if (how && (STILL.matches || (how === 'push' ? top.view === 'search' : shownView === 'search'))) how = 'fade';
+    const lifted = how ? lift(how) : null;
     el.query.value = top.view === 'search' ? top.q || '' : '';
     el.clear.hidden = !el.query.value;
-    render(enter);
+    render(lifted ? false : enter);
     if (top.top) finishRows();   // back to where it was scrolled: the rows down to there must be in
     el.scroll.scrollTop = top.top || 0;
+    if (lifted) move(lifted);
+  }
+  let shownView = null;   // the view of the page on screen (render)
+
+  /* Moving between pages, as iOS moves between the screens of an app. A step forward slides the
+     new page in from the right over the one it came from, which drifts a third of the way left
+     and dims under it; a step back slides the page off to the right, uncovering the one before
+     as it drifts back. Both on iOS's own curve (--ease), over half a second. The page leaving is
+     the old page itself, lifted into a card of its own as it looked (scrolled where it was, its
+     shelves where they were, its fades as they were): nothing is drawn again, nothing jumps.
+     The glass stays where it is, over both, and refracts both where they are (paint). The search
+     bar belongs to the pages that have one: to or from a work's or a piece's page it leaves or
+     arrives with its page, and the search's tabs fade as the search is left. Starting a search
+     or leaving it for its page changes that page in place: the two cross-fade, quickly, as every
+     step does with Reduce Motion on. A step taken while one is moving finishes that one first */
+  const PAGE_MS = 500, CROSS_MS = 220, DRIFT = 0.3, DIM = 0.6;
+  let moving = null;
+  /* the page on screen, out of the live card into one of its own: under the next page for a step
+     forward, over it otherwise. With what the glass's scene needs to draw it as it was */
+  function lift(how) {
+    endMove();
+    const frame = el.card.getBoundingClientRect(), lib = el.lib.getBoundingClientRect();
+    const bar = el.lib.classList.contains('no-search') ? null : el.bottom.getBoundingClientRect();
+    if (geo.topBlack === undefined) geo.topBlack = parseFloat(getComputedStyle(el.fadeTop).getPropertyValue('--top-black')) || 0;
+    const scene = {
+      P: paintables && paintables.scope === el.page ? paintables : measurePaintables(el.page, frame, el.scroll.scrollTop),
+      vy: el.scroll.scrollTop, fade: { ...fadeShown }, bar: bar && { top: bar.top - lib.top, bottom: bar.bottom - lib.top },
+    };
+    const card = make('div', 'lib-card');
+    card.inert = true;
+    card.setAttribute('aria-hidden', 'true');
+    const sc = make('div', 'lib-scroll'), pg = make('div', 'lib-page');
+    /* as they are now: the library's state (the search bar, the keyboard) changes under them */
+    sc.style.bottom = getComputedStyle(el.scroll).bottom;
+    sc.style.transition = 'none';
+    pg.style.paddingBottom = getComputedStyle(el.page).paddingBottom;
+    const fades = [el.fadeTop, el.fadeBottom].map((f) => {
+      const cs = getComputedStyle(f), c = make('div', 'lib-fade');
+      Object.assign(c.style, { display: cs.display, top: cs.top, height: cs.height, backgroundImage: cs.backgroundImage });
+      return c;
+    });
+    /* sideways shelves lose their place on leaving the page: kept to be put back */
+    const sides = [...el.page.querySelectorAll('.shelf, .pages')].filter((n) => n.scrollLeft).map((n) => [n, n.scrollLeft]);
+    const top = el.scroll.scrollTop;
+    pg.append(...el.page.childNodes);
+    sc.appendChild(pg);
+    card.append(sc, ...fades);
+    el.lib.insertBefore(card, how === 'push' ? el.card : el.card.nextSibling);
+    sc.scrollTop = top;
+    for (const [n, x] of sides) n.scrollLeft = x;
+    return { how, card, scene, hadBar: !!bar, hadScopes: !el.scopes.hidden, q: el.query.value };
+  }
+  /* the new page is in the live card: move the two */
+  function move(m) {
+    const w = el.lib.clientWidth, live = el.card, ghost = m.card;
+    const t = m.how === 'fade' ? { duration: CROSS_MS, easing: 'ease-out', fill: 'both' } : { duration: PAGE_MS, easing: 'cubic-bezier(0.32, 0.72, 0, 1)', fill: 'both' };
+    const at = (f, o = 1) => ({ transform: 'translate3d(' + Math.round(f * w) + 'px, 0, 0)', opacity: o });
+    if (m.how === 'fade') m.anims = [ghost.animate([{ opacity: 1 }, { opacity: 0 }], t)];
+    else if (m.how === 'push') {
+      live.classList.add('is-over');
+      m.anims = [live.animate([at(1), at(0)], t), ghost.animate([at(0), at(-DRIFT, DIM)], t)];
+    } else {
+      ghost.classList.add('is-over');
+      m.anims = [ghost.animate([at(0), at(1)], t), live.animate([at(-DRIFT, DIM), at(0)], t)];
+    }
+    if (m.hadBar !== !el.lib.classList.contains('no-search')) {
+      m.bar = { parent: el.bottom.parentNode, next: el.bottom.nextSibling };
+      (m.hadBar ? ghost : live).appendChild(el.bottom);
+      if (m.hadBar) {
+        /* leaving with its page, as that page had it: shown, and with what was typed in it */
+        el.bottom.style.display = 'block';
+        el.query.value = m.q;
+        el.clear.hidden = !m.q;
+      }
+    }
+    /* the search's tabs give way to the menu's button: out quickly, the button in after them */
+    if (m.hadScopes && el.scopes.hidden) {
+      el.scopes.hidden = false;
+      m.scopes = el.scopes.animate([{ opacity: 1 }, { opacity: 0 }], { duration: CROSS_MS * 0.7, easing: 'ease-out', fill: 'forwards' });
+      el.more.animate([{ opacity: 0 }, { opacity: 1 }], { duration: CROSS_MS, delay: CROSS_MS * 0.4, easing: 'ease-out', fill: 'backwards' });
+    }
+    moving = m;
+    sceneUntil = performance.now() + t.duration + 50;
+    kick(t.duration + 100);
+    Promise.all(m.anims.map((a) => a.finished)).then(() => { if (moving === m) endMove(); }, () => {});
+  }
+  /* the move done (or cut short): the lifted page gone, the search bar back with the glass */
+  function endMove() {
+    const m = moving;
+    if (!m) return;
+    moving = null;
+    for (const a of m.anims) a.cancel();
+    if (m.bar) {
+      m.bar.parent.insertBefore(el.bottom, m.bar.next);
+      el.bottom.style.display = '';
+      if (m.hadBar) {   // it left with its page's text: now the field of the page on screen, which has none
+        el.query.value = '';
+        el.clear.hidden = true;
+      }
+    }
+    if (m.scopes) { m.scopes.cancel(); el.scopes.hidden = !L.query.trim(); }
+    m.card.remove();
+    el.card.classList.remove('is-over');
+    sceneV++;
+    kick(100);
   }
   function push(item) {
     const cur = L.stack[L.stack.length - 1];
@@ -1415,10 +1581,10 @@
     } else if (inHistory()) history.replaceState(entry(L.stack, steps), '', urlOf(cur));
     L.stack.push(item);
     history.pushState(entry(L.stack, steps + 1), '', urlOf(item));
-    show(true);
+    show('push');
   }
-  /* A step the library takes itself eases in (the page rises, the library fades out); one the
-     browser takes alone does not: a swipe back has already slid the page in, and easing it in
+  /* A step the library takes itself moves (the pages slide, the library fades out); one the
+     browser has moved itself does not: a swipe back has already slid the page in, and moving it
      again flashed it */
   let ownStep = false;
   function back() {
@@ -1429,7 +1595,7 @@
     if (L.stack.length > 1) {
       L.stack.pop();
       if (inHistory()) history.replaceState(entry(L.stack, 0), '', urlOf(L.stack[L.stack.length - 1]));
-      show(true);
+      show('pop');
     } else { toPlayer(); closeNow(); }
   }
   /* leaving for the player: back to the entry the library sat on. Should the history not hold
@@ -1450,14 +1616,21 @@
       /* to or from the sheet music over the page it is on: only it opens or closes */
       const top = s.stack[s.stack.length - 1];
       if (L.open && (L.viewer || s.viewer) && s.stack.length === L.stack.length && hashOf(top) === hashOf(L.stack[L.stack.length - 1])) {
-        closeViewer();
+        const ua = e.hasUAVisualTransition;
+        closeViewer(!s.viewer && (own || ua === false || (ua === undefined && !TOUCH.matches)));
         if (s.viewer && L.data && L.data.byId.has(s.viewer.id)) openViewer(L.data.byId.get(s.viewer.id), s.viewer.at);
         return;
       }
       closeViewer();
+      const was = L.stack.length;
       L.stack = s.stack.map((x) => ({ ...x }));
-      if (!L.open) present(own);
-      show(own);
+      if (!L.open) { present(own); show(own); return; }
+      /* moved to as the library's own steps are, unless the browser has moved it already: a
+         swipe back slides the page itself (hasUAVisualTransition; where that is not known, a
+         phone's swipe is assumed) */
+      const ua = e.hasUAVisualTransition;
+      const slides = own || ua === false || (ua === undefined && !TOUCH.matches);
+      show(slides && L.stack.length !== was ? (L.stack.length > was ? 'push' : 'pop') : own);
     } else if (L.open) closeNow(own);
   });
   function openEntry(e) {
@@ -1838,8 +2011,9 @@
      the small title follows, the top bar's bottom, the fade's top), measured once per layout */
   let geo = {};
   const unmeasure = () => { paintables = null; geo = {}; depthNow = null; };
-  function measurePaintables(scope, root) {
-    const vy = scope === el.page ? el.scroll.scrollTop : 0;
+  /* where they sit in their frame (the card the page is in, which may be moving; the library, for
+     the sheet music), down the page scrolled vy */
+  function measurePaintables(scope, root, vy) {
     const list = [];
     for (const n of scope.querySelectorAll('[data-paint]')) {
       const r = n.getBoundingClientRect();
@@ -1889,14 +2063,56 @@
       if (r.width && r.height) bands.push([r.left - 32, r.top - 32, r.right + 32, r.bottom + 32]);
     }
     /* the full-screen sheet music, when open, is all there is under its glass */
-    const scope = L.viewer ? L.viewer.el : el.page;
-    if (!paintables || paintables.scope !== scope) paintables = measurePaintables(scope, root);
-    const vy = scope === el.page ? el.scroll.scrollTop : 0;
-    for (const it of paintables.list) {
+    if (L.viewer) {
+      if (!paintables || paintables.scope !== L.viewer.el) paintables = measurePaintables(L.viewer.el, root, 0);
+      drawNodes(ctx, paintables, 0, 0, bands, 1);
+      return;
+    }
+    if (!paintables || paintables.scope !== el.page) paintables = measurePaintables(el.page, el.card.getBoundingClientRect(), el.scroll.scrollTop);
+    /* where the top fade reaches black (the top edge) is read once per layout; the fade's span as
+       applyFade last set it; the bottom fade wherever the search bar is */
+    if (geo.topBlack === undefined) geo.topBlack = parseFloat(getComputedStyle(el.fadeTop).getPropertyValue('--top-black')) || 0;
+    const bar = el.lib.classList.contains('no-search') ? null : el.bottom.getBoundingClientRect();
+    const live = { P: paintables, vy: el.scroll.scrollTop, fade: fadeShown, bar: bar && bar.height ? { top: bar.top - root.top, bottom: bar.bottom - root.top } : null };
+    if (!moving) { drawPage(ctx, root, bands, live, 0, 1, false); return; }
+    /* two pages moving (move): the one underneath first, each where its card is now */
+    const cards = moving.how === 'push' ? [[moving.card, moving.scene], [el.card, live]] : [[el.card, live], [moving.card, moving.scene]];
+    cards.forEach(([card, scene], i) => drawPage(ctx, root, bands, scene, card.getBoundingClientRect().left - root.left, parseFloat(getComputedStyle(card).opacity), i === 1));
+  }
+  /* a page as it shows: its nodes, its shelves' edges and its fades, moved dx across. One over
+     another is opaque (black, and what is on it), at its opacity; one under another is dimmed */
+  function drawPage(ctx, root, bands, s, dx, o, over) {
+    ctx.save();
+    ctx.translate(dx, 0);
+    if (dx) { ctx.beginPath(); ctx.rect(0, 0, root.width, root.height); ctx.clip(); }
+    const a = over ? o : 1;
+    if (over) { ctx.globalAlpha = a; ctx.fillStyle = css.bg; ctx.fillRect(0, 0, root.width, root.height); }
+    drawNodes(ctx, s.P, s.vy, dx, bands, a);
+    ctx.globalAlpha = a;
+    /* a shelf's edges fade (dimShelf): on the black page, black over them */
+    for (const sf of s.P.shelves) {
+      const d = sf.sh._dim, y = sf.y - s.vy;
+      if (!d || (!d.kl && !d.kr) || y > root.height || y + sf.h < 0) continue;
+      for (const [x0, x1, k] of [[0, d.spanL, d.kl], [root.width, root.width - d.spanR, d.kr]]) {
+        if (!k) continue;
+        const g = ctx.createLinearGradient(x0, 0, x1, 0);
+        for (let i = 0; i <= 32; i++) g.addColorStop(i / 32, 'rgba(0,0,0,' + (k * 0.5 * FB.smoothRamp(1 - i / 32)).toFixed(4) + ')');
+        ctx.fillStyle = g;
+        ctx.fillRect(Math.min(x0, x1), y, Math.abs(x1 - x0), sf.h);
+      }
+    }
+    if (s.fade.span > 0) fadeBand(ctx, root, geo.topBlack, geo.topBlack + s.fade.span, true, s.fade.floor);
+    if (s.bar) fadeBand(ctx, root, s.bar.bottom, s.bar.top - 64, false);
+    if (!over && o < 1) { ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(0,0,0,' + (1 - o).toFixed(3) + ')'; ctx.fillRect(0, 0, root.width, root.height); }
+    ctx.restore();
+  }
+  /* every node near the glass (a band about a glass control, on screen), at opacity a */
+  function drawNodes(ctx, P, vy, dx, bands, a) {
+    for (const it of P.list) {
       const x = it.x - (it.side ? it.side.scrollLeft - it.sx : 0), y = it.y - vy, w = it.w, h = it.h;
-      if (!bands.some((band) => x + w > band[0] && y + h > band[1] && x < band[2] && y < band[3])) continue;
+      if (!bands.some((band) => x + dx + w > band[0] && y + h > band[1] && x + dx < band[2] && y < band[3])) continue;
       if (!it.styled) styleOf(it);
-      ctx.globalAlpha = it.dim && it.dim._o !== undefined ? it.dim._o : 1;
+      ctx.globalAlpha = a * (it.dim && it.dim._o !== undefined ? it.dim._o : 1);
       if (it.kind === 'canvas') {
         if (!it.n.width) continue;
         if (it.add && !it.n.classList.contains('whole')) ctx.globalCompositeOperation = 'lighter';
@@ -1930,38 +2146,18 @@
       ctx.restore();
     }
     ctx.globalAlpha = 1;
-    /* a shelf's edges fade (dimShelf): on the black page, black over them */
-    for (const sf of paintables.shelves) {
-      const d = sf.sh._dim, y = sf.y - vy;
-      if (!d || (!d.kl && !d.kr) || y > root.height || y + sf.h < 0) continue;
-      for (const [x0, x1, k] of [[0, d.spanL, d.kl], [root.width, root.width - d.spanR, d.kr]]) {
-        if (!k) continue;
-        const g = ctx.createLinearGradient(x0, 0, x1, 0);
-        for (let i = 0; i <= 32; i++) g.addColorStop(i / 32, 'rgba(0,0,0,' + (k * 0.5 * FB.smoothRamp(1 - i / 32)).toFixed(4) + ')');
-        ctx.fillStyle = g;
-        ctx.fillRect(Math.min(x0, x1), y, Math.abs(x1 - x0), sf.h);
-      }
-    }
-    /* black from `black` to `clear`, through the given stops ([position 0-1, how much shows]), as
-       the CSS masks and covers do */
-    /* the top and bottom fades as index.html .lib-fade draws them: black from `black` to `clear`
-       (where the old fades ended), the smooth step over 1.49 times that, centred on its middle */
-    const fade = (black, clear, fromTop, floor = 0) => {
-      const k = 1 - floor;   // how black the black end is: a floor of 0.5 leaves half showing
-      const span = clear - black, a = black - span * 0.245, b = black + span * 1.245;
-      const g = ctx.createLinearGradient(0, a, 0, b);
-      for (let i = 0; i <= 32; i++) g.addColorStop(i / 32, 'rgba(0,0,0,' + (k * (1 - FB.smoothStep(i / 32))).toFixed(4) + ')');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, Math.min(a, b), root.width, Math.abs(b - a));
-      ctx.fillStyle = 'rgba(0,0,0,' + k + ')';
-      if (fromTop) { if (a > 0) ctx.fillRect(0, 0, root.width, a); } else ctx.fillRect(0, a, root.width, root.height - a);
-    };
-    if (L.viewer) return;
-    /* the fade as applyFade last set it; where it reaches black (the top edge) is read once per layout */
-    if (geo.topBlack === undefined) geo.topBlack = parseFloat(getComputedStyle(el.fadeTop).getPropertyValue('--top-black')) || 0;
-    if (fadeShown.span > 0) fade(geo.topBlack, geo.topBlack + fadeShown.span, true, fadeShown.floor);
-    const bar = el.bottom.getBoundingClientRect();
-    if (bar.height) fade(bar.bottom - root.top, bar.top - 64 - root.top, false);
+  }
+  /* the top and bottom fades as index.html .lib-fade draws them: black from `black` to `clear`
+     (where the old fades ended), the smooth step over 1.49 times that, centred on its middle */
+  function fadeBand(ctx, root, black, clear, fromTop, floor = 0) {
+    const k = 1 - floor;   // how black the black end is: a floor of 0.5 leaves half showing
+    const span = clear - black, a = black - span * 0.245, b = black + span * 1.245;
+    const g = ctx.createLinearGradient(0, a, 0, b);
+    for (let i = 0; i <= 32; i++) g.addColorStop(i / 32, 'rgba(0,0,0,' + (k * (1 - FB.smoothStep(i / 32))).toFixed(4) + ')');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, Math.min(a, b), root.width, Math.abs(b - a));
+    ctx.fillStyle = 'rgba(0,0,0,' + k + ')';
+    if (fromTop) { if (a > 0) ctx.fillRect(0, 0, root.width, a); } else ctx.fillRect(0, a, root.width, root.height - a);
   }
   /* from 872 px the back button sits beside the column (index.html .library) */
   const WIDE = window.matchMedia('(min-width: 872px)');
@@ -2018,7 +2214,8 @@
     if (on) {
       el.title.firstElementChild.textContent = on.dataset.title;
       el.title.lastElementChild.textContent = on.dataset.sub || '';
-      if (was) el.title.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
+      /* a new name where one shows (another heading, or another page's) fades in over it */
+      if (was || el.title.classList.contains('is-on')) el.title.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
     }
     el.title.classList.toggle('is-on', !!on);
     el.lib.classList.toggle('is-titled', !!on);
@@ -2133,6 +2330,7 @@
   function closeNow(fade = true) {
     if (!L.open) return;
     L.open = false;
+    endMove();
     closeViewer();
     el.query.blur();
     const gone = () => { el.lib.hidden = true; el.lib.classList.remove('is-closing', 'is-still'); };
