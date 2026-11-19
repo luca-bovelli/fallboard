@@ -1515,19 +1515,15 @@
     for (const [n, x] of sides) n.scrollLeft = x;
     return { how, card, scene, hadBar: !!bar, hadScopes: !el.scopes.hidden, q: el.query.value };
   }
-  /* the new page is in the live card: move the two */
+  /* The new page is in the live card: move the two. Not at once: first the new page sits under
+     the old one, where it will come to rest, for two frames, so the browser has drawn all of it
+     before it moves. Started off screen at once, Safari drew it only as it came into view, a
+     band at a time behind the motion, and the rest once it had stopped. Each card is a layer of
+     its own throughout (index.html .lib-card), so ending the move draws nothing again either */
   function move(m) {
-    const w = el.lib.clientWidth, live = el.card, ghost = m.card;
-    const t = m.how === 'fade' ? { duration: CROSS_MS, easing: 'ease-out', fill: 'both' } : { duration: PAGE_MS, easing: 'cubic-bezier(0.32, 0.72, 0, 1)', fill: 'both' };
-    const at = (f, o = 1) => ({ transform: 'translate3d(' + Math.round(f * w) + 'px, 0, 0)', opacity: o });
-    if (m.how === 'fade') m.anims = [ghost.animate([{ opacity: 1 }, { opacity: 0 }], t)];
-    else if (m.how === 'push') {
-      live.classList.add('is-over');
-      m.anims = [live.animate([at(1), at(0)], t), ghost.animate([at(0), at(-DRIFT, DIM)], t)];
-    } else {
-      ghost.classList.add('is-over');
-      m.anims = [ghost.animate([at(0), at(1)], t), live.animate([at(-DRIFT, DIM), at(0)], t)];
-    }
+    const live = el.card, ghost = m.card;
+    ghost.style.zIndex = '1';   // over the new page while it is drawn
+    m.ghostOver = true;
     if (m.hadBar !== !el.lib.classList.contains('no-search')) {
       m.bar = { parent: el.bottom.parentNode, next: el.bottom.nextSibling };
       (m.hadBar ? ghost : live).appendChild(el.bottom);
@@ -1538,13 +1534,36 @@
         el.clear.hidden = !m.q;
       }
     }
-    /* the search's tabs give way to the menu's button: out quickly, the button in after them */
+    /* the search's tabs give way to the menu's button: out quickly, the button in after them.
+       Held as they were until the pages move */
+    m.chrome = [];
     if (m.hadScopes && el.scopes.hidden) {
       el.scopes.hidden = false;
       m.scopes = el.scopes.animate([{ opacity: 1 }, { opacity: 0 }], { duration: CROSS_MS * 0.7, easing: 'ease-out', fill: 'forwards' });
-      el.more.animate([{ opacity: 0 }, { opacity: 1 }], { duration: CROSS_MS, delay: CROSS_MS * 0.4, easing: 'ease-out', fill: 'backwards' });
+      m.chrome.push(m.scopes, el.more.animate([{ opacity: 0 }, { opacity: 1 }], { duration: CROSS_MS, delay: CROSS_MS * 0.4, easing: 'ease-out', fill: 'backwards' }));
+      for (const a of m.chrome) a.pause();
     }
     moving = m;
+    sceneV++; kick(200);
+    const go = () => { if (moving === m && !m.anims) start(m); };
+    requestAnimationFrame(() => requestAnimationFrame(go));
+    setTimeout(go, 120);   // should frames not come (a page in the background)
+  }
+  function start(m) {
+    const w = el.lib.clientWidth, live = el.card, ghost = m.card;
+    const t = m.how === 'fade' ? { duration: CROSS_MS, easing: 'ease-out', fill: 'both' } : { duration: PAGE_MS, easing: 'cubic-bezier(0.32, 0.72, 0, 1)', fill: 'both' };
+    const at = (f, o = 1) => ({ transform: 'translate3d(' + Math.round(f * w) + 'px, 0, 0)', opacity: o });
+    if (m.how === 'fade') m.anims = [ghost.animate([{ opacity: 1 }, { opacity: 0 }], t)];
+    else if (m.how === 'push') {
+      ghost.style.zIndex = '';   // under the new page now, as it slides in over it
+      m.ghostOver = false;
+      live.classList.add('is-over');
+      m.anims = [live.animate([at(1), at(0)], t), ghost.animate([at(0), at(-DRIFT, DIM)], t)];
+    } else {
+      ghost.classList.add('is-over');
+      m.anims = [ghost.animate([at(0), at(1)], t), live.animate([at(-DRIFT, DIM), at(0)], t)];
+    }
+    for (const a of m.chrome) a.play();
     sceneUntil = performance.now() + t.duration + 50;
     kick(t.duration + 100);
     Promise.all(m.anims.map((a) => a.finished)).then(() => { if (moving === m) endMove(); }, () => {});
@@ -1554,7 +1573,8 @@
     const m = moving;
     if (!m) return;
     moving = null;
-    for (const a of m.anims) a.cancel();
+    for (const a of m.anims || []) a.cancel();
+    for (const a of m.chrome) if (a !== m.scopes) a.cancel();
     if (m.bar) {
       m.bar.parent.insertBefore(el.bottom, m.bar.next);
       el.bottom.style.display = '';
@@ -2076,7 +2096,7 @@
     const live = { P: paintables, vy: el.scroll.scrollTop, fade: fadeShown, bar: bar && bar.height ? { top: bar.top - root.top, bottom: bar.bottom - root.top } : null };
     if (!moving) { drawPage(ctx, root, bands, live, 0, 1, false); return; }
     /* two pages moving (move): the one underneath first, each where its card is now */
-    const cards = moving.how === 'push' ? [[moving.card, moving.scene], [el.card, live]] : [[el.card, live], [moving.card, moving.scene]];
+    const cards = moving.ghostOver ? [[el.card, live], [moving.card, moving.scene]] : [[moving.card, moving.scene], [el.card, live]];
     cards.forEach(([card, scene], i) => drawPage(ctx, root, bands, scene, card.getBoundingClientRect().left - root.left, parseFloat(getComputedStyle(card).opacity), i === 1));
   }
   /* a page as it shows: its nodes, its shelves' edges and its fades, moved dx across. One over

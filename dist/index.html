@@ -626,11 +626,13 @@
     --bottom-span: calc(var(--control) + 64px);
   }
   /* A page and the fades over it, as one card (library.js lift, move): it moves as one between
-     pages, its fades with it, as iOS 26 keeps a scroll edge to each screen. At rest it is no layer
-     of its own, so what is in it stacks in the library's order: Explore's pinned tabs above the
-     fades, the glass above both. While it moves it is one: the page on top casts a shadow over the
-     one it covers */
-  .lib-card { position: absolute; inset: 0; background: var(--bg); }
+     pages, its fades with it, as iOS 26 keeps a scroll edge to each screen. It is always a layer
+     of its own, drawn once: one made only for the move had to be drawn as it started, and the
+     page drawn again into the library as it ended, which on the iPhone showed as bands of it
+     arriving late. What is in it stacks in it: Explore's pinned tabs over the fades, the top bar
+     and the search bar over the whole card. While it moves the page on top casts a shadow over
+     the one it covers */
+  .lib-card { position: absolute; inset: 0; background: var(--bg); will-change: transform; }
   .lib-card.is-over { box-shadow: -12px 0 40px rgb(0 0 0 / 0.55); }
   .lib-scroll {
     position: absolute; inset: 0 0 var(--kb) 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
@@ -942,9 +944,8 @@
      out across the tabs so the list shows through them. */
   .explore { min-height: calc(100dvh - var(--stick) - var(--page-pb)); }
   .explore-mark { height: 0; margin-bottom: -12px; }   /* where the tabs sit in the page (library.js pinCheck) */
-  /* above the fades (z-index 3), with the rest of the glass: neither the page nor its card has a
-     stacking context of its own at rest, so this counts in the library's (and in the card's, with
-     its fades, while it moves) */
+  /* above the fades (z-index 3): the page has no stacking context of its own, so this counts in
+     its card's, with the fades (.lib-card) */
   .explore-tabs { position: sticky; top: var(--stick); z-index: 4; }
   /* easing into their place as they pin (library.js pinCheck sets --settle, the scroll range):
      over its first half they fall behind the page, more and more (quadratic in), and over its
