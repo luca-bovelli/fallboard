@@ -28,16 +28,17 @@ const CHROME = process.env.CHROME || [
 /* the palette comes from the file's name, as an upload's does (js/library.js FB.pieceLook): this
    name gives orchid: violet and pink */
 const NAME = process.env.ICON_NAME || 'Fallboard 5.musicxml';
-/* one octave, C4 to B4, its outer keys left unplayed, balanced by weight rather than mirrored:
-   left of the middle the left hand's E, held, the one tall light, and a short C# high above;
-   right of it the right hand's lighter notes, a G falling, an A# repeated in eighths, an F#
-   sounding at the keys. No two notes overlap. [note, start, length, staff], in sixteenths of a
-   second (divisions 8 to a quarter, 120 bpm). The card starts at AT seconds, the notes sounding
-   then landing on its bottom edge */
+/* one octave, C4 to B4, its outer keys left unplayed and the notes nearest them on D and A, clear
+   of the glass's side bevels; balanced by weight rather than mirrored: right of the middle the
+   right hand's G, held, the one tall light, and an A high beside it; left of it the left hand's
+   lighter notes, a D sounding at the keys, a short E flat, an F repeated in eighths. No two
+   notes overlap. [note, start, length, staff], in sixteenths of a second (divisions 8 to a
+   quarter, 120 bpm). The card starts at AT seconds, the notes sounding then landing on its
+   bottom edge */
 const DIV = 8;
 const NOTES = [
-  ['E4', 0, 80, 2], ['C#4', 61, 4, 2],
-  ['G4', 58, 20, 1], ...[53, 57, 61, 65, 69, 73, 77].map((t) => ['A#4', t, 3, 1]), ['F#4', 48, 8, 1],
+  ['G4', 0, 80, 1], ['A4', 61, 5, 1],
+  ['D4', 50, 6, 2], ['D#4', 57, 4, 2], ...[55, 59, 63].map((t) => ['F4', t, 3, 2]),
 ];
 const AT = 3.33;
 /* the icon: SIDE css px, a phone's Continue card, drawn at the scale that makes it 1024 px, the
