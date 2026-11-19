@@ -582,7 +582,12 @@
       --bleed-l: 0px; --bleed-r: 0px;
     }
   }
+  /* shown by the browser's own step (a swipe forward), which slid it in already: no fade (library.js present) */
+  .library.is-still { animation: none; }
   .library.is-closing { animation: lib-out var(--dur-state) ease-in forwards; pointer-events: none; }
+  /* a work's or a piece's page: no search bar, and no fade under it (library.js render) */
+  .library.no-search { --page-pb: calc(var(--lib-bottom) + 24px); }
+  .library.no-search .lib-bottom, .library.no-search .lib-fade.bottom { display: none; }
   /* the on-screen keyboard is up: it crops the library from below (library.js sets --kb, its
      height, and the list's bottom edge and the search bar ride up on it, in step with it). It
      covers the home indicator, so the search bar keeps only its edge */
@@ -776,8 +781,15 @@
   .card .roll { position: absolute; inset: 0; z-index: -1; display: block; width: 100%; height: 100%; mix-blend-mode: screen; mix-blend-mode: plus-lighter; }
   .card .roll.whole { mix-blend-mode: normal; }   /* drawn with its cover (js/roll-gl.js thumb) */
   .card .title {
-    position: absolute; top: 0; left: 0; right: 0; padding: 18px 18px 0; font-size: var(--fs-card); font-weight: 650; line-height: 1.2; letter-spacing: -0.01em;
+    position: absolute; top: 0; left: 0; right: 0; padding: 16px 16px 0; font-size: var(--fs-card); font-weight: 650; line-height: 1.2; letter-spacing: -0.01em;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  /* a light name (library.js card: most covers' ink) over a soft, wide shade in the cover's own
+     hue, deep: the bright notes and fields behind it fall back without a grey smudge. A filter,
+     not a text shadow: the two lines' clip (overflow) cut a text shadow off flat below them */
+  .card.light-ink .title { filter: drop-shadow(0 1px 8px oklch(0.2 0.03 280 / 0.5)); }
+  @supports (color: oklch(from red l c h)) {
+    .card.light-ink .title { filter: drop-shadow(0 1px 8px oklch(from var(--base) 0.2 calc(c * 0.6) h / 0.5)); }
   }
   .card-item .by { padding-inline: 2px; font-size: var(--fs-s); color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -1158,7 +1170,7 @@
 <div class="library" id="library" role="dialog" aria-modal="true" aria-label="Library" hidden>
   <div class="lib-scroll" id="libScroll"><div class="lib-page" id="libPage"></div></div>
   <div class="lib-fade top" id="libFadeTop" aria-hidden="true"></div>
-  <div class="lib-fade bottom" aria-hidden="true"></div>
+  <div class="lib-fade bottom" id="libFadeBottom" aria-hidden="true"></div>
   <input type="search" class="lib-proxy" id="libProxy" tabindex="-1" aria-hidden="true" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
 
   <header class="lib-top">

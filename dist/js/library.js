@@ -31,7 +31,7 @@
     back: $('libBack'), scopes: $('libScopes'),
     more: $('libMore'), menu: $('libMenu'), share: $('libShare'), shareNote: $('libShareNote'), upload: $('libUpload'), install: $('libInstall'),
     bottom: $('libBottom'), search: $('libSearch'), query: $('libQuery'), clear: $('libClear'),
-    menuBtn: $('menuBtn'), file: $('fileInput'), title: $('libTitle'), fadeTop: $('libFadeTop'),
+    menuBtn: $('menuBtn'), file: $('fileInput'), title: $('libTitle'), fadeTop: $('libFadeTop'), fadeBottom: $('libFadeBottom'),
   };
 
   const L = { open: false, data: null, stack: [{ view: 'home' }], query: '', tab: 'pieces', thumbs: [], prints: new Map() };
@@ -310,6 +310,8 @@
     if (under) item.appendChild(make('small', 'by', under, 'text'));
     return item;
   }
+  /* a #rrggbb colour light enough to read as light text (its luma over the middle) */
+  const lightHex = (hex) => { const n = parseInt(String(hex).slice(1, 7), 16); return 0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255) > 140; };
   function card(r) {
     /* to the piece's page (a work's, when the whole work was opened); an upload has none, so
        it opens in the player */
@@ -322,6 +324,8 @@
     r = { ...r, hands: look.hands, cover: { fields: look.fields, base: look.base, ink: look.inkNotes && look.ink } };
     b.style.setProperty('--mesh', look.mesh);
     b.style.setProperty('--ink', look.ink);
+    b.style.setProperty('--base', look.base);
+    b.classList.toggle('light-ink', lightHex(look.ink));
     b.dataset.base = look.base;
     b.dataset.field = look.field;
     const cv = thumbCanvas(r);
@@ -1125,16 +1129,23 @@
   /* ------------------------------------------------------------------ the sheet music, full screen
      A page of the preview opens the pages full screen, one at a time, each as large as the screen
      allows, with the PDF to download in the corner. Swipe, scroll or use the arrows (or the arrow
-     keys) to turn pages; the close button or Escape goes back. */
+     keys) to turn pages; the close button, Escape or a swipe back goes back. It is an entry of
+     the history of its own, over its page's (popstate) */
   function openViewer(e, index) {
     const job = engraveFor(e);
     closeViewer();
+    if (inHistory() && !history.state.viewer) {
+      const steps = stepsNow();
+      L.stack[L.stack.length - 1].top = el.scroll.scrollTop;
+      history.replaceState(entry(L.stack, steps), '', location.hash);
+      history.pushState({ ...entry(L.stack, steps + 1), viewer: { id: e.id, at: index } }, '', location.hash);
+    }
     const v = make('div', 'viewer');
     v.setAttribute('role', 'dialog');
     v.setAttribute('aria-label', 'Sheet music: ' + pieceName(e, true));
     const strip = make('div', 'viewer-pages');
     v.appendChild(strip);
-    const shut = button('round glass-material viewer-close', undefined, closeViewer);
+    const shut = button('round glass-material viewer-close', undefined, leaveViewer);
     shut.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
     shut.setAttribute('aria-label', 'Close');
     shut.title = 'Close';
@@ -1170,6 +1181,10 @@
     L.viewer.el.remove();
     L.viewer = null;
     sceneV++; kick(300);
+  }
+  /* back out of it: its entry, if it has one */
+  function leaveViewer() {
+    if (history.state && history.state.viewer) { ownStep = true; history.back(); } else closeViewer();
   }
   function turnViewer(dir) {
     const v = L.viewer;
@@ -1326,6 +1341,15 @@
     const searching = !!L.query.trim();
     el.lib.classList.toggle('is-searching', searching);
     el.scopes.hidden = !searching;
+    /* a work's or a piece's page has no search bar: the pages that list things are searched from.
+       Going back to one, it fades in with the page */
+    const bare = !searching && (now.view === 'work' || now.view === 'piece');
+    if (bare !== el.lib.classList.contains('no-search')) {
+      el.lib.classList.toggle('no-search', bare);
+      const a = document.activeElement;
+      if (bare && a && (a === el.query || a.id === 'libProxy')) a.blur();
+      if (!bare && enter) for (const n of [el.bottom, el.fadeBottom]) n.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
+    }
     /* the menu shares a page about something */
     el.share.hidden = !L.stack[L.stack.length - 1].id;
     closeMenu();
@@ -1349,15 +1373,27 @@
   /* Every step in the library (home, a composer, a search, a piece…) is an entry on the
      browser's history holding the steps up to it, and the address names it
      (#library/chopin/op-28/15, #library/~search/raindrop) for reloads, bookmarks and shared links.
-     So the back button, Escape, the browser's back, a phone's back gesture and a swipe in from
-     the left edge all go one step back the same way: out of a piece into the search it came
-     from, out of a search into the page it started on, and from the library's home to the
-     player. */
+     So the back button, Escape, the browser's back and the phone's own swipe back (Safari's, an
+     installed app's on iOS, Android's back gesture) all go one step back the same way: out of a
+     piece into the search it came from, out of a search into the page it started on, and from
+     the library's home to the player.
+     Each entry also holds how many entries below it the player's is (steps). Leaving for the
+     player goes back that far as read from the entry the browser is on, so a step the page
+     missed can't leave it short in the library or past the player.
+     Safari's swipe back skips an entry made without a tap or a key (WebKit bug 248303), so the
+     library opening as the app starts (a first visit, a link) takes over the entry it opens on
+     (steps 0: no player's entry under it), and a link's levels get entries of their own at the
+     first step taken from it. */
   const hashOf = (top) => (top.view === 'recent' ? '/recent' : top.view === 'covers' ? '/~covers' : top.view === 'search' ? '/~search/' + encodeURIComponent(top.q || '')
     : top.view === 'pieces' ? '/' + top.id + '/~pieces' : top.view === 'works' ? '/' + top.id + '/~works' : top.id ? '/' + top.id : '');
   const urlOf = (item) => '#library' + hashOf(item);
-  const entry = (stack) => ({ fb: 'library', stack: stack.map((s) => ({ ...s })) });
+  const entry = (stack, steps) => ({ fb: 'library', stack: stack.map((s) => ({ ...s })), steps });
   const inHistory = () => !!(history.state && history.state.fb === 'library');
+  /* an entry kept from before steps were written was always one per level above the player's */
+  const stepsOf = (s) => (typeof s.steps === 'number' ? s.steps : s.stack.length);
+  const stepsNow = () => (inHistory() ? stepsOf(history.state) : 0);
+  /* the player's entry, in place of the library's: the address without the library's part */
+  const toPlayer = () => history.replaceState(null, '', location.pathname + location.search);
   /* show the step on top: its search text in the field, where it was scrolled */
   function show(enter) {
     const top = L.stack[L.stack.length - 1];
@@ -1370,25 +1406,59 @@
   function push(item) {
     const cur = L.stack[L.stack.length - 1];
     cur.top = el.scroll.scrollTop;
-    if (L.open && inHistory()) history.replaceState(entry(L.stack), '', urlOf(cur));
+    let steps = inHistory() ? stepsNow() : L.stack.length;
+    if (inHistory() && !steps && L.stack.length > 1) {
+      /* a link's page, opened as the app started, is one entry: each level of it gets one now */
+      history.replaceState(entry(L.stack.slice(0, 1), 0), '', urlOf(L.stack[0]));
+      for (let i = 1; i < L.stack.length; i++) history.pushState(entry(L.stack.slice(0, i + 1), i), '', urlOf(L.stack[i]));
+      steps = L.stack.length - 1;
+    } else if (inHistory()) history.replaceState(entry(L.stack, steps), '', urlOf(cur));
     L.stack.push(item);
-    if (L.open) history.pushState(entry(L.stack), '', urlOf(item));
+    history.pushState(entry(L.stack, steps + 1), '', urlOf(item));
     show(true);
   }
+  /* A step the library takes itself eases in (the page rises, the library fades out); one the
+     browser takes alone does not: a swipe back has already slid the page in, and easing it in
+     again flashed it */
+  let ownStep = false;
   function back() {
-    if (L.viewer) { closeViewer(); return; }
+    if (L.viewer) { leaveViewer(); return; }
     if (!el.menu.hidden) { closeMenu(); return; }
-    if (inHistory()) { history.back(); return; }
-    /* no history of our own (it could not be written): step back by hand */
-    if (L.stack.length > 1) { L.stack.pop(); show(true); } else closeNow();
-  }
-  window.addEventListener('popstate', (e) => {
-    const s = e.state;
-    if (s && s.fb === 'library') {
-      L.stack = s.stack.map((x) => ({ ...x }));
-      if (!L.open) present();
+    if (stepsNow()) { ownStep = true; history.back(); return; }
+    /* nothing of the library's under this entry: step back in place */
+    if (L.stack.length > 1) {
+      L.stack.pop();
+      if (inHistory()) history.replaceState(entry(L.stack, 0), '', urlOf(L.stack[L.stack.length - 1]));
       show(true);
-    } else if (L.open) closeNow();
+    } else { toPlayer(); closeNow(); }
+  }
+  /* leaving for the player: back to the entry the library sat on. Should the history not hold
+     what its entries say (one landed on is still the library's, or the step went nowhere), it
+     carries on from there, or closes where it is */
+  let leaving = 0;
+  window.addEventListener('popstate', (e) => {
+    const s = e.state, own = ownStep;
+    ownStep = false;
+    if (leaving) {
+      if (s && s.fb === 'library' && stepsOf(s)) { history.go(-stepsOf(s)); return; }
+      clearTimeout(leaving); leaving = 0;
+      if (s && s.fb === 'library') toPlayer();
+      closeNow(true);
+      return;
+    }
+    if (s && s.fb === 'library') {
+      /* to or from the sheet music over the page it is on: only it opens or closes */
+      const top = s.stack[s.stack.length - 1];
+      if (L.open && (L.viewer || s.viewer) && s.stack.length === L.stack.length && hashOf(top) === hashOf(L.stack[L.stack.length - 1])) {
+        closeViewer();
+        if (s.viewer && L.data && L.data.byId.has(s.viewer.id)) openViewer(L.data.byId.get(s.viewer.id), s.viewer.at);
+        return;
+      }
+      closeViewer();
+      L.stack = s.stack.map((x) => ({ ...x }));
+      if (!L.open) present(own);
+      show(own);
+    } else if (L.open) closeNow(own);
   });
   function openEntry(e) {
     const d = L.data, f = d.fileOf(e);
@@ -1457,7 +1527,7 @@
     if (top.view === 'search') {
       if (!q) { back(); return; }
       top.q = v;
-      if (inHistory()) history.replaceState(entry(L.stack), '', urlOf(top));
+      if (inHistory()) history.replaceState(entry(L.stack, stepsNow()), '', urlOf(top));
       /* composers are matched here and now; pieces and works once the worker has them */
       if (L.tab === 'composers' || (S.cache.has(q) && q !== S.shownQ)) { render(false); el.scroll.scrollTop = 0; }
       else ask(q);
@@ -2022,10 +2092,12 @@
   }).observe(el.lib);
 
   /* ------------------------------------------------------------------ open and close */
-  /* the library on screen, without touching the history (a step back or forward reached it) */
-  function present() {
+  /* the library on screen, without touching the history (a step back or forward reached it);
+     faded in, unless the browser slid it in itself (a swipe forward) */
+  function present(fade = true) {
     L.open = true;
     el.lib.classList.remove('is-closing');
+    el.lib.classList.toggle('is-still', !fade);
     el.lib.hidden = false;
     FB.app.covered(true);
     readTheme();
@@ -2037,54 +2109,46 @@
     kick(600);
   }
   /* open on the library's home, whatever page it was left on: one history entry, so back from it
-     returns to the player */
-  function open() {
+     returns to the player. As the app starts (no tap to make an entry Safari's swipe keeps) it
+     takes over the entry it opens on instead, on the address it was opened with */
+  function open(starting) {
     if (L.open) return;
     L.stack = [{ view: 'home' }];
-    history.pushState(entry(L.stack), '', urlOf(L.stack[0]));
+    if (starting) history.replaceState(entry(L.stack, 0), '', location.hash.startsWith('#library') ? location.hash : urlOf(L.stack[0]));
+    else history.pushState(entry(L.stack, 1), '', urlOf(L.stack[0]));
     present();
     show(true);
   }
   /* leave for the player: back past all of the library's steps, as if each had been undone */
   function close() {
     if (!L.open) return;
-    if (inHistory()) history.go(-L.stack.length);
-    else closeNow();
+    const steps = stepsNow();
+    if (!steps) { toPlayer(); closeNow(); return; }
+    ownStep = true;
+    clearTimeout(leaving);
+    /* a step that went nowhere: close where it is */
+    leaving = setTimeout(() => { leaving = 0; ownStep = false; toPlayer(); closeNow(); }, 1000);
+    history.go(-steps);
   }
-  function closeNow() {
+  function closeNow(fade = true) {
     if (!L.open) return;
     L.open = false;
     closeViewer();
     el.query.blur();
-    el.lib.classList.add('is-closing');
-    setTimeout(() => { if (!L.open) { el.lib.hidden = true; el.lib.classList.remove('is-closing'); } }, 200);
+    const gone = () => { el.lib.hidden = true; el.lib.classList.remove('is-closing', 'is-still'); };
+    if (fade) {
+      el.lib.classList.add('is-closing');
+      setTimeout(() => { if (!L.open) gone(); }, 200);
+    } else gone();
     FB.app.covered(false);
     el.menuBtn.focus({ preventScroll: true });
   }
   el.back.addEventListener('click', back);
-  /* Installed on a phone's home screen there is no browser around the app to give the swipe in
-     from the left edge, so the library gives it: the same step back as the button. In a browser
-     the browser's own gesture already steps back through the library's history. */
-  const STANDALONE = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-  if (STANDALONE) {
-    let swipe = null;
-    el.lib.addEventListener('touchstart', (e) => {
-      const t = e.touches[0];
-      swipe = e.touches.length === 1 && t.clientX < 24 ? { x: t.clientX, y: t.clientY } : null;
-    }, { passive: true });
-    el.lib.addEventListener('touchmove', (e) => {
-      if (!swipe) return;
-      const t = e.touches[0], dx = t.clientX - swipe.x, dy = Math.abs(t.clientY - swipe.y);
-      if (dy > 40 && dy > dx) swipe = null;
-      else if (dx > 72) { swipe = null; back(); }
-    }, { passive: true });
-    el.lib.addEventListener('touchend', () => { swipe = null; }, { passive: true });
-  }
   el.file.addEventListener('change', () => { if (L.open && el.file.files && el.file.files.length) close(); }, true);
   document.addEventListener('keydown', (e) => {
     if (!L.open) return;
     if (L.viewer) {
-      if (e.key === 'Escape') { e.preventDefault(); closeViewer(); }
+      if (e.key === 'Escape') { e.preventDefault(); leaveViewer(); }
       else if (e.key === 'ArrowRight') { e.preventDefault(); turnViewer(1); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); turnViewer(-1); }
       return;
@@ -2094,7 +2158,7 @@
       e.preventDefault();
       if (typing && !L.query) el.query.blur();
       else back();
-    } else if (!typing && (e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'))) {
+    } else if (!typing && !el.lib.classList.contains('no-search') && (e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'))) {
       e.preventDefault();
       el.query.focus();
     }
@@ -2122,11 +2186,15 @@
   FB.library = { open, close, load, isOpen: () => L.open };
   const asked = /^#library(?:\/(.+))?$/.exec(location.hash);
   if (asked) {
-    /* a link into the library: the player's entry underneath, then a step for each level, so
-       back walks up through them to the player */
-    history.replaceState(null, '', location.pathname + location.search);
-    open();
-    load().then(() => { for (const item of stackFor(asked[1] && decodeURIComponent(asked[1])).slice(1)) push(item); }, () => {});
-  } else if (FB.app && FB.app.firstVisit) open();
+    /* a link into the library: its page once the catalogue is in, in the entry it opened on. Back
+       walks up its levels in place; the first step taken from it gives them entries (push) */
+    open(true);
+    load().then(() => {
+      if (!L.open || L.stack.length > 1 || stepsNow()) return;   // somewhere else already
+      L.stack = stackFor(asked[1] && decodeURIComponent(asked[1]));
+      history.replaceState(entry(L.stack, 0), '', urlOf(L.stack[L.stack.length - 1]));
+      show(false);
+    }, () => {});
+  } else if (FB.app && FB.app.firstVisit) open(true);
   else if ('requestIdleCallback' in window) requestIdleCallback(() => load().catch(() => {}));
 })();
