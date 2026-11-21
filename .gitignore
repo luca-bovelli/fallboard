@@ -4,3 +4,9 @@ Thumbs.db
 .claude/settings.local.json
 .data/
 inbox/
+promo/clips/
+promo/exports/
+promo/audio/
+promo/_preview/
+promo/_tmp/
+promo/_diag/

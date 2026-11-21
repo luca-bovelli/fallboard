@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fallboard Motion Graphics Studio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=Newsreader:ital,opsz,wght@1,6..72,500..600&display=swap">
+<style>
+  /* Exact Fallboard tokens from dist/index.html */
+  :root {
+    --bg: #000000;
+    --t1: #f5f5f7;
+    --t2: rgba(245, 245, 247, 0.78);
+    --c1: var(--t1);
+    --c2: rgba(245, 245, 247, 0.72);
+    --fill: rgb(255 255 255 / 0.18);
+    --fill-ink: rgb(0 0 0 / 0.15);
+    --cf: var(--fill);
+    --now: #ff566a;
+    --lane: #121317;
+    --glass-fill: rgb(76 76 76 / 42%);
+    --glass-filter: blur(8px) saturate(150%) brightness(1.08);
+    --glass-lighting-brightness: 1.08;
+    --shadow-float: 0 12px 40px rgb(0 0 0 / 0.42);
+    --o-inactive: 0.72;
+    --control: 44px;
+    --gap: 8px;
+    --fs-m: 14px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
+    --serif-em: "Newsreader", Georgia, serif;
+    color-scheme: dark;
+  }
+
+  /* Exact Fallboard glass material & segmented control rules from dist/index.html */
+  .glass-material {
+    position: relative;
+    isolation: isolate;
+    background: var(--glass-fill);
+    border: 0;
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+  }
+  [data-refracted="true"] { isolation: isolate; }
+  html .glass-material[data-refracted="true"] {
+    background: transparent !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .glass-refraction {
+    position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;
+    border-radius: 0 !important; display: none;
+  }
+  [data-refracted="true"] > .glass-refraction { display: block; }
+  .scene .glass-refraction { filter: contrast(0.88) brightness(0.84); }
+
+  .seg {
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; flex: none;
+    height: var(--control); padding: 2px; border-radius: 22px; color: var(--c2);
+    box-shadow: var(--shadow-float);
+  }
+  .seg::after {
+    content: ""; position: absolute; z-index: -1; top: 4px; bottom: 4px; left: 4px;
+    width: calc((100% - 4px) / var(--n, 2) - 4px); border-radius: 18px; background: var(--cf);
+    transform: translateX(calc(var(--i, 0) * (100% + 4px)));
+  }
+  .seg button {
+    position: relative; min-width: 0; height: 40px; padding: 0 18px; border: 0; border-radius: 20px; background: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--gap);
+    color: inherit; font: inherit; font-weight: 600; font-size: var(--fs-m); cursor: default;
+  }
+  .seg button[aria-pressed="true"] { color: var(--c1); }
+  .seg button svg { width: 20px; height: 20px; flex: none; color: var(--c1); opacity: var(--o-inactive); }
+  .seg button[aria-pressed="true"] svg { opacity: 1; }
+
+  /* Properly optical-sized italic serif highlight for display headlines ONLY */
+  em.hi {
+    font-family: var(--serif-em);
+    font-style: italic;
+    font-weight: 500;
+    font-variation-settings: "opsz" 60;
+    font-size: 1.08em;
+    letter-spacing: -0.01em;
+    color: var(--hi, #bafff0);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100vw; height: 100vh; overflow: hidden;
+    background: #000; color: var(--t1); font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .scene {
+    position: fixed; inset: 0; display: none; overflow: hidden; background: #000;
+  }
+  .scene.active { display: block; }
+  .scene-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; z-index: 0;
+  }
+  .blackout {
+    position: absolute; inset: 0; background: #000; z-index: 60; opacity: 0; pointer-events: none;
+  }
+
+  /* ==================== SCENE 1: 5-TAB FRANKENSTEIN ==================== */
+  #scene-pain-frankenstein { background: #000; }
+  .fk-stage {
+    position: relative; z-index: 2; width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fk-card {
+    position: absolute; border-radius: 14px;
+    box-shadow: 0 28px 72px rgba(0,0,0,0.75);
+    overflow: hidden; opacity: 0;
+  }
+  .fk-imslp {
+    width: 460px; height: 280px; background: #ede3cc; color: #2b2419;
+    border: 1px solid rgba(0,0,0,0.2);
+  }
+  body.vertical .fk-imslp { width: 290px; height: 190px; }
+  .fk-imslp-bar {
+    background: #d8ccb2; padding: 8px 12px; font-size: 10px; font-weight: 600;
+    display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.12);
+    color: #534632;
+  }
+  .fk-imslp-body {
+    padding: 18px 22px; position: relative; height: calc(100% - 30px);
+    background:
+      radial-gradient(circle at 80% 78%, rgba(120,76,30,0.16), transparent 30%),
+      repeating-linear-gradient(to bottom, transparent 0 9px, rgba(45,36,24,0.18) 9px 10px, transparent 10px 18px);
+  }
+  .fk-imslp-wait {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-1.5deg);
+    background: #fff9ec; border: 1.5px solid #9d4536; border-radius: 9px;
+    padding: 13px 16px; text-align: center; width: 84%;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.26);
+  }
+  .fk-imslp-wait h4 { font-size: 13px; color: #8c2f21; margin-bottom: 4px; }
+  .fk-imslp-wait p { font-size: 10px; color: #5c4e3d; }
+
+  .fk-yt {
+    width: 470px; height: 275px; background: #121216; color: #fff;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  body.vertical .fk-yt { width: 296px; height: 192px; }
+  .fk-yt-head {
+    padding: 9px 12px; background: #1a1a20; display: flex; align-items: center; gap: 7px;
+    font-size: 10px; color: #bbb;
+  }
+  .fk-dots { display: flex; gap: 4px; }
+  .fk-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.2); display: block; }
+  .fk-yt-screen {
+    position: relative; height: calc(100% - 30px);
+    background: linear-gradient(135deg, #1b1f29, #0e1015);
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;
+    padding: 0 16px; text-align: center;
+  }
+  .fk-skip {
+    position: absolute; right: 12px; bottom: 16px;
+    background: rgba(0,0,0,0.82); border: 1px solid rgba(255,255,255,0.35);
+    padding: 6px 11px; border-radius: 6px; font-size: 11px; font-weight: 600;
+  }
+
+  .fk-forum {
+    width: 440px; background: #181a1f; color: #f5f5f7;
+    border: 1px solid rgba(255,255,255,0.12); padding: 18px 20px;
+  }
+  body.vertical .fk-forum { width: 294px; padding: 16px; }
+  .fk-forum-meta { font-size: 10px; color: #ff6b4a; font-weight: 600; margin-bottom: 6px; }
+  .fk-forum h3 { font-size: 16px; line-height: 1.25; margin-bottom: 8px; }
+  body.vertical .fk-forum h3 { font-size: 14px; }
+  .fk-forum p { font-size: 11px; color: #a1a1a8; line-height: 1.45; }
+
+  .fk-paywall {
+    width: 400px; background: #ffffff; color: #111;
+    border-radius: 20px; padding: 22px 24px; text-align: center;
+    box-shadow: 0 32px 90px rgba(0,0,0,0.9);
+  }
+  body.vertical .fk-paywall { width: 298px; padding: 20px 18px; }
+  .fk-streak {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff1e6; color: #d95d00; padding: 5px 10px; border-radius: 99px;
+    font-size: 10px; font-weight: 700; margin-bottom: 10px;
+  }
+  .fk-paywall h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; }
+  body.vertical .fk-paywall h2 { font-size: 19px; }
+  .fk-paywall p { font-size: 12px; color: #555; margin-bottom: 14px; }
+  .fk-price {
+    background: #f5f5f7; border: 1.5px solid #0a84ff; border-radius: 12px;
+    padding: 11px 14px; display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; text-align: left;
+  }
+  .fk-price strong { font-size: 15px; display: block; }
+  .fk-price span { font-size: 10px; color: #666; }
+  .fk-cta {
+    background: #0a84ff; color: #fff; font-weight: 700; font-size: 13px;
+    padding: 11px; border-radius: 10px; width: 100%;
+  }
+
+  .fk-resolve {
+    position: absolute; inset: 0; z-index: 55;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 0 8vw; opacity: 0;
+  }
+  .fk-resolve h1 {
+    font-family: var(--font); font-weight: 700;
+    font-size: 52px; letter-spacing: -0.035em; line-height: 1.1; color: var(--t1);
+    text-wrap: balance; text-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  }
+  body.vertical .fk-resolve h1 { font-size: 30px; }
+  .fk-resolve p { margin-top: 14px; font-size: 18px; color: var(--t2); font-weight: 500; }
+  body.vertical .fk-resolve p { font-size: 14px; }
+
+  /* ==================== SCENE 2: PURIST UNO REVERSE (REAL CONTINUE-CARD MESH + GLASS.JS) ==================== */
+  .purist-center {
+    position: relative; z-index: 2; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 0 9vw; gap: 32px;
+  }
+  body.vertical .purist-center { gap: 26px; padding: 0 7vw; }
+  .purist-quote {
+    font-family: var(--font); font-weight: 700;
+    font-size: 48px; line-height: 1.14; letter-spacing: -0.035em;
+    color: var(--t1); max-width: 800px; text-wrap: balance;
+    text-shadow: 0 6px 36px rgba(5, 30, 62, 0.55);
+  }
+  body.vertical .purist-quote { font-size: 26px; line-height: 1.18; max-width: 304px; }
+  .purist-seg-wrap { display: inline-flex; justify-content: center; }
+
+  /* ==================== SCENE 3: LEDGER LINE JUMP SCARE ==================== */
+  #scene-hook-ledger { background: #0d0e11; }
+  .ledger-wrap {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  }
+  .ledger-paper {
+    width: 780px; background: #121315; border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 18px; padding: 36px 44px;
+    box-shadow: 0 32px 90px rgba(0,0,0,0.8);
+    transform-origin: 62% 38%;
+  }
+  body.vertical .ledger-paper { width: 340px; padding: 18px 16px; border-radius: 12px; }
+  .ledger-label {
+    position: absolute; bottom: 11vh; left: 50%; transform: translateX(-50%);
+    font-size: 44px; font-weight: 700; letter-spacing: -0.035em;
+    color: #fff; text-align: center; white-space: nowrap;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.9);
+  }
+  body.vertical .ledger-label { font-size: 27px; bottom: 16vh; white-space: normal; width: 88vw; }
+
+  /* ==================== SCENE 4: ENDCARD (CLEAN, ZERO PILL CLUTTER, REAL MESH + NOTES) ==================== */
+  .end-center {
+    position: relative; z-index: 2; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 0 8vw;
+  }
+  .end-icon {
+    width: 104px; height: 104px;
+    filter: drop-shadow(0 20px 52px rgba(24, 6, 48, 0.58));
+    margin-bottom: 24px;
+  }
+  body.vertical .end-icon { width: 88px; height: 88px; margin-bottom: 20px; }
+  .end-icon img { width: 100%; height: 100%; display: block; }
+  .end-title {
+    font-family: var(--font); font-weight: 700;
+    font-size: 62px; letter-spacing: -0.04em; line-height: 1;
+    color: #fff; margin-bottom: 14px;
+    text-shadow: 0 6px 32px rgba(24, 6, 48, 0.45);
+  }
+  body.vertical .end-title { font-size: 42px; margin-bottom: 12px; }
+  .end-sub {
+    font-size: 18px; color: rgba(255, 245, 252, 0.86); font-weight: 500;
+    line-height: 1.35; letter-spacing: -0.01em;
+    text-shadow: 0 2px 18px rgba(24, 6, 48, 0.45);
+  }
+  body.vertical .end-sub { font-size: 14px; }
+
+  /* ==================== SCENE 5: FEATURE BUMPER (REAL CONTINUE-CARD MESH + NOTES) ==================== */
+  .bumper-center {
+    position: relative; z-index: 2; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 0 9vw; gap: 14px;
+  }
+  .bumper-h {
+    font-family: var(--font); font-weight: 700;
+    font-size: 52px; letter-spacing: -0.035em; line-height: 1.12; color: #fff;
+    text-wrap: balance; text-shadow: 0 6px 34px rgba(0,0,0,0.42);
+  }
+  body.vertical .bumper-h { font-size: 29px; max-width: 300px; }
+  .bumper-p {
+    font-size: 18px; color: rgba(245, 245, 247, 0.82); max-width: 520px;
+    line-height: 1.35; text-wrap: balance; text-shadow: 0 2px 16px rgba(0,0,0,0.4);
+  }
+  body.vertical .bumper-p { font-size: 14px; max-width: 270px; }
+</style>
+</head>
+<body>
+
+<!-- ==================== SCENE 1: 5-TAB FRANKENSTEIN ==================== -->
+<section class="scene" id="scene-pain-frankenstein">
+  <canvas class="scene-bg" id="fkBg"></canvas>
+  <div class="fk-stage">
+    <div class="fk-card fk-imslp" id="fkCard1">
+      <div class="fk-imslp-bar">
+        <span>IMSLP2280-Chopin_Ballade_1894_scan.pdf</span>
+        <span>Page 7 of 14 · 38 MB</span>
+      </div>
+      <div class="fk-imslp-body">
+        <div class="fk-imslp-wait">
+          <h4>Please wait 15 seconds to view this file…</h4>
+          <p>Crooked 1894 scan · blurry ledger lines · no playback</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="fk-card fk-yt" id="fkCard2">
+      <div class="fk-yt-head">
+        <div class="fk-dots"><i></i><i></i><i></i></div>
+        <span>youtube.com/watch?v=chopin-tutorial-05x</span>
+      </div>
+      <div class="fk-yt-screen">
+        <div style="font-size:17px;font-weight:700;color:#fff;">Ad · Learn Piano in 3 Days!</div>
+        <div style="font-size:12px;color:#999;">Can't isolate Left Hand · Can't step one chord</div>
+        <div class="fk-skip">Skip Ad in 5…</div>
+      </div>
+    </div>
+
+    <div class="fk-card fk-forum" id="fkCard3">
+      <div class="fk-forum-meta">r/piano · 4 tabs open</div>
+      <h3>“Is Chopin Op. 23 too hard for me? What Henle level even is it?”</h3>
+      <p>Top reply: “Check Henle's site, then cross-reference IMSLP, then sync Bar 34 to 1:12 on YouTube manually…”</p>
+    </div>
+
+    <div class="fk-card fk-paywall" id="fkCard4">
+      <div class="fk-streak">🔥 Don't lose your 3-day streak!</div>
+      <h2>Unlock Left Hand Mode</h2>
+      <p>Create an account &amp; start your free trial to view page 2 of sheet music.</p>
+      <div class="fk-price">
+        <div><strong>$119.99 / year</strong><span>Auto-renews unless cancelled</span></div>
+        <span style="background:#0a84ff;color:#fff;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;">PRO</span>
+      </div>
+      <div class="fk-cta">Start 7-Day Trial</div>
+    </div>
+  </div>
+  <div class="blackout" id="fkBlack"></div>
+  <div class="fk-resolve" id="fkResolve">
+    <h1>Learning a piece shouldn’t take <em class="hi" style="--hi:#ff9ad0">five apps.</em></h1>
+    <p>Meet Fallboard.</p>
+  </div>
+</section>
+
+<!-- ==================== SCENE 2: PURIST UNO REVERSE ==================== -->
+<section class="scene" id="scene-hook-purist">
+  <canvas class="scene-bg" id="puristBg"></canvas>
+  <div class="purist-center">
+    <h1 class="purist-quote" id="puristQuote">
+      “Falling notes are for people who <em class="hi" style="--hi:#bafff0">can’t read</em> sheet music.”
+    </h1>
+    <div class="purist-seg-wrap" id="puristSegWrap">
+      <div class="seg views glass-material" id="puristSeg" role="group" aria-label="View" style="--n:2;--i:0">
+        <button type="button" id="puristRoll" aria-pressed="true">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3.45" y="3" width="4.5" height="9" rx="2"/><rect x="9.75" y="9" width="4.5" height="12" rx="2"/><rect x="16.05" y="5" width="4.5" height="7" rx="2"/></svg><span>Roll</span>
+        </button>
+        <button type="button" id="puristScore" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><defs><mask id="fb-staff-gap-p" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><ellipse cx="9.4" cy="15.85" rx="2.9" ry="2.2" transform="rotate(-22 9.4 15.85)" fill="#000" stroke="#000" stroke-width="3.6"/><path d="M11.31 15.4V5.75" stroke="#000" stroke-width="5.4"/></mask></defs><path d="M3 8.25h18M3 13.25h18M3 18.25h18" mask="url(#fb-staff-gap-p)"/><ellipse cx="9.4" cy="15.85" rx="2.9" ry="2.2" transform="rotate(-22 9.4 15.85)" fill="currentColor" stroke="none"/><path d="M11.31 15.4V5.75"/></svg><span>Score</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="blackout" id="puristBlack"></div>
+</section>
+
+<!-- ==================== SCENE 3: LEDGER LINE JUMP SCARE ==================== -->
+<section class="scene" id="scene-hook-ledger">
+  <div class="ledger-wrap">
+    <div class="ledger-paper" id="ledgerPaper">
+      <svg viewBox="0 0 1000 380" width="100%" height="auto">
+        <g stroke="#d8d2c5" stroke-width="2">
+          <line x1="60" y1="150" x2="940" y2="150"/><line x1="60" y1="170" x2="940" y2="170"/>
+          <line x1="60" y1="190" x2="940" y2="190"/><line x1="60" y1="210" x2="940" y2="210"/>
+          <line x1="60" y1="230" x2="940" y2="230"/>
+          <line x1="60" y1="290" x2="940" y2="290"/><line x1="60" y1="310" x2="940" y2="310"/>
+          <line x1="60" y1="330" x2="940" y2="330"/><line x1="60" y1="350" x2="940" y2="350"/>
+          <line x1="60" y1="370" x2="940" y2="370"/>
+        </g>
+        <g stroke="#e9e3d6" stroke-width="2.2">
+          <line x1="510" y1="130" x2="625" y2="130"/><line x1="510" y1="110" x2="625" y2="110"/>
+          <line x1="510" y1="90" x2="625" y2="90"/><line x1="510" y1="70" x2="625" y2="70"/>
+          <line x1="510" y1="50" x2="625" y2="50"/><line x1="510" y1="30" x2="625" y2="30"/>
+          <line x1="640" y1="130" x2="755" y2="130"/><line x1="640" y1="110" x2="755" y2="110"/>
+          <line x1="640" y1="90" x2="755" y2="90"/><line x1="640" y1="70" x2="755" y2="70"/>
+          <line x1="640" y1="50" x2="755" y2="50"/>
+        </g>
+        <g fill="#e9e3d6">
+          <text x="482" y="38" font-size="30" font-family="Georgia, serif">𝄪</text>
+          <text x="488" y="68" font-size="28" font-family="Georgia, serif">♯</text>
+          <text x="482" y="98" font-size="30" font-family="Georgia, serif">𝄪</text>
+          <ellipse cx="555" cy="30" rx="11" ry="8" transform="rotate(-20 555 30)"/>
+          <ellipse cx="555" cy="60" rx="11" ry="8" transform="rotate(-20 555 60)"/>
+          <ellipse cx="555" cy="90" rx="11" ry="8" transform="rotate(-20 555 90)"/>
+          <ellipse cx="578" cy="40" rx="11" ry="8" transform="rotate(-20 578 40)"/>
+          <rect x="544" y="30" width="3" height="145"/>
+          <text x="618" y="58" font-size="28" font-family="Georgia, serif">♯</text>
+          <text x="615" y="88" font-size="30" font-family="Georgia, serif">♮</text>
+          <ellipse cx="685" cy="50" rx="11" ry="8" transform="rotate(-20 685 50)"/>
+          <ellipse cx="685" cy="80" rx="11" ry="8" transform="rotate(-20 685 80)"/>
+          <ellipse cx="685" cy="110" rx="11" ry="8" transform="rotate(-20 685 110)"/>
+          <rect x="674" y="50" width="3" height="125"/>
+          <polygon points="544,175 677,175 677,165 544,165"/>
+          <polygon points="544,158 677,158 677,150 544,150"/>
+          <polygon points="544,142 677,142 677,135 544,135"/>
+          <ellipse cx="180" cy="190" rx="11" ry="8" transform="rotate(-20 180 190)"/>
+          <ellipse cx="260" cy="170" rx="11" ry="8" transform="rotate(-20 260 170)"/>
+          <ellipse cx="340" cy="150" rx="11" ry="8" transform="rotate(-20 340 150)"/>
+          <ellipse cx="420" cy="130" rx="11" ry="8" transform="rotate(-20 420 130)"/>
+          <ellipse cx="810" cy="170" rx="11" ry="8" transform="rotate(-20 810 170)"/>
+        </g>
+        <rect id="ledgerBox" x="470" y="8" width="295" height="140" rx="14"
+              fill="rgba(255,92,114,0.14)" stroke="#ff5c72" stroke-width="3.5" stroke-dasharray="10 7"/>
+      </svg>
+    </div>
+  </div>
+  <div class="ledger-label" id="ledgerLabel">What note <em class="hi" style="--hi:#ff6b7f">even is this?!</em></div>
+  <div class="blackout" id="ledgerBlack"></div>
+</section>
+
+<!-- ==================== SCENE 4: ENDCARD ==================== -->
+<section class="scene" id="scene-endcard">
+  <canvas class="scene-bg" id="endBg"></canvas>
+  <div class="end-center">
+    <div class="end-icon" id="endIcon"><img src="/icons/icon-512.png" alt="Fallboard"></div>
+    <h1 class="end-title" id="endTitle">Fallboard</h1>
+    <p class="end-sub" id="endSub">Free · No account · Works offline</p>
+  </div>
+  <div class="blackout" id="endBlack"></div>
+</section>
+
+<!-- ==================== SCENE 5: FEATURE BUMPER ==================== -->
+<section class="scene" id="scene-bumper">
+  <canvas class="scene-bg" id="bumperBg"></canvas>
+  <div class="bumper-center">
+    <h1 class="bumper-h" id="bumperH"></h1>
+    <p class="bumper-p" id="bumperP"></p>
+  </div>
+  <div class="blackout" id="bumperBlack"></div>
+</section>
+
+<!-- Fallboard's ACTUAL score parser, WebGL2 Continue-card mesh+notes renderer (roll-gl.js), and refractive glass (glass.js) -->
+<script src="/js/score.js"></script>
+<script src="/js/roll-gl.js"></script>
+<script src="/js/glass.js"></script>
+<script>
+(function () {
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, t) => a + (b - a) * clamp(t, 0, 1);
+  const seg = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+  const $ = (id) => document.getElementById(id);
+
+  // Exact Fallboard C∞ curve from dist/js/roll-gl.js
+  const smoothStep = FB.smoothStep;
+
+  // Exact solver for Fallboard's --ease: cubic-bezier(0.32, 0.72, 0, 1)
+  function easeOut(x) {
+    x = clamp(x, 0, 1);
+    if (x <= 0 || x >= 1) return x;
+    const bx = (u) => 3 * (1 - u) * (1 - u) * u * 0.32 + u * u * u;
+    const by = (u) => 3 * (1 - u) * (1 - u) * u * 0.72 + 3 * (1 - u) * u * u + u * u * u;
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 16; i++) { const m = (lo + hi) * 0.5; if (bx(m) < x) lo = m; else hi = m; }
+    return by((lo + hi) * 0.5);
+  }
+
+  /* Exact Fallboard cover palettes & meshOf from dist/js/library.js! */
+  const COVER_PALETTES = {
+    // orchid (matches Fallboard's own app icon!)
+    orchid: {
+      base: '#4d1499',
+      fields: [
+        { c: '#9b38f2', x: 84, y: 18, w: 92, h: 86, stop: 10 },
+        { c: '#ff6fb2', x: 18, y: 24, w: 88, h: 78, stop: 8 },
+        { c: '#ffd0ea', x: 10, y: 8,  w: 62, h: 52, stop: 0 },
+        { c: '#5a1aa8', x: 58, y: 86, w: 96, h: 80, stop: 14 },
+      ],
+      hands: ['#ff9ad0', '#a557ff'],
+    },
+    // lagoon (vivid deep ocean blue + cyan)
+    lagoon: {
+      base: '#05396b',
+      fields: [
+        { c: '#0a6bd8', x: 22, y: 28, w: 90, h: 82, stop: 12 },
+        { c: '#1fd3c3', x: 82, y: 72, w: 88, h: 80, stop: 8 },
+        { c: '#bafff0', x: 92, y: 90, w: 58, h: 48, stop: 0 },
+        { c: '#063e7a', x: 52, y: 14, w: 95, h: 76, stop: 14 },
+      ],
+      hands: ['#6ff0dc', '#3a86ff'],
+    },
+    // dusk (deep twilight indigo + rose + peach)
+    dusk: {
+      base: '#1d1450',
+      fields: [
+        { c: '#5b3fe0', x: 18, y: 30, w: 88, h: 84, stop: 10 },
+        { c: '#ef6aa6', x: 82, y: 22, w: 84, h: 74, stop: 8 },
+        { c: '#ffb489', x: 90, y: 82, w: 66, h: 58, stop: 4 },
+        { c: '#2a1a6e', x: 46, y: 78, w: 94, h: 82, stop: 14 },
+      ],
+      hands: ['#ffb489', '#8f63ff'],
+    },
+    // claret (deep velvet crimson + warm rose)
+    claret: {
+      base: '#470b1a',
+      fields: [
+        { c: '#8e1c36', x: 24, y: 26, w: 90, h: 84, stop: 10 },
+        { c: '#d9504e', x: 82, y: 66, w: 84, h: 76, stop: 8 },
+        { c: '#f6b388', x: 92, y: 88, w: 56, h: 48, stop: 0 },
+        { c: '#5a0f22', x: 50, y: 14, w: 96, h: 78, stop: 14 },
+      ],
+      hands: ['#f7b48a', '#e0435f'],
+    },
+  };
+
+  /* Load real Chopin Ballade No. 1 notes for Fallboard's authentic FB.rollGL.thumb Continue-card renderer:
+     - `realRoll`: the original bar-12 opening slice (t0 = 47.0)
+     - `denseRoll`: automatically picked richest multi-note chord strike at t = 0 so 5–6 notes blaze across the bottom edge! */
+  let realRoll = null, denseRoll = null;
+  function sliceRoll(sc, t0, dur = 9.0) {
+    const notes = [];
+    for (const n of sc.notes) {
+      if (n.t0 < t0 - 0.015 || n.t0 >= t0 + dur) continue;
+      const start = Math.max(0, Math.round((n.t0 - t0) * 100));
+      notes.push(
+        start,
+        Math.max(6, Math.round((Math.min(n.t1, t0 + dur) - Math.max(n.t0, t0)) * 100)),
+        n.midi,
+        n.hand
+      );
+      if (notes.length >= 360 * 4) break;
+    }
+    return { end: Math.round(dur * 100), notes };
+  }
+  window.initPromoData = async () => {
+    if (realRoll) return;
+    const xml = await (await fetch('/scores/ballade-op23.musicxml')).text();
+    const sc = await FB.parseScore(xml);
+    realRoll = sliceRoll(sc, 47.0, 9.0);
+    // Find a dramatic, SUSTAINED multi-note chord strike (4+ simultaneous notes, average duration >= 0.4s)
+    // so the falling bars look tall, stately, and luminous rather than tiny staccato dots!
+    let bestT = 47.0, bestScore = 0;
+    for (const ot of sc.onsets.both) {
+      if (ot < 10 || ot > 260) continue;
+      const chord = sc.notes.filter((n) => Math.abs(n.t0 - ot) < 0.03);
+      if (chord.length < 4) continue;
+      const hands = new Set(chord.map((n) => n.hand)).size;
+      const avgChordDur = chord.reduce((s, n) => s + (n.t1 - n.t0), 0) / chord.length;
+      const follow = sc.notes.filter((n) => n.t0 > ot && n.t0 < ot + 6.0);
+      const avgFollowDur = follow.length ? follow.reduce((s, n) => s + (n.t1 - n.t0), 0) / follow.length : 0;
+      if (avgChordDur < 0.35 || avgFollowDur < 0.28 || follow.length > 55) continue;
+      const scVal = chord.length * 14 + (hands > 1 ? 20 : 0) + Math.min(25, avgChordDur * 18) + Math.min(25, avgFollowDur * 25);
+      if (scVal > bestScore) { bestScore = scVal; bestT = ot; }
+    }
+    denseRoll = sliceRoll(sc, bestT, 8.0);
+  };
+
+  /* WebGL2 2-pass separable linear-light quadratic progressive blur + OKLCH elliptical bottom-weighted C∞ fade:
+     - Elliptical C∞ smoothStep weighted toward bottom-center (wide horizon arch reaching the bottom sides, lower at sides than center)
+     - Blur radius grows QUADRATICALLY with the fade-to-black opacity increase: sigma = uMostBlur * fadeOut * fadeOut
+     - Fades to pure black in OKLCH space (preserving hue & retaining vivid chroma in dark shadows, zero muddy sRGB grey) */
+  const oklchFade = (() => {
+    const glc = document.createElement('canvas');
+    const gl = glc.getContext('webgl2', { alpha: false, antialias: false, preserveDrawingBuffer: true });
+    if (!gl) return null;
+    const vs = `#version 300 es
+      void main() {
+        vec2 p = vec2((gl_VertexID & 1) * 2 - 1, (gl_VertexID >> 1) * 2 - 1);
+        gl_Position = vec4(p, 0.0, 1.0);
+      }`;
+    const fs = `#version 300 es
+      precision highp float;
+      uniform sampler2D uTex;
+      uniform vec2 uSize, uDir;
+      uniform vec4 uEll; // cx, cy (0=top,1=bottom), rx, ry
+      uniform vec2 uAsym; // a (dark tail), b (colored side)
+      uniform float uMostBlur, uHeatBloom, uDoFade;
+      out vec4 o;
+      vec3 dec(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
+      vec3 enc(vec3 c) { return mix(c * 12.92, 1.055 * pow(max(c, 0.0), vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
+      float smoothRamp(float t) { return t <= 0.0 ? 0.0 : exp(1.45 * (1.0 - 1.0 / t)); }
+      // Asymmetric C∞ logistic curve: 100% continuous curvature (all derivatives 0 at d=0 and d=1),
+      // steeper drop on the colored side (small b) and long velvety tail into pure black (large a).
+      float asymKeep(float d, float a, float b) {
+        if (d <= 0.0) return 1.0;
+        if (d >= 1.0) return 0.0;
+        return 1.0 / (1.0 + exp(a / (1.0 - d) - b / d));
+      }
+
+      // Exact Björn Ottosson linear sRGB <-> OKLab
+      vec3 rgbToOklab(vec3 c) {
+        float l = 0.4122214708 * c.r + 0.5363325363 * c.g + 0.0514459929 * c.b;
+        float m = 0.2119034982 * c.r + 0.6806995451 * c.g + 0.1073969566 * c.b;
+        float s = 0.0883024619 * c.r + 0.2817188376 * c.g + 0.6299787005 * c.b;
+        float l_ = pow(max(l, 0.0), 1.0 / 3.0);
+        float m_ = pow(max(m, 0.0), 1.0 / 3.0);
+        float s_ = pow(max(s, 0.0), 1.0 / 3.0);
+        return vec3(
+          0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,
+          1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
+          0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_
+        );
+      }
+      vec3 oklabToRgb(vec3 c) {
+        float l_ = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z;
+        float m_ = c.x - 0.1055613458 * c.y - 0.0638541728 * c.z;
+        float s_ = c.x - 0.0894841775 * c.y - 1.2914855480 * c.z;
+        float l = l_ * l_ * l_, m = m_ * m_ * m_, s = s_ * s_ * s_;
+        return vec3(
+          +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+          -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+          -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+        );
+      }
+      // Interleaved Gradient Noise for ±0.5 LSB triangular dithering (eliminates 8-bit black-floor contour)
+      float ign(vec2 p) { return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
+
+      void main() {
+        vec2 fc = gl_FragCoord.xy;
+        vec2 uv = vec2(fc.x / uSize.x, 1.0 - fc.y / uSize.y);
+        float d = clamp(length((uv - uEll.xy) / uEll.zw), 0.0, 1.0);
+        float keep = asymKeep(d, uAsym.x, uAsym.y);
+        float fadeOut = 1.0 - keep;
+
+        if (uDoFade > 0.5 && keep <= 0.00001) { o = vec4(0.0, 0.0, 0.0, 1.0); return; }
+
+        // Quadratic progressive blur coupled to fadeOut^2 in linear light
+        float sigma = uMostBlur * fadeOut * fadeOut;
+        vec3 lin;
+        if (sigma < 0.35) {
+          lin = dec(texture(uTex, fc / uSize).rgb);
+        } else {
+          vec3 acc = vec3(0.0); float sum = 0.0;
+          for (int i = -12; i <= 12; i++) {
+            float x = float(i) * sigma * 0.25;
+            float wgt = exp(-0.5 * float(i * i) / 18.0);
+            vec2 suv = clamp((fc + uDir * x) / uSize, vec2(0.0), vec2(1.0));
+            acc += dec(texture(uTex, suv).rgb) * wgt;
+            sum += wgt;
+          }
+          lin = acc / sum;
+        }
+
+        if (uDoFade > 0.5) {
+          // C∞-safe OKLCH fade: linear L * keep (zero infinite-slope cliff at 0!),
+          // smooth polynomial chroma boost keep * (1 + 0.45 * (1 - keep)) for vivid shadows
+          vec3 lab = rgbToOklab(lin);
+          float L = lab.x * keep;
+          float cScale = keep * (1.0 + 0.45 * (1.0 - keep));
+          lin = oklabToRgb(vec3(L, lab.y * cScale, lab.z * cScale));
+          float mn = min(min(lin.r, lin.g), lin.b);
+          if (mn < 0.0) {
+            float lum = max(0.0001, 0.2126 * lin.r + 0.7152 * lin.g + 0.0722 * lin.b);
+            float t = lum / (lum - mn);
+            lin = mix(vec3(lum), lin, t);
+          }
+
+          // Optional linear-light bottom "key heat" incandescent white bloom:
+          // Smooth elliptical smoothRamp centered at bottom edge (zero rectangular edges!),
+          // driven primarily by the notes' own luminance so the glowing bars blaze incandescent white!
+          if (uHeatBloom > 0.001) {
+            float hd = clamp(length(vec2((uv.x - 0.5) / 0.46, (1.0 - uv.y) / 0.36)), 0.0, 1.0);
+            float hEnv = smoothRamp(1.0 - hd);
+            float luma = dot(lin, vec3(0.2126, 0.7152, 0.0722));
+            float noteCore = smoothstep(0.14, 0.78, luma);
+            vec3 hotLift = (lin * 1.15 + vec3(1.0) * (0.14 + 1.65 * noteCore)) * hEnv * uHeatBloom;
+            lin += hotLift;
+          }
+
+          vec3 srgb = enc(clamp(lin, 0.0, 1.0));
+          // ±0.5 LSB triangular dither to eliminate 8-bit contour ring near #000000
+          float dither = (ign(fc) + ign(fc + vec2(17.0, 31.0)) - 1.0) / 255.0;
+          o = vec4(clamp(srgb + dither, 0.0, 1.0), 1.0);
+          return;
+        }
+        o = vec4(enc(clamp(lin, 0.0, 1.0)), 1.0);
+      }`;
+    const comp = (t, s) => { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh; };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, comp(gl.VERTEX_SHADER, vs));
+    gl.attachShader(prog, comp(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(prog);
+    const u = {};
+    for (const k of ['uTex', 'uSize', 'uDir', 'uEll', 'uAsym', 'uMostBlur', 'uHeatBloom', 'uDoFade']) u[k] = gl.getUniformLocation(prog, k);
+    const mkTex = () => {
+      const t = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      return t;
+    };
+    const tIn = mkTex(), tMid = mkTex(), fbo = gl.createFramebuffer(), vao = gl.createVertexArray();
+    return function apply(srcCanvas, cx, cy, rx, ry, a, b, mostBlurPx, heatBloom) {
+      const cw = srcCanvas.width, ch = srcCanvas.height;
+      if (glc.width !== cw || glc.height !== ch) {
+        glc.width = cw; glc.height = ch;
+        gl.bindTexture(gl.TEXTURE_2D, tMid);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, cw, ch, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      }
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tIn);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, srcCanvas);
+      gl.useProgram(prog); gl.bindVertexArray(vao); gl.viewport(0, 0, cw, ch);
+      gl.uniform1i(u.uTex, 0); gl.uniform2f(u.uSize, cw, ch);
+      gl.uniform4f(u.uEll, cx, cy, rx, ry); gl.uniform2f(u.uAsym, a, b);
+      gl.uniform1f(u.uMostBlur, mostBlurPx); gl.uniform1f(u.uHeatBloom, heatBloom);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tMid, 0);
+      gl.bindTexture(gl.TEXTURE_2D, tIn);
+      gl.uniform2f(u.uDir, 1, 0); gl.uniform1f(u.uDoFade, 0.0);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.bindTexture(gl.TEXTURE_2D, tMid);
+      gl.uniform2f(u.uDir, 0, 1); gl.uniform1f(u.uDoFade, 1.0);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      gl.bindVertexArray(null);
+      return glc;
+    };
+  })();
+
+  /* Cache the real FB.rollGL.thumb Continue-card canvas per palette & size */
+  const bgCache = new Map();
+  function getThumbBackdrop(canvasId, paletteKey, opts = {}) {
+    const c = $(canvasId);
+    const w = window.innerWidth, h = window.innerHeight, dpr = window.devicePixelRatio || 1;
+    const vert = w < h;
+    const cw = Math.round(w * dpr), ch = Math.round(h * dpr);
+    const roll = opts.denseChord && denseRoll ? denseRoll : realRoll;
+    const heat = opts.heatBloom ?? 0;
+    const key = `${canvasId}:${paletteKey}:${cw}x${ch}:${opts.ry || 0}:${opts.denseChord ? 1 : 0}:${heat}`;
+    if (bgCache.has(key)) return bgCache.get(key);
+
+    const pal = COVER_PALETTES[paletteKey] || COVER_PALETTES.orchid;
+
+    const optScale = vert ? 0.62 : 0.48;
+    const lw = Math.round(w * optScale);
+    const lh = Math.round(h * optScale);
+    const effDpr = cw / lw;
+
+    const notes = roll.notes;
+    let lo = 127, hi = 0;
+    for (let i = 0; i < notes.length; i += 4) { lo = Math.min(lo, notes[i + 2]); hi = Math.max(hi, notes[i + 2]); }
+    const whiteOf = (m) => { let n = 0; for (let k = 21; k < m; k++) if (!FB.isBlack(k)) n++; return n; };
+    const wLo = whiteOf(lo), wHi = whiteOf(hi) + 1;
+    const wSpan = Math.max(12, wHi - wLo);
+    const wMid = (wLo + wHi) * 0.5;
+    const mult = vert ? 1.85 : 2.35;
+    const totalW = wSpan * mult;
+    const span = [wMid - totalW * 0.5, wMid + totalW * 0.5];
+
+    const tmp = document.createElement('canvas');
+    tmp.style.cssText = `position:fixed;left:-9999px;top:0;width:${lw}px;height:${lh}px;pointer-events:none;`;
+    document.body.appendChild(tmp);
+    FB.rollGL.thumb(tmp, {
+      roll,
+      hands: pal.hands,
+      cover: { base: pal.base, fields: pal.fields },
+      span,
+      glass: false,
+      dpr: effDpr,
+    });
+    tmp.remove();
+
+    // Asymmetric C∞ elliptical fade: steep on colored side (b=0.40), long velvety tail to black (a=1.80)
+    const cx = 0.5;
+    const cy = opts.cy ?? 1.12;
+    const rx = opts.rx ?? (vert ? 1.55 : 1.38);
+    const ry = opts.ry ?? (vert ? 1.18 : 1.22);
+    const a = opts.a ?? 1.8;
+    const b = opts.b ?? 0.4;
+    const mostBlur = (opts.blur ?? 10) * dpr;
+    const faded = oklchFade ? oklchFade(tmp, cx, cy, rx, ry, a, b, mostBlur, heat) : tmp;
+
+    c.width = cw; c.height = ch;
+    const ctx = c.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(faded, 0, 0, cw, ch);
+
+    bgCache.set(key, c);
+    return c;
+  }
+
+  let glassPurist = null, vCounter = 1;
+  function ensureGlass() {
+    if (!glassPurist && window.FBGlass) {
+      const root = $('scene-hook-purist');
+      glassPurist = new FBGlass.GlassBackdrop({ root: () => root, reducedTransparency: () => false });
+      FBGlass.attachGlassMaterials(glassPurist, root);
+    }
+  }
+
+  function setActive(id) {
+    document.querySelectorAll('.scene').forEach((s) => s.classList.toggle('active', s.id === 'scene-' + id));
+  }
+
+  window.configureLayout = (vertical) => {
+    document.body.classList.toggle('vertical', !!vertical);
+    bgCache.clear();
+  };
+
+  window.renderScene = (sceneId, t, opts = {}) => {
+    setActive(sceneId);
+    const W = window.innerWidth, H = window.innerHeight, dpr = window.devicePixelRatio || 1;
+    const vert = document.body.classList.contains('vertical');
+
+    if (sceneId === 'pain-frankenstein') {
+      // Subtle C∞ radial backdrop on black
+      const c = $('fkBg');
+      const cw = Math.round(W * dpr), ch = Math.round(H * dpr);
+      if (c.width !== cw || c.height !== ch) {
+        c.width = cw; c.height = ch;
+        const ctx = c.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+        const g = ctx.createRadialGradient(W * 0.5, H * 0.48, 0, W * 0.5, H * 0.48, Math.max(W, H) * 0.56);
+        for (let i = 0; i <= 32; i++) g.addColorStop(i / 32, `rgba(28,30,42,${(0.62 * (1 - smoothStep(i / 32))).toFixed(4)})`);
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      }
+
+      const scaleOff = vert ? 0.28 : 0.65;
+      const cards = [
+        { el: $('fkCard1'), t0: 0.15, dx: -140 * scaleOff, dy: -70 * scaleOff, rot: -4.5 },
+        { el: $('fkCard2'), t0: 1.25, dx: 120 * scaleOff,  dy: -30 * scaleOff, rot: 3.2 },
+        { el: $('fkCard3'), t0: 2.35, dx: -80 * scaleOff,  dy: 75 * scaleOff,  rot: -2.4 },
+        { el: $('fkCard4'), t0: 3.40, dx: 0,               dy: 10 * scaleOff,  rot: 0.8 },
+      ];
+      const collapse = smoothStep(seg(t, 4.65, 5.35));
+      for (const card of cards) {
+        const p = easeOut(seg(t, card.t0, card.t0 + 0.45));
+        const sc = lerp(1.14, 1.0, p) * lerp(1, 0.78, collapse);
+        const op = p * (1 - collapse);
+        const yOff = lerp(45, 0, p);
+        card.el.style.opacity = op;
+        card.el.style.transform = `translate(${card.dx * (1 - collapse * 0.6)}px, ${(card.dy + yOff) * (1 - collapse * 0.6)}px) rotate(${card.rot * (1 - collapse)}deg) scale(${sc})`;
+      }
+      $('fkBlack').style.opacity = smoothStep(seg(t, 4.80, 5.35));
+      const resIn = smoothStep(seg(t, 5.15, 5.75));
+      const resOut = smoothStep(seg(t, 6.10, 6.50));
+      $('fkResolve').style.opacity = resIn * (1 - resOut);
+      $('fkResolve').style.transform = `translateY(${lerp(16, 0, resIn)}px)`;
+    }
+
+    else if (sceneId === 'hook-purist') {
+      ensureGlass();
+      const bg = getThumbBackdrop('puristBg', 'lagoon', {
+        cy: 1.12, rx: vert ? 1.38 : 1.26, ry: vert ? 1.08 : 1.10,
+        a: 0.65, b: 0.45, blur: 10, denseChord: true, heatBloom: 0,
+      });
+
+      const qIn = smoothStep(seg(t, 0.05, 0.68));
+      $('puristQuote').style.opacity = qIn;
+      $('puristQuote').style.transform = `translateY(${lerp(18, 0, qIn)}px)`;
+
+      const segIn = smoothStep(seg(t, 1.40, 2.0));
+      $('puristSegWrap').style.opacity = segIn;
+      $('puristSegWrap').style.transform = `translateY(${lerp(16, 0, segIn)}px)`;
+
+      const slide = easeOut(seg(t, 2.45, 2.95));
+      $('puristSeg').style.setProperty('--i', slide.toFixed(4));
+      $('puristRoll').setAttribute('aria-pressed', slide < 0.5 ? 'true' : 'false');
+      $('puristScore').setAttribute('aria-pressed', slide >= 0.5 ? 'true' : 'false');
+
+      if (glassPurist) {
+        glassPurist.update(W, H, t * 1000, (ctx) => ctx.drawImage(bg, 0, 0, W, H), String(++vCounter));
+      }
+      $('puristBlack').style.opacity = smoothStep(seg(t, 3.60, 4.0));
+    }
+
+    else if (sceneId === 'hook-ledger') {
+      const zoom = lerp(1.0, 2.15, smoothStep(seg(t, 0.25, 3.2)));
+      const shake = t > 1.8 && t < 3.2 ? Math.sin(t * 48) * 2.2 : 0;
+      $('ledgerPaper').style.transform = `scale(${zoom}) translate(${shake}px, ${-shake * 0.5}px)`;
+      $('ledgerBox').style.opacity = 0.35 + 0.65 * Math.abs(Math.sin(t * 7));
+      const lblIn = smoothStep(seg(t, 0.55, 1.1));
+      $('ledgerLabel').style.opacity = lblIn;
+      $('ledgerLabel').style.transform = `translate(-50%, ${lerp(16, 0, lblIn)}px)`;
+      $('ledgerBlack').style.opacity = smoothStep(seg(t, 3.55, 4.0));
+    }
+
+    else if (sceneId === 'endcard') {
+      getThumbBackdrop('endBg', opts.palette || 'orchid', {
+        cy: 1.12, rx: vert ? 1.35 : 1.24, ry: vert ? 1.04 : 1.06,
+        a: 0.65, b: 0.45, blur: 10,
+        denseChord: opts.denseChord ?? true,
+        heatBloom: opts.heatBloom ?? 0,
+      });
+      const iIn = smoothStep(seg(t, 0.12, 0.78));
+      $('endIcon').style.opacity = iIn;
+      $('endIcon').style.transform = `scale(${lerp(0.88, 1, iIn)}) translateY(${lerp(12, 0, iIn)}px)`;
+      const tIn = smoothStep(seg(t, 0.32, 0.96));
+      $('endTitle').style.opacity = tIn;
+      $('endTitle').style.transform = `translateY(${lerp(14, 0, tIn)}px)`;
+      const sIn = smoothStep(seg(t, 0.56, 1.22));
+      $('endSub').style.opacity = sIn;
+      $('endSub').style.transform = `translateY(${lerp(12, 0, sIn)}px)`;
+      $('endBlack').style.opacity = smoothStep(seg(t, 4.10, 4.5));
+    }
+
+    else if (sceneId === 'bumper') {
+      getThumbBackdrop('bumperBg', opts.palette || 'dusk', {
+        cy: 1.12, rx: vert ? 1.35 : 1.24, ry: vert ? 1.04 : 1.06,
+        a: 0.65, b: 0.45, blur: 10, denseChord: true, heatBloom: 0,
+      });
+      $('bumperH').innerHTML = opts.title || '';
+      $('bumperP').textContent = opts.sub || '';
+      const aIn = smoothStep(seg(t, 0.06, 0.58));
+      const aOut = smoothStep(seg(t, 1.72, 2.20));
+      const vis = aIn * (1 - aOut);
+      $('bumperH').style.opacity = vis;
+      $('bumperH').style.transform = `translateY(${lerp(14, 0, aIn)}px)`;
+      $('bumperP').style.opacity = smoothStep(seg(t, 0.22, 0.72)) * (1 - aOut);
+      $('bumperBlack').style.opacity = aOut;
+    }
+  };
+})();
+</script>
+</body>
+</html>
