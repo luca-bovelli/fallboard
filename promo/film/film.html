@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fallboard Film</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=Newsreader:ital,opsz,wght@1,6..72,500..600&display=swap">
+<style>
+  /* Fallboard's tokens (dist/index.html), the same set the signed-off stills used */
+  :root {
+    --bg: #000000;
+    --t1: #f5f5f7;
+    --t2: rgba(245, 245, 247, 0.78);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
+    --serif-em: "Newsreader", Georgia, serif;
+    --shadow-float: 0 12px 40px rgb(0 0 0 / 0.42);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100vw; height: 100vh; overflow: hidden;
+    background: #000; color: var(--t1); font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+  em.hi {
+    font-family: var(--serif-em);
+    font-style: italic;
+    font-weight: 500;
+    font-variation-settings: "opsz" 60;
+    font-size: 1.08em;
+    letter-spacing: -0.01em;
+    color: var(--hi, #bafff0);
+  }
+
+  .layer { position: absolute; inset: 0; pointer-events: none; }
+  #bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; transform-origin: center 72%; }
+  #stage { transform-origin: 0 0; }
+
+  /* ---------------------------------------------------------------- the app, floating */
+  .win {
+    position: absolute; left: 0; top: 0; overflow: hidden; background: #000;
+    transform-origin: 0 0;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.10), 0 30px 90px rgb(0 0 0 / 0.65);
+  }
+  .win iframe { position: absolute; left: 0; top: 0; border: 0; display: block; transform-origin: 0 0; background: #000; }
+
+  .tap {
+    position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%;
+    background: rgb(255 255 255 / 0.22); box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.62);
+    opacity: 0;
+  }
+  body.vertical .tap { width: 34px; height: 34px; margin: -17px 0 0 -17px; }
+
+  /* ---------------------------------------------------------------- the other tools (generic, unbranded) */
+  .prop { position: absolute; left: 0; top: 0; transform-origin: 50% 50%; opacity: 0; }
+
+  .player { background: #0d0d0f; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), 0 24px 70px rgb(0 0 0 / 0.6); }
+  .player canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: auto; filter: blur(0.35px) saturate(0.92); }
+  .player .chrome { position: absolute; left: 0; right: 0; bottom: 0; height: 30%; }
+  .player .shade { position: absolute; inset: 0; background: linear-gradient(to top, rgb(0 0 0 / 0.62), rgb(0 0 0 / 0)); }
+  .player .bar { position: absolute; left: 14px; right: 14px; bottom: 38px; height: 4px; border-radius: 2px; background: rgb(255 255 255 / 0.28); }
+  .player .done { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: #fff; }
+  .player .knob { position: absolute; top: 50%; width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; border-radius: 50%; background: #fff; }
+  .player .row { position: absolute; left: 14px; right: 14px; bottom: 10px; height: 20px; display: flex; align-items: center; gap: 14px; font: 500 12px/1 var(--font); color: rgb(255 255 255 / 0.9); font-variant-numeric: tabular-nums; }
+  .player .row svg { width: 16px; height: 16px; fill: #fff; flex: none; }
+  .player .row .sp { flex: 1; }
+  .player .menu { position: absolute; right: 12px; bottom: 50px; width: 132px; padding: 6px 0; border-radius: 10px; background: rgb(28 28 30 / 0.94); font: 500 12px/1 var(--font); color: #fff; opacity: 0; transform-origin: 100% 100%; }
+  .player .menu div { height: 26px; padding: 0 12px 0 28px; display: flex; align-items: center; position: relative; }
+  .player .menu div.on::before { content: ""; position: absolute; left: 11px; top: 50%; width: 8px; height: 4px; margin-top: -4px; border: solid #fff; border-width: 0 0 2px 2px; transform: rotate(-45deg); }
+  .player .menu div.hl { background: rgb(255 255 255 / 0.12); }
+  body.vertical .player { border-radius: 9px; }
+  body.vertical .player .bar { left: 9px; right: 9px; bottom: 26px; height: 3px; }
+  body.vertical .player .knob { width: 10px; height: 10px; margin: -5px 0 0 -5px; }
+  body.vertical .player .row { left: 9px; right: 9px; bottom: 6px; height: 16px; gap: 10px; font-size: 9.5px; }
+  body.vertical .player .row svg { width: 12px; height: 12px; }
+  body.vertical .player .menu { right: 8px; bottom: 34px; width: 100px; font-size: 9.5px; padding: 4px 0; }
+  body.vertical .player .menu div { height: 20px; padding-left: 22px; }
+  body.vertical .player .menu div.on::before { left: 8px; }
+
+  .scan { background: #ebe3cf; border-radius: 3px; overflow: hidden; box-shadow: 0 24px 70px rgb(0 0 0 / 0.6); }
+  .scan .ink { position: absolute; inset: 0; filter: url(#scanInk); }
+  .scan svg.sys { position: absolute; left: 7%; width: 86%; overflow: visible; }
+  .scan { background: #e6dbbd; }
+  .scan .ink { filter: url(#scanInk) blur(0.35px) contrast(0.9); }
+  .scan .s-title { position: absolute; left: 0; right: 0; top: 4.2%; text-align: center; font: 600 20px/1.2 Georgia, serif; color: #2a241c; letter-spacing: 0.32em; }
+  .scan .s-sub { position: absolute; left: 0; right: 0; top: 9.6%; text-align: center; font: italic 500 10px/1.2 Georgia, serif; color: #3b342a; letter-spacing: 0.06em; }
+  .scan .spine { position: absolute; left: 0; top: 0; bottom: 0; width: 16%; background: linear-gradient(to right, rgb(60 44 20 / 0.34), rgb(60 44 20 / 0)); }
+  .scan .grain { position: absolute; inset: 0; mix-blend-mode: multiply; opacity: 0.55; }
+  body.vertical .scan .s-title { font-size: 12px; }
+  body.vertical .scan .s-sub { font-size: 6.5px; }
+
+  .paywall { background: #fbfbfd; color: #111; border-radius: 18px; padding: 26px 26px 22px; box-shadow: 0 30px 90px rgb(0 0 0 / 0.7); text-align: center; font-family: var(--font); }
+  .paywall .lock { width: 40px; height: 40px; margin: 0 auto 12px; border-radius: 12px; background: #ececf1; display: grid; place-items: center; }
+  .paywall .lock svg { width: 20px; height: 20px; fill: none; stroke: #111; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .paywall h3 { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; }
+  .paywall p { margin-top: 6px; font-size: 13px; color: #55555c; line-height: 1.35; }
+  .paywall .price { margin-top: 14px; font-size: 13px; color: #111; font-weight: 600; }
+  .paywall .cta { margin-top: 12px; height: 42px; border-radius: 21px; background: #111; color: #fff; font-size: 14px; font-weight: 600; display: grid; place-items: center; }
+  .paywall .fine { margin-top: 9px; font-size: 10.5px; color: #8a8a92; }
+  body.vertical .paywall { border-radius: 14px; padding: 18px 16px 14px; }
+  body.vertical .paywall .lock { width: 30px; height: 30px; border-radius: 9px; margin-bottom: 8px; }
+  body.vertical .paywall .lock svg { width: 15px; height: 15px; }
+  body.vertical .paywall h3 { font-size: 14px; }
+  body.vertical .paywall p { font-size: 10px; }
+  body.vertical .paywall .price { font-size: 10px; margin-top: 9px; }
+  body.vertical .paywall .cta { height: 30px; font-size: 11px; margin-top: 8px; }
+  body.vertical .paywall .fine { font-size: 8px; margin-top: 6px; }
+
+  .cursor { position: absolute; left: 0; top: 0; width: 22px; height: 22px; opacity: 0; }
+  body.vertical .cursor { width: 15px; height: 15px; }
+  .cursor svg { width: 100%; height: 100%; overflow: visible; }
+
+  /* ---------------------------------------------------------------- headlines: sans, one word in the italic serif */
+  .head {
+    position: absolute; left: 0; right: 0; text-align: center; opacity: 0;
+    font-family: var(--font); font-weight: 700; color: #fff;
+    letter-spacing: -0.035em; line-height: 1.12; text-wrap: balance;
+    padding: 0 6vw;
+  }
+
+  /* ---------------------------------------------------------------- the icon and name (the signed-off endcard) */
+  .end-center {
+    position: absolute; inset: 0; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 0 8vw; transform-origin: center center;
+  }
+  .end-icon { width: 104px; height: 104px; filter: drop-shadow(0 20px 52px rgba(24, 6, 48, 0.58)); margin-bottom: 24px; }
+  body.vertical .end-icon { width: 88px; height: 88px; margin-bottom: 20px; }
+  .end-icon img { width: 100%; height: 100%; display: block; }
+  .end-title { font-family: var(--font); font-weight: 700; font-size: 62px; letter-spacing: -0.04em; line-height: 1; color: #fff; margin-bottom: 14px; text-shadow: 0 6px 32px rgba(24, 6, 48, 0.45); }
+  body.vertical .end-title { font-size: 42px; margin-bottom: 12px; }
+  .end-sub { font-size: 18px; color: rgba(255, 245, 252, 0.86); font-weight: 500; line-height: 1.35; letter-spacing: -0.01em; text-shadow: 0 2px 18px rgba(24, 6, 48, 0.45); }
+  body.vertical .end-sub { font-size: 14px; }
+
+  #black { background: #000; opacity: 0; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <!-- a photocopy: ink that clumps and breaks up a little -->
+  <filter id="scanInk" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="1.1" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<canvas id="bg"></canvas>
+
+<div class="layer" id="stage">
+  <div class="win" id="win"><iframe id="app" title="Fallboard" scrolling="no"></iframe></div>
+  <div id="taps"></div>
+
+  <div class="prop player" id="player">
+    <canvas id="vid"></canvas>
+    <div class="chrome">
+      <div class="shade"></div>
+      <div class="bar" id="vbar"><div class="done" id="vdone"></div><div class="knob" id="vknob"></div></div>
+      <div class="row">
+        <svg viewBox="0 0 24 24" id="vplay"><path d="M7 4.5v15l12.5-7.5z"/></svg>
+        <span id="vtime">0:14 / 2:33</span><span class="sp"></span>
+        <svg viewBox="0 0 24 24"><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8zm8.2 4.6-.1-2.4 2-1.6-2-3.5-2.4.9-2-1.2L15.4 3h-4l-.4 2.4-2 1.2-2.4-.9-2 3.5 2 1.6-.1 1.2.1 1.2-2 1.6 2 3.5 2.4-.9 2 1.2.4 2.4h4l.4-2.4 2-1.2 2.4.9 2-3.5-2-1.6z" fill="#fff"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="#fff" stroke-width="2"/></svg>
+      </div>
+    </div>
+    <div class="menu" id="vmenu">
+      <div>0.25</div><div id="vm50">0.5</div><div>0.75</div><div class="on" id="vm100">Normal</div><div>1.25</div><div>1.5</div>
+    </div>
+  </div>
+
+  <div class="prop scan" id="scan">
+    <div class="ink" id="scanInkBox"></div>
+    <canvas class="grain" id="grain"></canvas>
+    <div class="spine"></div>
+  </div>
+
+  <div class="prop paywall" id="paywall">
+    <div class="lock"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7"/></svg></div>
+    <h3>Unlock hand practice</h3>
+    <p>Practise the left or right hand on its own<br>with Premium.</p>
+    <div class="price">$12.99 / month</div>
+    <div class="cta">Start free trial</div>
+    <div class="fine">Cancel anytime. Renews automatically.</div>
+  </div>
+
+  <div class="cursor" id="cursor"><svg viewBox="0 0 22 22"><path d="M3 2.2v16.3l4.1-3.9 2.7 6.1 2.9-1.3-2.7-6h5.8z" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round"/></svg></div>
+</div>
+
+<div class="layer" id="endLayer" style="opacity:0">
+  <div class="end-center" id="endStage">
+    <div class="end-icon" id="endIcon"><img src="/icons/icon-512.png" alt="Fallboard"></div>
+    <h1 class="end-title" id="endTitle">Fallboard</h1>
+    <p class="end-sub" id="endSub">Free · No account · Works offline</p>
+  </div>
+</div>
+
+<div class="layer" id="topfade"></div>
+<div class="layer" id="heads"><div class="head" id="headA"></div><div class="head" id="headB"></div></div>
+<div class="layer" id="black"></div>
+
+<script src="/js/score.js"></script>
+<script src="/js/roll-gl.js"></script>
+<script src="/js/audio.js"></script>
+<script src="/promo/film/backdrop.js"></script>
+<script src="/promo/film/film.js"></script>
+</body>
+</html>

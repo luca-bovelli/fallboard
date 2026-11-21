@@ -1,0 +1,82 @@
+# The launch film (promo/film): every shot on its own runner, then the soundtrack is made from
+# what each shot played and the shots are joined. Run by hand from Actions, or with
+#   gh workflow run render-film.yml -f formats=16x9
+name: Render Film
+
+on:
+  workflow_dispatch:
+    inputs:
+      formats:
+        description: 'Formats, comma separated (16x9, 9x16)'
+        default: '16x9,9x16'
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      formats: ${{ steps.f.outputs.formats }}
+    steps:
+      - id: f
+        run: echo "formats=$(echo '${{ inputs.formats }}' | jq -Rc 'split(",") | map(gsub(" "; ""))')" >> "$GITHUB_OUTPUT"
+
+  shots:
+    needs: plan
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        format: ${{ fromJson(needs.plan.outputs.formats) }}
+        shot: [0, 1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: FFmpeg and Chromium
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          npm install --no-save playwright@1.49.1
+          npx playwright install --with-deps chromium
+      - name: Shot ${{ matrix.shot }} (${{ matrix.format }})
+        run: node promo/scripts/film.js --format=${{ matrix.format }} --shots=${{ matrix.shot }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shot-${{ matrix.format }}-${{ matrix.shot }}
+          path: promo/film/out/${{ matrix.format }}/
+
+  assemble:
+    needs: [plan, shots]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        format: ${{ fromJson(needs.plan.outputs.formats) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: FFmpeg and Chromium
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          npm install --no-save playwright@1.49.1
+          npx playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shot-${{ matrix.format }}-*
+          merge-multiple: true
+          path: promo/film/out/${{ matrix.format }}
+      - name: Soundtrack and join
+        run: |
+          node promo/scripts/film.js --format=${{ matrix.format }} --assemble
+          f=promo/exports/fallboard-${{ matrix.format }}.mp4
+          ffprobe -v error -show_entries stream=codec_type,width,height,r_frame_rate -show_entries format=duration -of compact=p=0 "$f"
+          mkdir -p promo/_preview
+          ffmpeg -v error -y -i "$f" -vf "fps=1,scale=480:-1,tile=6x7" -frames:v 1 promo/_preview/sheet-${{ matrix.format }}.jpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: film-${{ matrix.format }}
+          path: |
+            promo/exports/fallboard-${{ matrix.format }}.mp4
+            promo/_preview/sheet-${{ matrix.format }}.jpg
+            promo/film/out/${{ matrix.format }}/sound.wav
