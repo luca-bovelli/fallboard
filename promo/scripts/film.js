@@ -68,7 +68,7 @@ async function open() {
 }
 
 async function shoot(cdp) {
-  const { data } = await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, fromSurface: true });
+  const { data } = await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, fromSurface: true, clip: { x: 0, y: 0, width: VIEW.width, height: VIEW.height, scale: VIEW.dpr } });
   return Buffer.from(data, 'base64');
 }
 

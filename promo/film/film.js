@@ -450,7 +450,7 @@
      speed slider on the touch itself */
   const LEAD = 0.07, TAP = 0.09;
   const run = (from, callT, speed = 1) => (t) => from + Math.max(0, t - callT - LEAD) * speed;
-  const HANDS_PLAY = 19.55 - LEAD, SLOW = 23.05 - LEAD, RACH = 35.2 - LEAD;
+  const HANDS_PLAY = 19.2 - LEAD, SLOW = 23.05 - LEAD, RACH = 35.2 - LEAD;
   let stepped = 0, pHands = null, pSlow = null;
   const pRach = run(0, RACH);
   function plan() {
@@ -504,8 +504,8 @@
     tap(T.pause, '#playBtn');
     T.steps.forEach((s) => tap(s, '#nextBtn'));
     // hands
-    tap(18.55, '#handToggle');
-    tap(19.1, '#handSeg button[data-hand="L"]');
+    tap(18.45, '#handToggle');
+    tap(18.85, '#handSeg button[data-hand="L"]');
     tap(HANDS_PLAY, '#playBtn');
     // speed: open it, touch the 50% stop
     tap(22.55, '#speedToggle');
@@ -662,8 +662,8 @@
     cam(14.75, 1.26, (nb.x + kb.x) / 2, (nb.y + kb.y) / 2 - 10);
     cam(17.75, 1, W / 2, H / 2, 0.65);
     const ht = focusOf('#handToggle');
-    cam(18.3, 1.42, ht.x + (VERT ? 40 : 90), ht.y - (VERT ? 30 : 20));
-    cam(19.75, 1, W / 2, H / 2, 0.7);
+    cam(18.2, 1.42, ht.x + (VERT ? 40 : 90), ht.y - (VERT ? 30 : 20));
+    cam(19.4, 1, W / 2, H / 2, 0.7);
     const st = focusOf('#speedToggle');
     cam(22.3, 1.42, st.x - (VERT ? 40 : 120), st.y - (VERT ? 30 : 20));
     cam(23.6, 1, W / 2, H / 2, 0.7);
@@ -788,16 +788,16 @@
     } else if (kind === 'paper') {
       const n = noise(ctx, 0.6), f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.8;
       f.frequency.setValueAtTime(700, t); f.frequency.exponentialRampToValueAtTime(3200, t + 0.45);
-      n.connect(f); f.connect(g); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.11, t + 0.12); g.gain.setTargetAtTime(0, t + 0.3, 0.09); n.start(t); n.stop(t + 0.6);
+      n.connect(f); f.connect(g); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.32, t + 0.12); g.gain.setTargetAtTime(0, t + 0.3, 0.09); n.start(t); n.stop(t + 0.6);
     } else if (kind === 'pop') {
       const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(860, t + 0.06);
       o.connect(g); env(0.22, 0.004, 0.05); o.start(t); o.stop(t + 0.4);
     } else if (kind === 'drop') {
       const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(92, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.5);
-      o.connect(g); env(0.55, 0.01, 0.16); o.start(t); o.stop(t + 1.2);
+      o.connect(g); env(0.26, 0.01, 0.16); o.start(t); o.stop(t + 1.2);
       const n = noise(ctx, 0.5), f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 260;
       const gn = ctx.createGain(); n.connect(f); f.connect(gn); gn.connect(out);
-      gn.gain.setValueAtTime(0, t); gn.gain.linearRampToValueAtTime(0.25, t + 0.01); gn.gain.setTargetAtTime(0, t + 0.01, 0.08); n.start(t); n.stop(t + 0.5);
+      gn.gain.setValueAtTime(0, t); gn.gain.linearRampToValueAtTime(0.12, t + 0.01); gn.gain.setTargetAtTime(0, t + 0.01, 0.08); n.start(t); n.stop(t + 0.5);
     } else if (kind === 'whoosh') {
       const n = noise(ctx, 1.0), f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.1;
       f.frequency.setValueAtTime(260, t); f.frequency.exponentialRampToValueAtTime(2600, t + 0.7);
