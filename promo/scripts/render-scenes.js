@@ -13,10 +13,12 @@ const OUT9 = path.join(ROOT, 'promo', 'clips', '9x16');
 const PREV = path.join(ROOT, 'promo', '_preview');
 [OUT16, OUT9, PREV].forEach((d) => fs.mkdirSync(d, { recursive: true }));
 
-// Remove old fake YouTube clips if present
+// Remove retired/old clips if present locally
 for (const dir of [OUT16, OUT9]) {
-  const old = path.join(dir, '01-pain-youtube.mp4');
-  if (fs.existsSync(old)) fs.unlinkSync(old);
+  for (const old of ['01-pain-youtube.mp4', '02-pain-frankenstein.mp4', '04-hook-ledger.mp4', '06-bumper-step.mp4', '07-bumper-sync.mp4', '08-bumper-library.mp4']) {
+    const p = path.join(dir, old);
+    if (fs.existsSync(p)) fs.unlinkSync(p);
+  }
 }
 
 const MIME = {
@@ -72,41 +74,17 @@ function encodePipe(outFile, fps) {
   return { ff, done };
 }
 
+const FPS = 60;
 const SCENES = [
-  { name: '02-pain-frankenstein', id: 'pain-frankenstein', dur: 6.5, previewT: 3.9 },
-  { name: '03-hook-purist', id: 'hook-purist', dur: 4.0, previewT: 2.85 },
-  { name: '04-hook-ledger', id: 'hook-ledger', dur: 4.0, previewT: 2.3 },
-  { name: '05-endcard', id: 'endcard', dur: 4.5, previewT: 2.4 },
-  {
-    name: '06-bumper-step',
-    id: 'bumper',
-    dur: 2.2,
-    previewT: 1.0,
-    opts: { palette: 'dusk', title: 'Step <em class="hi" style="--hi:#ffb489">chord by chord.</em><br>Isolate either hand.', sub: 'Slow down to 25% without distorting the piano.' },
-  },
-  {
-    name: '07-bumper-sync',
-    id: 'bumper',
-    dur: 2.2,
-    previewT: 1.0,
-    opts: { palette: 'lagoon', title: 'Falling notes &amp;<br><em class="hi" style="--hi:#bafff0">engraved</em> sheet music.', sub: 'One tap switches views on the exact same bar.' },
-  },
-  {
-    name: '08-bumper-library',
-    id: 'bumper',
-    dur: 2.2,
-    previewT: 1.0,
-    opts: { palette: 'claret', title: '650+ scores. <em class="hi" style="--hi:#f7b48a">Henle levels.</em><br>Instant PDFs.', sub: 'Or drop in any MusicXML of your own.' },
-  },
+  { name: '03-hook-purist', id: 'hook-purist', dur: 3.2, previewT: 2.15 },
+  { name: '05-endcard', id: 'endcard', dur: 2.6, previewT: 1.4 },
 ];
 
-const FPS = 30;
 const PREVIEW_ONLY = process.argv.includes('--preview-only');
 const ONLY = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split(',');
-const FORMAT = process.argv.find((a) => a.startsWith('--format='))?.slice(9); // '16x9' | '9x16' | undefined (both)
+const FORMAT = process.argv.find((a) => a.startsWith('--format='))?.slice(9);
 
 async function renderFormat(browser, port, vertical) {
-  // EXACT same CSS viewport + DPR as the real Fallboard app captures!
   const ctxOpts = vertical
     ? { viewport: { width: 360, height: 640 }, deviceScaleFactor: 3 }
     : { viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1.5 };
@@ -144,7 +122,6 @@ async function renderFormat(browser, port, vertical) {
     const tStart = Date.now();
     const { ff, done } = encodePipe(outFile, FPS);
 
-    // Warm up real glass.js layout before frame 0
     await page.evaluate(([id, opts]) => window.renderScene(id, 0, opts), [sc.id, sc.opts || {}]);
     await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
 
@@ -158,7 +135,7 @@ async function renderFormat(browser, port, vertical) {
     }
     ff.stdin.end();
     await done;
-    console.log(`[${tag}] ${sc.name}.mp4 (${frames}f) in ${((Date.now() - tStart) / 1000).toFixed(1)}s`);
+    console.log(`[${tag}] ${sc.name}.mp4 (${frames}f @ ${FPS}fps) in ${((Date.now() - tStart) / 1000).toFixed(1)}s`);
   }
 
   await ctx.close();

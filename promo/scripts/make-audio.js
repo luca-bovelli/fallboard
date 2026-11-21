@@ -6,8 +6,24 @@ const { launchBrowser } = require('./browser');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const DIST = path.join(ROOT, 'dist');
+const C16 = path.join(ROOT, 'promo', 'clips', '16x9');
+const C9 = path.join(ROOT, 'promo', 'clips', '9x16');
 const OUT = path.join(ROOT, 'promo', 'audio');
 fs.mkdirSync(OUT, { recursive: true });
+
+// Remove retired audio files if present locally
+for (const old of ['pain-youtube-muffled.wav', 'pain-frankenstein-sfx.wav', 'chopin-ballade-bed.wav', 'chopin-step-demo.wav', 'rach-cs-bed.wav']) {
+  const p = path.join(OUT, old);
+  if (fs.existsSync(p)) fs.unlinkSync(p);
+}
+
+function loadEventLog(clipName) {
+  for (const dir of [C16, C9]) {
+    const p = path.join(dir, `${clipName}.events.json`);
+    if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8'));
+  }
+  return null;
+}
 
 function startServer() {
   return new Promise((resolve) => {
@@ -27,15 +43,48 @@ function startServer() {
 }
 
 (async () => {
+  const clipNames = [
+    'app-01-open-and-step',
+    'app-02-roll-to-score',
+    'app-03-color-worlds',
+    'app-04-library-henle-pdf',
+  ];
+  const logs = {};
+  for (const name of clipNames) {
+    const ev = loadEventLog(name);
+    if (!ev) throw new Error(`Missing ${name}.events.json in promo/clips/16x9 or 9x16 — run capture-app.js first!`);
+    logs[name] = ev;
+  }
+
+  // Deterministic motion-graphic scene sound specs (ZERO piano loops — pure tactile UI sound design!)
+  logs['03-hook-purist'] = {
+    fps: 60,
+    duration: 3.2,
+    clip: '03-hook-purist',
+    notes: [],
+    sfx: [
+      { t: 0.75, kind: 'tap' },
+      { t: 1.65, kind: 'toggle' },
+      { t: 2.84, kind: 'whoosh' },
+    ],
+  };
+  logs['05-endcard'] = {
+    fps: 60,
+    duration: 2.6,
+    clip: '05-endcard',
+    notes: [],
+    sfx: [
+      { t: 0.04, kind: 'resolve' },
+    ],
+  };
+
   const { srv, port } = await startServer();
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
     await page.goto(`http://127.0.0.1:${port}/credits.html`, { waitUntil: 'load' });
-    await page.addScriptTag({ url: `http://127.0.0.1:${port}/js/score.js` });
 
-    // Load samples & render WAVs via OfflineAudioContext inside browser
-    const wavs = await page.evaluate(async () => {
+    const wavs = await page.evaluate(async (allLogs) => {
       const SR = 48000;
       const NAMES = ['A', 'C', 'Ds', 'Fs'];
       const ROOTS = [];
@@ -59,101 +108,205 @@ function startServer() {
         return best;
       }
 
-      function makeHall(ctx, dur = 2.2) {
+      /* Warm studio concert hall IR:
+         - 22ms pre-delay so piano hammer transients stay crisp & intimate
+         - Warm early reflections (25..78ms)
+         - One-pole lowpass-damped diffuse stereo tail (eliminates raw white-noise metallic hiss!) */
+      function makeStudioHall(ctx, dur = 2.0) {
         const len = Math.floor(ctx.sampleRate * dur);
         const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-        let seed = 1337;
-        const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646 * 2 - 1; };
+        const preDelay = Math.floor(ctx.sampleRate * 0.022);
+        const earlyTaps = [0.028, 0.041, 0.056, 0.071];
+
         for (let ch = 0; ch < 2; ch++) {
           const d = buf.getChannelData(ch);
-          for (let i = 0; i < len; i++) {
-            const x = i / len;
-            d[i] = rnd() * Math.pow(1 - x, 2.7) * 0.4;
+          let seed = ch === 0 ? 133791 : 982451;
+          const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646 * 2 - 1; };
+
+          // Warm early reflections
+          for (let k = 0; k < earlyTaps.length; k++) {
+            const idx = Math.floor((earlyTaps[k] + ch * 0.0035) * ctx.sampleRate);
+            if (idx < len) d[idx] += (0.28 - k * 0.045) * (k % 2 ? -1 : 1);
+          }
+
+          // Lowpass-damped diffuse hall tail (alpha decays smoothly with time so highs darken naturally!)
+          let lp = 0;
+          for (let i = preDelay; i < len; i++) {
+            const x = (i - preDelay) / (len - preDelay);
+            const env = Math.pow(1 - x, 3.1) * Math.min(1, (i - preDelay) / (ctx.sampleRate * 0.035));
+            const raw = rnd() * env * 0.34;
+            const coeff = 0.24 - 0.14 * x; // warm ~2.4kHz -> ~1.1kHz damping over time
+            lp = lp + coeff * (raw - lp);
+            d[i] += lp;
           }
         }
         return buf;
       }
 
-      function setupBus(ctx, opts = {}) {
+      function setupPianoBus(ctx) {
         const comp = ctx.createDynamicsCompressor();
-        comp.threshold.value = -10; comp.ratio.value = 5; comp.attack.value = 0.003; comp.release.value = 0.25;
+        comp.threshold.value = -9;
+        comp.knee.value = 14;
+        comp.ratio.value = 3.2;
+        comp.attack.value = 0.006;
+        comp.release.value = 0.22;
         comp.connect(ctx.destination);
 
-        const master = ctx.createGain();
-        master.gain.value = opts.gain ?? 1.45;
-        master.connect(comp);
+        // Warm low-mid body + gentle anti-glare midrange dip
+        const lowShelf = ctx.createBiquadFilter();
+        lowShelf.type = 'lowshelf'; lowShelf.frequency.value = 165; lowShelf.gain.value = 2.0;
+        const midDip = ctx.createBiquadFilter();
+        midDip.type = 'peaking'; midDip.frequency.value = 2350; midDip.Q.value = 1.1; midDip.gain.value = -1.8;
+        const highRoll = ctx.createBiquadFilter();
+        highRoll.type = 'highshelf'; highRoll.frequency.value = 7800; highRoll.gain.value = -1.5;
 
-        if (opts.hall !== false) {
-          const conv = ctx.createConvolver();
-          conv.buffer = makeHall(ctx, 2.1);
-          const wet = ctx.createGain();
-          wet.gain.value = opts.wet ?? 0.18;
-          master.connect(conv);
-          conv.connect(wet);
-          wet.connect(comp);
-        }
-        return master;
+        const dry = ctx.createGain();
+        dry.gain.value = 1.28;
+        dry.connect(lowShelf);
+        lowShelf.connect(midDip);
+        midDip.connect(highRoll);
+        highRoll.connect(comp);
+
+        const conv = ctx.createConvolver();
+        conv.buffer = makeStudioHall(ctx, 2.0);
+        const wet = ctx.createGain();
+        wet.gain.value = 0.24;
+        highRoll.connect(conv);
+        conv.connect(wet);
+        wet.connect(comp);
+
+        return { pianoIn: dry, sfxIn: comp };
       }
 
-      function scheduleNote(ctx, dest, midi, when, dur, vel = 0.72, rateMul = 1) {
-        const root = nearestRoot(midi);
+      function schedulePianoNote(ctx, dest, note, cutTimes) {
+        const root = nearestRoot(note.midi);
         const buf = buffers.get(root);
-        if (!buf || when < 0) return;
+        if (!buf || note.t < 0) return;
+
         const src = ctx.createBufferSource();
         src.buffer = buf;
-        src.playbackRate.value = Math.pow(2, (midi - root) / 12) * rateMul;
+        src.playbackRate.value = Math.pow(2, (note.midi - root) / 12);
 
+        // Velocity-sensitive tone filter: soft notes are velvety warm, forte chords bloom open
+        const vel = Math.max(0.18, Math.min(1.0, note.vel || 0.72));
         const filt = ctx.createBiquadFilter();
         filt.type = 'lowpass';
-        filt.frequency.value = 1800 + Math.pow(vel, 1.4) * 14000;
+        filt.frequency.value = 1350 + Math.pow(vel, 1.55) * 11500;
 
-        const g = ctx.createGain();
-        const peak = 0.18 + Math.pow(vel, 1.5) * 0.72;
-        g.gain.setValueAtTime(0.0001, when);
-        g.gain.linearRampToValueAtTime(peak, when + 0.005);
-        const rel = 0.28 + Math.max(0, (60 - midi) / 40) * 0.45;
-        const stopAt = when + Math.max(0.08, dur);
-        g.gain.setValueAtTime(peak, Math.max(when + 0.01, stopAt));
-        g.gain.exponentialRampToValueAtTime(0.0001, stopAt + rel);
+        // Stereo soundstage: bass left (-0.34), treble right (+0.34)
+        const pan = ctx.createStereoPanner();
+        pan.pan.value = Math.max(-0.36, Math.min(0.36, ((note.midi - 60) / 36) * 0.34));
 
-        src.connect(filt); filt.connect(g); g.connect(dest);
-        src.start(when);
-        src.stop(stopAt + rel + 0.05);
-      }
+        // Natural damper release: longer in bass, cleaner in treble, damped cleanly before hard piece cuts!
+        const registerRel = 0.42 + Math.max(0, (68 - note.midi) / 48) * 0.52;
+        let stopAt = note.t + Math.max(0.08, note.dur);
+        let rel = registerRel;
 
-      function scheduleClick(ctx, dest, when, freq = 620, vol = 0.16) {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, when);
-        osc.frequency.exponentialRampToValueAtTime(freq * 0.45, when + 0.045);
-        g.gain.setValueAtTime(vol, when);
-        g.gain.exponentialRampToValueAtTime(0.0001, when + 0.055);
-        osc.connect(g); g.connect(dest);
-        osc.start(when); osc.stop(when + 0.06);
-      }
-
-      function scheduleWhoosh(ctx, dest, when, dur = 0.75, vol = 0.14) {
-        const len = Math.floor(ctx.sampleRate * dur);
-        const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-        let seed = 4242;
-        const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646 * 2 - 1; };
-        for (let c = 0; c < 2; c++) {
-          const d = buf.getChannelData(c);
-          for (let i = 0; i < len; i++) {
-            const x = i / len;
-            d[i] = rnd() * Math.sin(x * Math.PI);
+        // If this clip has an internal piece cut (app-03 at 1.4s / 2.8s), cleanly damp prior piece's tail at the cut!
+        for (const ct of cutTimes) {
+          if (note.t < ct - 0.01 && stopAt + rel > ct + 0.06) {
+            stopAt = Math.min(stopAt, ct - 0.02);
+            rel = Math.min(rel, 0.09);
           }
         }
-        const src = ctx.createBufferSource(); src.buffer = buf;
-        const bp = ctx.createBiquadFilter();
-        bp.type = 'bandpass'; bp.Q.value = 1.4;
-        bp.frequency.setValueAtTime(220, when);
-        bp.frequency.exponentialRampToValueAtTime(1400, when + dur * 0.55);
-        bp.frequency.exponentialRampToValueAtTime(320, when + dur);
-        const g = ctx.createGain(); g.gain.value = vol;
-        src.connect(bp); bp.connect(g); g.connect(dest);
-        src.start(when);
+
+        const g = ctx.createGain();
+        const peak = 0.14 + Math.pow(vel, 1.45) * 0.62;
+        g.gain.setValueAtTime(0.0001, note.t);
+        g.gain.linearRampToValueAtTime(peak, note.t + 0.005);
+        g.gain.setValueAtTime(peak, Math.max(note.t + 0.012, stopAt));
+        g.gain.exponentialRampToValueAtTime(0.0001, stopAt + rel);
+
+        src.connect(filt);
+        filt.connect(g);
+        g.connect(pan);
+        pan.connect(dest);
+        src.start(note.t);
+        src.stop(stopAt + rel + 0.04);
+      }
+
+      /* Tactile, subtle Apple-style UI sound design (never loud or harsh!) */
+      function scheduleSfx(ctx, dest, ev, idx) {
+        const when = Math.max(0.002, ev.t);
+        if (ev.kind === 'tap') {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(240, when);
+          osc.frequency.exponentialRampToValueAtTime(105, when + 0.026);
+          g.gain.setValueAtTime(0.075, when);
+          g.gain.exponentialRampToValueAtTime(0.0001, when + 0.032);
+          osc.connect(g); g.connect(dest);
+          osc.start(when); osc.stop(when + 0.038);
+        } else if (ev.kind === 'toggle') {
+          // Soft dual-harmonic glass slide click
+          for (const [f0, f1, vol] of [[440, 290, 0.065], [880, 620, 0.028]]) {
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f0, when);
+            osc.frequency.exponentialRampToValueAtTime(f1, when + 0.032);
+            g.gain.setValueAtTime(vol, when);
+            g.gain.exponentialRampToValueAtTime(0.0001, when + 0.042);
+            osc.connect(g); g.connect(dest);
+            osc.start(when); osc.stop(when + 0.05);
+          }
+        } else if (ev.kind === 'key') {
+          // Soft damped laptop keystroke click with subtle pitch variation
+          const len = Math.floor(ctx.sampleRate * 0.018);
+          const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+          const d = buf.getChannelData(0);
+          let seed = 7001 + idx * 913;
+          const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646 * 2 - 1; };
+          for (let i = 0; i < len; i++) d[i] = rnd() * Math.pow(1 - i / len, 3.2);
+          const src = ctx.createBufferSource(); src.buffer = buf;
+          const bp = ctx.createBiquadFilter();
+          bp.type = 'bandpass'; bp.Q.value = 2.2;
+          bp.frequency.value = 1450 + ((idx * 173) % 380);
+          const g = ctx.createGain(); g.gain.value = 0.085;
+          src.connect(bp); bp.connect(g); g.connect(dest);
+          src.start(when);
+        } else if (ev.kind === 'whoosh' || ev.kind === 'page') {
+          const dur = ev.kind === 'page' ? 0.28 : 0.24;
+          const len = Math.floor(ctx.sampleRate * dur);
+          const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+          let seed = 4242 + idx * 31;
+          const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646 * 2 - 1; };
+          for (let c = 0; c < 2; c++) {
+            const d = buf.getChannelData(c);
+            for (let i = 0; i < len; i++) d[i] = rnd() * Math.sin((i / len) * Math.PI);
+          }
+          const src = ctx.createBufferSource(); src.buffer = buf;
+          const bp = ctx.createBiquadFilter();
+          bp.type = 'bandpass'; bp.Q.value = 1.2;
+          bp.frequency.setValueAtTime(ev.kind === 'page' ? 320 : 210, when);
+          bp.frequency.exponentialRampToValueAtTime(ev.kind === 'page' ? 1050 : 720, when + dur * 0.5);
+          bp.frequency.exponentialRampToValueAtTime(240, when + dur);
+          const g = ctx.createGain(); g.gain.value = ev.kind === 'page' ? 0.068 : 0.058;
+          src.connect(bp); bp.connect(g); g.connect(dest);
+          src.start(when);
+        } else if (ev.kind === 'resolve') {
+          // Ultra-quiet warm harmonic breath that settles cleanly into silence (NOT a piano loop!)
+          const dur = 1.35;
+          const len = Math.floor(ctx.sampleRate * dur);
+          const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+          let seed = 88123;
+          const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646 * 2 - 1; };
+          for (let c = 0; c < 2; c++) {
+            const d = buf.getChannelData(c);
+            let lp = 0;
+            for (let i = 0; i < len; i++) {
+              const x = i / len;
+              const env = Math.sin(Math.min(1, x * 4.5) * Math.PI * 0.5) * Math.pow(1 - x, 2.4);
+              lp += 0.04 * (rnd() * env - lp);
+              d[i] = lp * 0.25;
+            }
+          }
+          const src = ctx.createBufferSource(); src.buffer = buf;
+          const g = ctx.createGain(); g.gain.value = 0.35;
+          src.connect(g); g.connect(dest);
+          src.start(when);
+        }
       }
 
       function encodeWavBase64(ab) {
@@ -184,152 +337,50 @@ function startServer() {
         return btoa(bin);
       }
 
-      const [balladeXml, revXml, rachXml] = await Promise.all([
-        fetch('/scores/ballade-op23.musicxml').then((r) => r.text()),
-        fetch('/scores/revolutionary.musicxml').then((r) => r.text()),
-        fetch('/scores/rach-cs.musicxml').then((r) => r.text()),
-      ]);
-      const ballade = await FB.parseScore(balladeXml);
-      const rev = await FB.parseScore(revXml);
-      const rach = await FB.parseScore(rachXml);
-
       const out = {};
+      for (const [name, log] of Object.entries(allLogs)) {
+        const dur = log.duration;
+        const ctx = new OfflineAudioContext(2, Math.ceil(dur * SR), SR);
+        const { pianoIn, sfxIn } = setupPianoBus(ctx);
 
-      // 1. pain-youtube-muffled.wav (6.0s)
-      {
-        const ctx = new OfflineAudioContext(2, Math.floor(6.0 * SR), SR);
-        const bus = setupBus(ctx, { gain: 1.15, hall: false });
-        // Fast segment 0..1.3s from Revolutionary Etude
-        const filt = ctx.createBiquadFilter();
-        filt.type = 'lowpass';
-        filt.frequency.setValueAtTime(4200, 0);
-        filt.frequency.setValueAtTime(680, 3.45); // muffled underwater 0.5x!
-        filt.connect(bus);
+        // Identify piece cut timestamps in multi-piece clips (e.g. app-03 at 1.4s and 2.8s)
+        const cutTimes = [];
+        let lastPiece = null;
+        for (const n of log.notes || []) {
+          if (lastPiece && n.piece !== lastPiece) cutTimes.push(n.t);
+          lastPiece = n.piece;
+        }
+        cutTimes.push(dur - 0.04);
 
-        for (const n of rev.notes) {
-          if (n.t0 >= 2.0 && n.t0 < 4.4) {
-            const w = (n.t0 - 2.0) * 0.72;
-            if (w < 1.32) scheduleNote(ctx, filt, n.midi, w, (n.t1 - n.t0) * 0.65, n.vel * 0.85);
-          }
+        for (const n of log.notes || []) {
+          schedulePianoNote(ctx, pianoIn, n, cutTimes);
         }
-        // Scrub clicks + stutters
-        scheduleClick(ctx, bus, 1.32, 780, 0.24);
-        scheduleClick(ctx, bus, 2.00, 660, 0.24);
-        scheduleClick(ctx, bus, 2.45, 740, 0.22);
-        scheduleClick(ctx, bus, 3.45, 520, 0.26);
-        // Short stutter bursts during scrub
-        for (const n of rev.notes) {
-          if (n.t0 >= 1.0 && n.t0 < 1.55) scheduleNote(ctx, filt, n.midi, 1.38 + (n.t0 - 1.0), 0.14, n.vel * 0.7);
-          if (n.t0 >= 3.2 && n.t0 < 3.65) scheduleNote(ctx, filt, n.midi, 2.06 + (n.t0 - 3.2), 0.12, n.vel * 0.7);
+        const sfxList = log.sfx || [];
+        for (let i = 0; i < sfxList.length; i++) {
+          scheduleSfx(ctx, sfxIn, sfxList[i], i);
         }
-        // Garbled slow 0.5x from 3.48 to 5.15
-        for (const n of rev.notes) {
-          if (n.t0 >= 2.0 && n.t0 < 2.95) {
-            const w = 3.48 + (n.t0 - 2.0) * 1.85;
-            if (w < 5.1) scheduleNote(ctx, filt, n.midi, w, 0.35, n.vel * 0.8, 0.992);
-          }
-        }
-        scheduleWhoosh(ctx, bus, 5.05, 0.85, 0.22);
+
+        // Gentle click-free master edge fade (8ms in, 140ms out)
         const ab = await ctx.startRendering();
-        out['pain-youtube-muffled.wav'] = encodeWavBase64(ab);
-      }
-
-      // 2. pain-frankenstein-sfx.wav (6.5s)
-      {
-        const ctx = new OfflineAudioContext(2, Math.floor(6.5 * SR), SR);
-        const bus = setupBus(ctx, { gain: 1.35, wet: 0.24 });
-        // 4 rhythmic card slams + tense low piano hits
-        const hits = [
-          [0.15, 43, 520],
-          [1.25, 46, 590],
-          [2.35, 50, 680],
-          [3.40, 54, 780],
-        ];
-        for (const [t, midi, f] of hits) {
-          scheduleClick(ctx, bus, t, f, 0.22);
-          scheduleNote(ctx, bus, midi, t, 0.45, 0.55);
-        }
-        scheduleWhoosh(ctx, bus, 4.70, 0.85, 0.24);
-        // Warm, serene G-minor resolution chord as "Meet Fallboard." appears
-        for (const m of [43, 55, 62, 67, 70, 74]) {
-          scheduleNote(ctx, bus, m, 5.20, 1.25, 0.64);
-        }
-        const ab = await ctx.startRendering();
-        out['pain-frankenstein-sfx.wav'] = encodeWavBase64(ab);
-      }
-
-      // 3. chopin-ballade-bed.wav (36.0s — iconic Ballade No. 1 theme starting from t=46.5s)
-      {
-        const ctx = new OfflineAudioContext(2, Math.floor(36.0 * SR), SR);
-        const bus = setupBus(ctx, { gain: 1.45, wet: 0.22 });
-        const startT = 46.5;
-        for (const n of ballade.notes) {
-          if (n.t0 >= startT && n.t0 < startT + 34.5) {
-            const w = n.t0 - startT + 0.15;
-            const fade = w > 31.5 ? Math.max(0.05, 1 - (w - 31.5) / 3.5) : 1;
-            scheduleNote(ctx, bus, n.midi, w, Math.min(3.5, n.t1 - n.t0), n.vel * 0.88 * fade);
+        const fadeIn = Math.floor(SR * 0.008);
+        const fadeOut = Math.floor(SR * 0.14);
+        for (let ch = 0; ch < 2; ch++) {
+          const d = ab.getChannelData(ch);
+          for (let i = 0; i < fadeIn && i < d.length; i++) d[i] *= i / fadeIn;
+          for (let i = 0; i < fadeOut && i < d.length; i++) {
+            const idx = d.length - 1 - i;
+            d[idx] *= i / fadeOut;
           }
         }
-        const ab = await ctx.startRendering();
-        out['chopin-ballade-bed.wav'] = encodeWavBase64(ab);
+        out[name + '.wav'] = encodeWavBase64(ab);
       }
-
-      // 4. chopin-step-demo.wav (15.0s — crisp onset steps then smooth play, synced to short-01)
-      {
-        const ctx = new OfflineAudioContext(2, Math.floor(15.0 * SR), SR);
-        const bus = setupBus(ctx, { gain: 1.5, wet: 0.22 });
-        const onsets = ballade.onsets.both.filter((t) => t >= 47.0);
-        // 4 clean manual steps at 0.35, 1.15, 1.95, 2.75
-        for (let k = 0; k < 4; k++) {
-          const ot = onsets[k];
-          const when = 0.35 + k * 0.8;
-          for (const n of ballade.notes) {
-            if (Math.abs(n.t0 - ot) < 0.02) {
-              scheduleNote(ctx, bus, n.midi, when, 0.72, Math.min(0.9, n.vel * 0.95));
-            }
-          }
-        }
-        // Left hand isolated gentle melody 3.8..7.0s
-        const lhStart = onsets[4];
-        for (const n of ballade.notes) {
-          if (n.hand === 1 && n.t0 >= lhStart && n.t0 < lhStart + 3.2) {
-            scheduleNote(ctx, bus, n.midi, 3.8 + (n.t0 - lhStart), Math.min(2.0, n.t1 - n.t0), n.vel * 0.9);
-          }
-        }
-        // Both hands 50% speed then normal 7.2..14.5s
-        const bothStart = lhStart + 3.2;
-        for (const n of ballade.notes) {
-          if (n.t0 >= bothStart && n.t0 < bothStart + 5.5) {
-            const w = 7.2 + (n.t0 - bothStart) * 1.25;
-            if (w < 14.3) scheduleNote(ctx, bus, n.midi, w, Math.min(2.4, (n.t1 - n.t0) * 1.25), n.vel * 0.88);
-          }
-        }
-        const ab = await ctx.startRendering();
-        out['chopin-step-demo.wav'] = encodeWavBase64(ab);
-      }
-
-      // 5. rach-cs-bed.wav (18.0s — iconic C# minor opening!)
-      {
-        const ctx = new OfflineAudioContext(2, Math.floor(18.0 * SR), SR);
-        const bus = setupBus(ctx, { gain: 1.45, wet: 0.25 });
-        for (const n of rach.notes) {
-          if (n.t0 < 16.5) {
-            const w = n.t0 + 0.15;
-            const fade = w > 14.5 ? Math.max(0.05, 1 - (w - 14.5) / 2.5) : 1;
-            scheduleNote(ctx, bus, n.midi, w, Math.min(4.0, n.t1 - n.t0), n.vel * 0.92 * fade);
-          }
-        }
-        const ab = await ctx.startRendering();
-        out['rach-cs-bed.wav'] = encodeWavBase64(ab);
-      }
-
       return out;
-    });
+    }, logs);
 
     for (const [name, b64] of Object.entries(wavs)) {
       const p = path.join(OUT, name);
       fs.writeFileSync(p, Buffer.from(b64, 'base64'));
-      console.log('Wrote audio:', name, Math.round(fs.statSync(p).size / 1024) + ' KB');
+      console.log('Wrote synced audio:', name, Math.round(fs.statSync(p).size / 1024) + ' KB');
     }
   } finally {
     await browser.close();
