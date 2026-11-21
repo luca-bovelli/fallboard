@@ -438,6 +438,10 @@
       }
       /* the notes: white-key notes first, black-key notes over them */
       const notes = sc.notes, inset = Math.min(1.5, W * 0.07);
+      /* a name sits 8 px above the note's foot, or above the keyboard while it sounds; once too
+         little of the note is left above the keyboard for that, it rides down with the note's head
+         (8 px and its capital's height below it), so it never leaves its note */
+      const nameCap = clamp(W * 0.46, 8.5, 11.5) * 0.72;
       const [bar, clk] = env.progressBounds.roll;
       for (let pass = 0; pass < 2; pass++) {
         for (let i = env.lowerT0(disp - sc.maxDur - EPS); i < notes.length && notes[i].t0 < tTop; i++) {
@@ -453,7 +457,7 @@
           const hot = n.t0 <= live + EPS && n.t1 > live + EPS, hc = hands[n.hand];
           inst.push(...noteOf(x, y1 - bh, bwid, bh, black, hc, hot));
           if (y1 - bh < h) fieldNotes.push([x, y1 - bh, bwid, Math.min(bh, h - (y1 - bh)), n.hand, y1]);
-          if (bwid >= 14 && bh >= 22) names.push([n.name, x + bwid / 2, Math.min(y1, hot ? h : y1) - 8]);
+          if (bwid >= 14 && bh >= 22) names.push([n.name, x + bwid / 2, Math.max(Math.min(y1, hot ? h : y1) - 8, y1 - bh + 8 + nameCap)]);
         }
       }
       /* the heat strip: how long each key has sounded, on a logarithm so it never grows without end,
@@ -850,17 +854,22 @@
     const grad = (a, b, cc) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, a); g.addColorStop(0.88, b); g.addColorStop(1, cc); return g; };
     const ivory = grad('#fdfdfd', '#f4f4f4', '#e6e6e6'), ivoryDown = grad('#f1f1f1', '#e7e7e7', '#dadada');
     const whitePath = (x) => rr(c, x + hair, TOP, W - hair, h - TOP, rad, rad);
+    /* a C's name at the foot of its key: grey, or (lit) white as a falling note's name is */
+    const cName = (m, x, a, lit) => {
+      if (a <= 0) return;
+      const oct = FB.midiOctave(m);
+      c.globalAlpha = a;
+      c.font = lit ? `700 ${clamp(W * 0.46, 8.5, 11.5)}px ${UI_FONT}` : `${oct === 4 ? 650 : 550} ${W < 16 ? 8 : 9.5}px ${UI_FONT}`;
+      c.fillStyle = lit ? 'rgba(255,255,255,0.86)' : oct === 4 ? '#8a8a8a' : '#a8a8a8';
+      c.fillText((W < 15 ? '' : 'C') + oct, x + W / 2, h - 6);
+      c.globalAlpha = 1;
+    };
     c.textAlign = 'center'; c.textBaseline = 'alphabetic';
     for (let i = i0; i <= i1; i++) {
       const m = WHITE_MIDI[i], x = (i - left) * W;
       c.fillStyle = pressed.has(m) && !lit.has(m) ? ivoryDown : ivory;
       whitePath(x); c.fill();
-      if (m % 12 === 0 && W >= 11) {
-        const oct = FB.midiOctave(m);
-        c.font = `${oct === 4 ? 650 : 550} ${W < 16 ? 8 : 9.5}px ${UI_FONT}`;
-        c.fillStyle = oct === 4 ? '#8a8a8a' : '#a8a8a8';
-        c.fillText((W < 15 ? '' : 'C') + oct, x + W / 2, h - 6);
-      }
+      if (m % 12 === 0 && W >= 11 && !lit.has(m)) cName(m, x, 1, false);   // a lit one's comes over its light, below
     }
     /* the fallboard's shadow */
     /* (the smooth step, spread as the 9 px linear fade it replaced, over 3.4 px above to 12.4 below) */
@@ -877,6 +886,12 @@
       else { c.globalAlpha = 0.85 * k[1]; c.fillStyle = css(hc.key); whitePath(x); c.fill(); c.globalAlpha = 1; }
     }
     if (inst.length) { keysGlass(c, w, h, inst); inst.length = 0; }
+    /* a struck C's name over its light, white in the falling notes' lettering, rather than bent by
+       the glass under it; grey again as the light fades */
+    for (let i = i0; i <= i1; i++) {
+      const m = WHITE_MIDI[i], k = lit.get(m);
+      if (k && m % 12 === 0 && W >= 11) { cName(m, (i - left) * W, 1 - k[1], false); cName(m, (i - left) * W, k[1], true); }
+    }
     /* the black keys: a soft shadow on the white keys, a dark top face lifting a little toward the
        front, a hairline where it meets the front slope */
     const side = Math.min(1.4, bw * 0.12), dpr = c.canvas.width / Math.max(1, w);
