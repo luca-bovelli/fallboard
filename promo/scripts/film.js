@@ -146,7 +146,7 @@ async function assembleMix(mix) {
   const s = await open();
   let wav;
   try {
-    wav = await s.page.evaluate(([ev, d, m]) => window.FILM.renderAudio(ev, d, m || 'A'), [events, s.info.duration + 0.5, mix]);
+    wav = await s.page.evaluate(([ev, d, m]) => window.FILM.renderAudio(window.FILM.freshEvents(ev), d, m || 'A'), [events, s.info.duration + 0.5, mix]);
   } finally { await s.close(); }
   const wavFile = path.join(OUT, `sound${mix ? '-' + mix : ''}.wav`);
   fs.writeFileSync(wavFile, Buffer.from(wav, 'base64'));

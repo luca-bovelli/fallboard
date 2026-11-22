@@ -1702,5 +1702,8 @@
     const S = A.FB.debug.S;
     return { t: +filmNow().toFixed(3), pos: +(S.playing ? S.anchorT + Math.max(0, filmNow() + base / 1000 - S.anchorCtx) * S.speed : S.t).toFixed(3), playing: S.playing, speed: S.speed, hand: S.hand, view: S.view, piece: S.meta && S.meta.id, library: A.FB.library.isOpen() };
   }
-  window.FILM = { ready, begin, frame, skip, drain, probe, renderAudio, get shots() { return shots; }, T, hits: () => ({ yt: YT_HITS, miss: MISS_HITS, fb: FB_HITS }) };
+  /* a soundtrack from shots rendered earlier: the hook's own sounds (everything but the app's piano)
+     come from the code as it is now, not from the shots' logs, so a sound-only run hears its changes */
+  const freshEvents = (ev) => (CUT === 'hook' ? [...hookEvents(), ...ev.filter((e) => !e.keep)] : ev);
+  window.FILM = { ready, begin, frame, skip, drain, freshEvents, probe, renderAudio, get shots() { return shots; }, T, hits: () => ({ yt: YT_HITS, miss: MISS_HITS, fb: FB_HITS }) };
 })();
