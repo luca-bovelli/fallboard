@@ -184,8 +184,8 @@
   }
   let hookDy = 0;
   function drawCam(t) {
-    const c = camAt(t);
-    $('stage').style.transform = `translate(0px, ${hookDy.toFixed(2)}px) translate(${c.x}px, ${c.y}px) scale(${c.s.toFixed(5)}) translate(${-c.x}px, ${-c.y}px)`;
+    const c = camAt(t), z = fbPulse(t);
+    $('stage').style.transform = `translate(0px, ${hookDy.toFixed(2)}px) translate(${FB_PZ.x}px, ${FB_PZ.y}px) scale(${z.toFixed(5)}) translate(${-FB_PZ.x}px, ${-FB_PZ.y}px) translate(${c.x}px, ${c.y}px) scale(${c.s.toFixed(5)}) translate(${-c.x}px, ${-c.y}px)`;
   }
 
   /* ------------------------------------------------------------------ the app's frame */
@@ -910,7 +910,7 @@
   /* what the search does to the picture: every miss shakes it, punches in and splits its colour, and
      it all wears on: the hand gets less steady, the colour drains, the edges darken */
   function ytFx(t) {
-    let sx = 0, sy = 0, rot = 0, punch = 0, ca = 0, m = 0;
+    let sx = 0, sy = 0, rot = 0, ca = 0, m = 0;
     BOOMS.forEach((tb, k) => {
       const u = t - tb;
       if (u < 0) return;
@@ -920,7 +920,6 @@
       sx += s * e * Math.sin(2 * Math.PI * 14 * u + k * 1.7) * 15;
       sy += s * e * Math.cos(2 * Math.PI * 11 * u + k * 2.3) * 10;
       rot += s * e * Math.sin(2 * Math.PI * 9 * u + k) * 0.8;
-      punch += s * Math.exp(-u / 0.085) * 0.055;
       ca += s * Math.exp(-u / 0.12) * 8;
     });
     const w = ease(t, HK.unpause, HK.stop, (x) => x);
@@ -929,7 +928,7 @@
     const grade = clamp(m / 16, 0, 1);
     return {
       sx: clamp(sx, -20, 20), sy: clamp(sy, -16, 16), rot: clamp(rot, -1.4, 1.4),
-      scale: 1 + 0.032 * ease(t, HK.unpause - 0.1, HK.unpause + 0.4) + Math.min(0.11, punch),
+      scale: 1 + 0.032 * ease(t, HK.unpause - 0.1, HK.unpause + 0.4) + (lungeAt(t, MISS_HITS) - 1),
       ca: Math.min(13, ca), sat: 1 - 0.42 * grade, con: 1 + 0.1 * grade, vig: grade,
     };
   }
@@ -1044,9 +1043,66 @@
     return { t0: HK.freeze + 0.1, t1: HK.unpause, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA') };
   }
   function fbHL(t) {
-    const r = fbRing, c = camAt(t), m = (x, y) => ({ x: c.x + (x - c.x) * c.s, y: c.y + (y - c.y) * c.s });
+    const r = fbRing, m = (x, y) => stageToScreen(t, { x, y });
     const p0 = m(r.cx - r.rx + 14, r.cy - 44), p1 = m(r.cx + r.rx - 14, r.cy + 16);
     return { t0: HK.steps[3] + 0.06, t1: HK.playOn, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA') };
+  }
+
+  /* the lunge: a chord (or a miss) pushes the picture in, fast and then slower and slower
+     (logarithmic in time), and its end snaps it back for the next one */
+  const lunge = (u, A, ref) => (A * Math.log(1 + u / 0.045)) / Math.log(1 + ref / 0.045);
+  function lungeAt(t, hits) {
+    let z = 0;
+    for (const h of hits) {
+      if (t < h.t || t > h.rel + 0.08) continue;
+      z += t < h.rel ? lunge(t - h.t, h.A, h.ref) : lunge(h.rel - h.t, h.A, h.ref) * (1 - easeOut(prog(t, h.rel, h.rel + 0.08)));
+    }
+    return 1 + z;
+  }
+  const seal = (hits, end) => {
+    hits.sort((a, b) => a.t - b.t);
+    hits.forEach((h, i) => { const nx = i + 1 < hits.length ? hits[i + 1].t : end; h.rel = Math.min(h.rel ?? nx, nx); });
+    return hits;
+  };
+  /* the video's right-hand chords up to the pause, found in its sound (its bars 25–27, about 1.03×
+     the score's time); after the pause only the misses lunge */
+  const YT_CHORDS = [48.38, 48.84, 49.33, 49.78, 50.25, 50.70, 50.95, 51.22, 51.44, 52.30];
+  const YT_HITS = seal(YT_CHORDS.map((s, i) => ({ t: s - 48.0, A: i === 8 ? 0.06 : 0.035, ref: 0.4, rel: s - 48.0 + (i >= 5 && i <= 7 ? 0.24 : i === 8 ? 0.94 : 0.46) })), HK.brake);
+  const MISS_HITS = seal(BOOMS.map((t, k) => ({ t, A: Math.min(0.09, 0.05 + 0.002 * k), ref: 0.4, rel: t + 0.9 })), HK.stop);
+  const YT_PZ = { x: W / 2, y: 330 }, FB_PZ = { x: W / 2, y: H * 0.62 };
+  /* Fallboard's: a big lunge on the cut, then every right-hand chord it plays (from the score, on
+     the film's clock); the found chord keeps creeping in while it is held, until play */
+  let FB_HITS = [];
+  function buildHits() {
+    const groups = new Map();
+    for (const n of etude.notes) {
+      if (n.midi < 58) continue;
+      const k = Math.round(n.t0 * 1000);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(n);
+    }
+    // (the shot's first play starts on its anchor; a play pressed later sounds LEAD after the press)
+    const sPause = FB_FROM + (HK.pause - HK.fbAudio);
+    const hits = [];
+    for (const [k, ns] of groups) {
+      if (ns.length < 3) continue;
+      const s = k / 1000, dur = Math.max(...ns.map((n) => n.t1 - n.t0)), land = Math.abs(s - LAND) < 0.01;
+      let t;
+      if (s < sPause) t = HK.fbAudio + (s - FB_FROM);
+      else if (land) { t = HK.steps[3] + 0.012; hits.push({ t: HK.playOn + LEAD, A: 0.035, ref: 0.4, rel: HK.playOn + LEAD + dur }); }
+      else if (s > LAND) t = HK.playOn + LEAD + (s - LAND);
+      else continue;
+      if (t < HK.cut + 0.6 || t > HK.end) continue;
+      hits.push({ t, A: land ? 0.05 : dur > 0.8 ? 0.06 : 0.035, ref: 0.4, rel: land ? HK.playOn : t + dur });
+    }
+    FB_HITS = seal([{ t: HK.cut, A: 0.15, ref: 0.7 }, ...hits], HK.end);
+  }
+  const fbPulse = (t) => (CUT === 'hook' && t >= HK.cut && t < HK.end + 0.1 ? lungeAt(t, FB_HITS) : 1);
+  /* a stage point to the screen, through the camera and the lunge */
+  function stageToScreen(t, p) {
+    const c = camAt(t), z = fbPulse(t);
+    const x = c.x + (p.x - c.x) * c.s, y = c.y + (p.y - c.y) * c.s;
+    return { x: FB_PZ.x + (x - FB_PZ.x) * z, y: FB_PZ.y + (y - FB_PZ.y) * z + hookDy };
   }
 
   async function drawYT(t) {
@@ -1057,9 +1113,9 @@
     const sink = ease(t, HK.stop, HK.cut, easeIn);
     $('ytFrame').style.filter = sink > 0 ? `brightness(${(1 - 0.5 * sink).toFixed(3)}) saturate(${(1 - 0.6 * sink).toFixed(3)})` : '';
     // the freeze: a bump in that keeps creeping closer, and the chord highlighted
-    const z = pauseZoom(t);
-    $('ytFrame').style.transformOrigin = `${ZO.x}px ${ZO.y}px`;
-    $('ytFrame').style.transform = z !== 1 ? `scale(${z.toFixed(5)})` : '';
+    const z = pauseZoom(t), zp = lungeAt(t, YT_HITS);
+    $('ytFrame').style.transformOrigin = '0 0';
+    $('ytFrame').style.transform = z !== 1 || zp !== 1 ? `translate(${YT_PZ.x}px, ${YT_PZ.y}px) scale(${zp.toFixed(5)}) translate(${-YT_PZ.x}px, ${-YT_PZ.y}px) translate(${ZO.x}px, ${ZO.y}px) scale(${z.toFixed(5)}) translate(${-ZO.x}px, ${-ZO.y}px)` : '';
     drawHL(t, ytHL(t));
     // the big centre icon when it pauses and plays
     const big = $('ytBig');
@@ -1145,8 +1201,7 @@
     const el = $('fbCursor');
     const vis = ease(t, HK.pause - 1.0, HK.pause - 0.8) * (1 - ease(t, HK.playOn + 0.5, HK.playOn + 0.9));
     el.style.opacity = vis.toFixed(3);
-    const p = fbCursorAt(t), sp = toStage(p), c = camAt(t);
-    const x = c.x + (sp.x - c.x) * c.s, y = c.y + (sp.y - c.y) * c.s;
+    const p = fbCursorAt(t), { x, y } = stageToScreen(t, toStage(p));
     const down = FB_PRESS.some((x0) => t >= x0 - 0.07 && t < x0 + 0.02);
     el.style.transform = `translate(${(x - 2.5).toFixed(2)}px, ${(y - 1.5).toFixed(2)}px) scale(${down ? 0.9 : 1})`;
     // the app's own hover, on whichever button is under it
@@ -1251,6 +1306,7 @@
     placeWin(WIN, WIN.r, 1);
     if (CUT === 'hook') {
       buildHook();
+      buildHits();
       hoverRules();
     } else {
       plan();
@@ -1605,5 +1661,5 @@
     const S = A.FB.debug.S;
     return { t: +filmNow().toFixed(3), pos: +(S.playing ? S.anchorT + Math.max(0, filmNow() + base / 1000 - S.anchorCtx) * S.speed : S.t).toFixed(3), playing: S.playing, speed: S.speed, hand: S.hand, view: S.view, piece: S.meta && S.meta.id, library: A.FB.library.isOpen() };
   }
-  window.FILM = { ready, begin, frame, drain, probe, renderAudio, get shots() { return shots; }, T };
+  window.FILM = { ready, begin, frame, drain, probe, renderAudio, get shots() { return shots; }, T, hits: () => ({ yt: YT_HITS, miss: MISS_HITS, fb: FB_HITS }) };
 })();
