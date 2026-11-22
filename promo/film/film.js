@@ -617,6 +617,8 @@
     if (S.hand !== o.hand) click(`#handSeg button[data-hand="${o.hand}"]`);
     S.speed = o.speed;
     if (o.ppsMul) { if (!A.__pps0) A.__pps0 = S.pps; S.pps = A.__pps0 * o.ppsMul; }
+    // the keyboard zoomed as a pinch leaves it: so many white keys across, and the app follows the notes
+    if (o.keys) { const G = D.G; G.manual = true; G.tW = G.W = G.width / o.keys; G.holdUntil = 0; }
     // close any open rail control, then open the one wanted
     doc().dispatchEvent(new A.PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' }));
     if (o.rail === 'hand') click('#handToggle');
@@ -1491,7 +1493,7 @@
   }
   async function framingFromPause() {
     placeWin(WIN, WIN.r, 1);
-    await appState({ piece: 'revolutionary', view: 'roll', hand: 'both', speed: 1, ppsMul: 1.6, pos: FB_FROM + (FRAME_T - HK.fbAudio) }, FRAME_T);
+    await appState({ piece: 'revolutionary', view: 'roll', hand: 'both', speed: 1, ppsMul: 1.6, ...(TT ? { keys: 30 } : {}), pos: FB_FROM + (FRAME_T - HK.fbAudio) }, FRAME_T);
     placeWin(WIN, WIN.r, 1);
     computeFraming();
   }
@@ -1539,7 +1541,7 @@
       head(HK.steps[3] + 0.12, HK.end - 0.15, `<em class="hi">There it is.</em>`, { y: 150 });
     }
     const D = HK.D;
-    const fb = { piece: 'revolutionary', view: 'roll', hand: 'both', speed: 1, ppsMul: 1.6 };
+    const fb = { piece: 'revolutionary', view: 'roll', hand: 'both', speed: 1, ppsMul: 1.6, ...(TT ? { keys: 30 } : {}) };
     // small shots, one runner each in the cloud. The video needs no app; each app shot starts from a
     // state set up at its start, or a moment before (pre) and run on to it unseen
     (TT ? [[0, 2.5], [2.5, 5], [5, 7.5], [7.5, 10], [10, 12], [12, HK.fbAudio]] : [[0, 2.5], [2.5, 5], [5, 7.5], [7.5, 10], [10, 12.2], [12.2, HK.fbAudio]]).forEach(([a, b], i) =>
