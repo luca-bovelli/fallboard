@@ -10,6 +10,7 @@
   const Q = new URLSearchParams(location.search);
   const FPS = +Q.get('fps') || 60, DT = 1000 / FPS;
   const CUT = Q.get('cut') || 'main';
+  const TT = CUT === 'tiktok', HOOKY = CUT === 'hook' || TT;   // tiktok: the hook again, 9:16, as a phone shows it
   const VERT = (Q.get('format') || '16x9') === '9x16';
   document.body.classList.toggle('vertical', VERT);
   const W = window.innerWidth, H = window.innerHeight;
@@ -52,12 +53,13 @@
     scan: { w: 372, h: 482, cx: 884, cy: 420, rot: 2.6 },
     pay: { w: 330, cx: 640, cy: 438 },
   };
+  if (TT) LAY.app = { w: 390, h: (640 * 390) / 360 };   // a phone's width, the frame's shape
   let WIN = (() => {
     const s = LAY.win.s, w = LAY.app.w * s, h = LAY.app.h * s;
     return { x: (W - w) / 2, y: H - h - LAY.win.bottom, w, h, s, r: LAY.win.r };
   })();
 
-  if (CUT === 'hook') WIN = { x: 0, y: 0, w: W, h: H, s: W / LAY.app.w, r: 0 };
+  if (HOOKY) WIN = { x: 0, y: 0, w: W, h: H, s: W / LAY.app.w, r: 0 };
 
   /* ------------------------------------------------------------------ the piece and its plan */
   const P0 = 14.55;          // the Revolutionary Étude, bar 9: the left hand's run into the theme
@@ -159,7 +161,7 @@
       if (k === 0) { const hb = $('headHalo'); hb.style.top = h.y + 'px'; }
     });
     const hb = $('headHalo');
-    hb.style.opacity = (CUT === 'hook' ? halo : 0).toFixed(3);
+    hb.style.opacity = (HOOKY ? halo : 0).toFixed(3);
   }
 
   /* what the camera pushes up under the headlines fades to black there, on Fallboard's C∞ curve */
@@ -185,7 +187,7 @@
   let hookDy = 0;
   /* the camera as screen = p * s + (tx, ty) */
   function viewAt(t) {
-    if (CUT === 'hook') return hookView(t);
+    if (HOOKY) return hookView(t);
     const c = camAt(t);
     return { s: c.s, tx: c.x * (1 - c.s), ty: c.y * (1 - c.s) };
   }
@@ -640,7 +642,7 @@
     curShot = shots[i];
     const t0 = curShot.pre ?? curShot.a;
     taps.length = 0; $('taps').textContent = '';
-    if (CUT === 'hook') { fbView = null; camKeys.length = 0; }
+    if (HOOKY) { fbView = null; camKeys.length = 0; }
     scroll = null;
     log = [];
     if (curShot.setup) await curShot.setup(t0);
@@ -672,9 +674,10 @@
   }
 
   function compose(t) {
-    if (CUT === 'hook') {
+    if (HOOKY) {
       const inYT = t < HK.cut;
-      $('yt').style.display = inYT ? 'block' : 'none';
+      $('yt').style.display = inYT && !TT ? 'block' : 'none';
+      $('myt').style.display = inYT && TT ? 'block' : 'none';
       $('topfade').style.display = 'none';
       if (inYT) {
         $('endLayer').style.opacity = 0;
@@ -684,10 +687,11 @@
         $('keys').style.display = 'none';
         $('fbCursor').style.opacity = 0; $('fxWash').style.opacity = 0; $('stage').style.filter = '';
         drawHeads(t);
-        return drawYT(t);
+        return TT ? drawMYT(t) : drawYT(t);
       }
-      $('yt').style.filter = '';
+      $('yt').style.filter = ''; $('myt').style.filter = '';
       hookDy = drawFb(t);
+      if (TT) drawTTCaps(t);
     }
     const R = T.reveal;
     // the opening
@@ -753,8 +757,15 @@
      its sound runs on into the chord and holds; the search for it, ever faster, ever worse, at 0.5×,
      until the tape stops; Fallboard's own playback of the same build-up, and Fallboard stepping to
      the chord with its own buttons. */
-  const HK = {
-    brake: 4.48, freeze: 4.84, unpause: 8.04, half: 10.70, frenzy: 12.3, stop: 14.4,
+  /* the TikTok cut: a shorter pause; from the speed menu on, the search lasts as long as the "ahh
+     almost" clip; Fallboard's half is the hook's, moved earlier by D */
+  const TTK = { tap: 4.46, gear: 7.52, item: 7.92, half: 8.32, s0: 8.55, clip: 4.435 };
+  const HK = TT ? (() => {
+    const stop = TTK.s0 + TTK.clip, cut = stop + 0.8, D = cut - 15.2;
+    return { brake: 4.48, freeze: 4.84, unpause: 7.24, half: TTK.half, frenzy: TTK.s0, stop, cut, D,
+      fbAudio: 14.3 + D, pause: 18.87 + D, steps: [19.297, 19.752, 20.206, 20.661].map((x) => x + D), playOn: 21.57 + D, end: 22.7 + D, out: 26.1 + D };
+  })() : {
+    brake: 4.48, freeze: 4.84, unpause: 8.04, half: 10.70, frenzy: 12.3, stop: 14.4, D: 0,
     fbAudio: 14.3, cut: 15.2, pause: 18.87, steps: [19.297, 19.752, 20.206, 20.661], playOn: 21.57, end: 22.7, out: 26.1,
   };
   const SIXTEENTH = 60 / 132 / 4;   // the étude's sixteenth on Fallboard's clock
@@ -766,8 +777,39 @@
 
   /* the search: three drags that miss, the speed menu, and then clicks along the bar that come faster
      and faster, none of them on the chord */
-  const DRAGS = [{ a: 8.55, b: 8.85, to: 50.2 }, { a: 9.35, b: 9.58, to: 54.3 }, { a: 9.95, b: 10.15, to: 50.4 }];
-  const SEEKS = (() => {
+  /* the TikTok search, in the clip's 4.4 s: two drags and two double taps (10 s either way), then taps
+     along the bar and more double taps, faster and faster, never on the chord */
+  const TT_EV = (() => {
+    if (!TT) return [];
+    const ev = [];
+    let seed = 7031, cur = FREEZE_SRC + (TTK.half - HK.unpause) + (TTK.s0 - TTK.half) * 0.5, t = TTK.s0;
+    const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+    const far = (p) => Math.abs(p - FREEZE_SRC) > 0.45;
+    const gap = (dt) => { cur += dt * 0.5; t += dt; };
+    ev.push({ t, kind: 'drag', b: t + 0.36, to: 49.3 }); cur = 49.3; t += 0.36;
+    gap(0.36); ev.push({ t, kind: 'dtap', dir: 1, to: cur + 10 }); cur += 10;
+    gap(0.36); ev.push({ t, kind: 'dtap', dir: -1, to: cur - 10 }); cur -= 10;
+    gap(0.34); ev.push({ t, kind: 'drag', b: t + 0.3, to: 55.9 }); cur = 55.9; t += 0.3;
+    let d = 0.34, k = 0;
+    while (t + d < HK.stop - 0.08) {
+      gap(d);
+      if (k % 3 === 1) {
+        const dir = cur > 58 ? -1 : cur < 46 ? 1 : rnd() < 0.5 ? -1 : 1;
+        let to = clamp(cur + 10 * dir, 36, 69);
+        if (!far(to)) to += 0.9;
+        ev.push({ t, kind: 'dtap', dir, to }); cur = to;
+      } else {
+        let p;
+        do p = 44 + rnd() * 22; while (!far(p) || Math.abs(p - cur) < 1.2);
+        ev.push({ t, kind: 'tap', to: p }); cur = p;
+      }
+      d = Math.max(0.045, d * 0.82); k++;
+    }
+    return ev;
+  })();
+  const DRAGS = TT ? TT_EV.filter((e) => e.kind === 'drag').map((e) => ({ a: e.t, b: e.b, to: e.to }))
+    : [{ a: 8.55, b: 8.85, to: 50.2 }, { a: 9.35, b: 9.58, to: 54.3 }, { a: 9.95, b: 10.15, to: 50.4 }];
+  const SEEKS = TT ? TT_EV.filter((e) => e.kind !== 'drag').map((e) => ({ t: e.t, p: e.to, dir: e.dir, kind: e.kind })) : (() => {
     const out = [];
     let t = HK.frenzy, d = 0.36, seed = 20261122, prev = 51.75;
     const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
@@ -780,7 +822,19 @@
     return out;
   })();
   const BOOMS = [...DRAGS.map((d) => d.b), ...SEEKS.map((s) => s.t)];
-  const YSEG = (() => {
+  const YSEG = TT ? (() => {
+    const g = [{ a: 0, b: HK.brake, p: 48.0, s: 1 }, { a: HK.brake, b: HK.freeze, brake: 48.0 + HK.brake }, { a: HK.freeze, b: HK.unpause, hold: FREEZE_SRC }];
+    let p = FREEZE_SRC, t = HK.unpause;
+    g.push({ a: t, b: TTK.half, p, s: 1 }); p += TTK.half - t; t = TTK.half;
+    for (const e of TT_EV) {
+      g.push({ a: t, b: e.t, p, s: 0.5 }); p += (e.t - t) * 0.5;
+      if (e.kind === 'drag') { g.push({ a: e.t, b: e.b, drag: [p, e.to] }); t = e.b; } else t = e.t;
+      p = e.to;
+    }
+    g.push({ a: t, b: HK.stop, p, s: 0.5 });
+    g.push({ a: HK.stop, b: 99, tape: true });
+    return g;
+  })() : (() => {
     const g = [];
     g.push({ a: 0, b: HK.brake, p: 48.0, s: 1 });
     g.push({ a: HK.brake, b: HK.freeze, brake: 48.0 + HK.brake });
@@ -814,12 +868,14 @@
     return pos;
   }
   const ytDragging = (t) => DRAGS.some((d) => t >= d.a && t < d.b);
-  const onBar = (t) => (t >= DRAGS[0].a - 0.25 && t < DRAGS[2].b + 0.03) || (t >= HK.frenzy - 0.2 && t < SEEKS[SEEKS.length - 1].t + 0.12);
-  const MENU = { gear: 10.30, item: 10.47, half: 10.68 };
+  const onBar = TT ? (t) => DRAGS.some((d) => t >= d.a - 0.12 && t < d.b + 0.06) || SEEKS.some((s) => s.kind === 'tap' && t >= s.t - 0.05 && t < s.t + 0.08)
+    : (t) => (t >= DRAGS[0].a - 0.25 && t < DRAGS[2].b + 0.03) || (t >= HK.frenzy - 0.2 && t < SEEKS[SEEKS.length - 1].t + 0.12);
+  const MENU = TT ? { gear: TTK.gear, item: TTK.item, half: TTK.half } : { gear: 10.30, item: 10.47, half: 10.68 };
 
   /* every sound of the hook that is not the app's own piano. mix: A booms, then a FAHH; B booms only;
      C a FAHH on each drag, booms in the frenzy; D as A, with "ahh almost almost" over the frenzy instead of the FAHH */
   function hookEvents() {
+    if (TT) return ttEvents();
     const ev = [];
     const clip = (o) => ev.push({ k: 'c', ...o });
     // the video's own sound: played through the brake into the chord, which rings out and is held
@@ -868,10 +924,47 @@
     return ev.map((e) => ({ ...e, keep: true }));
   }
 
+  /* the TikTok cut's sounds: the video from a wider stretch of it, a finger's taps, a boom on every
+     miss, and "ahh… almost, almost, almost" over the whole search */
+  function ttEvents() {
+    const ev = [];
+    const clip = (o) => ev.push({ k: 'c', ...o });
+    clip({ t: 0, file: 'yt-norm-w', off: 48.0 - 35, dur: HK.freeze + 0.3, fadeOut: 0.26 });
+    clip({ t: HK.freeze - 0.03, file: 'yt-drone', off: 0.2, dur: HK.unpause - HK.freeze + 0.25,
+      env: [[0, 0], [0.4, 0.8], [HK.unpause - HK.freeze - 0.2, 0.62], [HK.unpause - HK.freeze + 0.22, 0]] });
+    for (const g of YSEG) {
+      if (g.hold !== undefined || g.drag || g.tape || g.brake !== undefined || g.a === 0 || g.b - g.a < 0.004) continue;
+      if (g.s === 1) clip({ t: g.a, file: 'yt-norm-w', off: g.p - 35, dur: g.b - g.a });
+      else clip({ t: g.a, file: 'yt-slow-w', off: (g.p - 35) * 2, dur: g.b - g.a, fadeIn: 0.004, fadeOut: 0.006 });
+    }
+    clip({ t: HK.stop, file: 'yt-slow-w', off: (posAtStop - 35) * 2, dur: STOP_LEN, tape: true });
+    const taps = [TTK.tap, HK.freeze - 0.02, HK.freeze + 0.3, HK.unpause - 0.32, HK.unpause, MENU.gear, MENU.item, MENU.half, ...DRAGS.map((d) => d.a)];
+    for (const s of SEEKS) { taps.push(s.t); if (s.kind === 'dtap') taps.push(s.t - 0.09); }
+    for (const t of taps) ev.push({ k: 's', t, kind: 'mtap' });
+    for (const d of DRAGS) for (let t = d.a + 0.03; t < d.b; t += 0.045) ev.push({ k: 's', t, kind: 'tick' });
+    ev.push({ k: 's', t: HK.freeze, kind: 'freeze' });
+    ev.push({ k: 's', t: HK.freeze + 0.05, kind: 'scribble' });
+    for (const t of BOOMS) ev.push({ k: 'c', t: t - 0.05, file: 'sfx/vine-boom.mp3', bus: 'boom', gain: 0.6 });
+    clip({ t: TTK.s0, file: 'sfx/almost-long.wav', gain: 2.4 });
+    const CL = [54, 64, 59, 73, 74, 69, 63, 67, 70, 66, 61, 76, 57, 72];
+    ev.push({ k: 'str', t: HK.unpause, midi: 41, g: 1 }, { k: 'str', t: HK.unpause, midi: 48, g: 0.7 });
+    BOOMS.forEach((t, i) => { if (i < 3 || (i - 3) % 2 === 0) { const m = CL[Math.min(CL.length - 1, i < 3 ? i : 3 + (i - 3) / 2)]; ev.push({ k: 'str', t, midi: m, g: 0.6 }); } });
+    ev.push({ k: 'bus', t0: HK.fbAudio, t1: HK.cut, from: 0, to: 1 });
+    ev.push({ k: 's', t: HK.cut - 0.7, kind: 'swell' });
+    ev.push({ k: 's', t: HK.cut, kind: 'impact' });
+    for (const t of [HK.pause, ...HK.steps, HK.playOn]) ev.push({ k: 's', t: t - 0.07, kind: 'mtap' });
+    ev.push({ k: 's', t: HK.steps[3] + 0.06, kind: 'scribble' });
+    ev.push({ k: 's', t: HK.steps[3] + 0.02, kind: 'chime' });
+    ev.push({ k: 's', t: HK.end - 0.05, kind: 'whoosh' });
+    ev.push({ k: 's', t: HK.end + 0.55, kind: 'shimmer' });
+    return ev.map((e) => ({ ...e, keep: true }));
+  }
+
   const PLAY_D = 'M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z';
   const PAUSE_D = 'M 12,26 16,26 16,10 12,10 z M 21,26 25,26 25,10 21,10 z';
-  const ytSrc = (pos) => `/promo/_src/yt60/${String(clamp(Math.round((pos - SRC0) * 60), 0, YT60_LAST)).padStart(4, '0')}.jpg`;
-  const ytThumb = (pos) => `/promo/_src/yt/${String(clamp(Math.round((pos - SRC0) * 25), 0, 324)).padStart(4, '0')}.jpg`;
+  const ytWide = (pos) => `/promo/_src/yt25w/${String(clamp(Math.round((pos - 35) * 25), 0, 874)).padStart(4, '0')}.jpg`;
+  const ytSrc = (pos) => (TT && (pos < 45 || pos > 58.1)) ? ytWide(pos) : `/promo/_src/yt60/${String(clamp(Math.round((pos - SRC0) * 60), 0, YT60_LAST)).padStart(4, '0')}.jpg`;
+  const ytThumb = (pos) => TT ? ytWide(pos) : `/promo/_src/yt/${String(clamp(Math.round((pos - SRC0) * 25), 0, 324)).padStart(4, '0')}.jpg`;
   async function showImg(img, src) { if (img.dataset.src !== src) { img.dataset.src = src; img.src = src; await img.decode().catch(() => {}); } }
 
   const drawOn = (t, t0) => bezier(0.3, 0.1, 0.2, 1)(prog(t, t0, t0 + 0.5));
@@ -1000,6 +1093,7 @@
   let arrowFrom = null;
   /* o: { t0, t1, box (screen px), head (the headline's element, for the arrow) } */
   function drawHL(t, o) {
+    if (TT) return drawScrawl(t, o);
     const svg = $('hl');
     if (!o || t < o.t0 - 0.12 || t > o.t1 + 0.02) { svg.innerHTML = ''; if (!o || t > o.t1) arrowFrom = null; return; }
     const b = o.box, cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2, w = b.x1 - b.x0, h = b.y1 - b.y0;
@@ -1050,14 +1144,18 @@
   }
   /* the chord's box on screen: in the video, through the pause zoom; in Fallboard, through the camera */
   function ytHL(t) {
-    const z = pauseZoom(t), m = (x, y) => ({ x: ZO.x + (x - ZO.x) * z, y: ZO.y + (y - ZO.y) * z });
+    const z = pauseZoom(t), m = (x, y) => {
+      const vx = ZO.x + (x - ZO.x) * z, vy = ZO.y + (y - ZO.y) * z;
+      return TT ? { x: vx * VK * PH.k, y: PH.y + (48 + vy * VK) * PH.k } : { x: vx, y: vy };
+    };
     const p0 = m(YT_BOX.x0, YT_BOX.y0), p1 = m(YT_BOX.x1, YT_BOX.y1);
-    return { t0: HK.freeze + 0.1, t1: HK.unpause, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA') };
+    return { t0: HK.freeze + (TT ? 0.05 : 0.1), t1: HK.unpause, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA'),
+      from: () => document.querySelector('#ttCapA .fill .this') };
   }
   function fbHL(t) {
     const r = fbRing, m = (x, y) => stageToScreen(t, { x, y });
     const p0 = m(r.cx - r.rx + 14, r.cy - 44), p1 = m(r.cx + r.rx - 14, r.cy + 16);
-    return { t0: HK.steps[3] + 0.06, t1: HK.playOn, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA') };
+    return { t0: HK.steps[3] + 0.06, t1: HK.playOn, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA'), from: () => document.querySelector('#ttCapA .fill') };
   }
 
   /* a pulse: the picture jumps in a little the moment the note hits (at its top two frames later),
@@ -1102,7 +1200,7 @@
     for (const s of HK.steps.slice(0, 3)) hits.push({ t: s + 0.012, A: 0.008 });
     FB_HITS = [{ t: HK.cut, A: 0.15, k: 0.13, drop: true }, ...hits].sort((x, y) => x.t - y.t);
   }
-  const fbPulse = (t) => (CUT === 'hook' && t >= HK.cut && t < HK.end + 0.1 ? pulseAt(t, FB_HITS) + hold(t, HK.steps[3] + 0.012, HK.playOn, 0.06) : 1);
+  const fbPulse = (t) => (HOOKY && t >= HK.cut && t < HK.end + 0.1 ? pulseAt(t, FB_HITS) + hold(t, HK.steps[3] + 0.012, HK.playOn, 0.06) : 1);
   /* a stage point to the screen, through the camera and the lunge */
   function stageToScreen(t, p) {
     const v = viewAt(t), z = fbPulse(t);
@@ -1123,6 +1221,152 @@
     }
     return clamp(x, -16, 16);
   }
+
+  /* ================================================================== the TikTok cut's own parts
+     YouTube's iPhone web page (the real page, captured; its player drawn here with its own icons), a
+     scrappy red circle and a blinking arrow drawn with a finger, and captions in TikTok's own style */
+  const PH = { k: W / 390, y: 168 };          // the page on the 9:16 frame
+  const VK = 390 / 1280;                      // the video in the page's player
+  const VH = (H - PH.y) / PH.k;               // how much of the page the frame shows
+  const MYT_PLAY = 'M6 4.8v14.4a1.5 1.5 0 002.3 1.27l11.3-7.2a1.5 1.5 0 000-2.54L8.3 3.53A1.5 1.5 0 006 4.8Z';
+  const MYT_PAUSE = 'M6.5 3A1.5 1.5 0 005 4.5v15A1.5 1.5 0 006.5 21h2a1.5 1.5 0 001.5-1.5v-15A1.5 1.5 0 008.5 3h-2Zm9 0A1.5 1.5 0 0014 4.5v15a1.5 1.5 0 001.5 1.5h2a1.5 1.5 0 001.5-1.5v-15A1.5 1.5 0 0017.5 3h-2Z';
+  /* up with the tap before the pause; a tap after it clears them off the chord; one more brings them back for play */
+  const ttControls = (t) => {
+    if (t < TTK.tap) return 0;
+    const up = ease(t, TTK.tap, TTK.tap + 0.12) * (1 - ease(t, HK.freeze + 0.3, HK.freeze + 0.42)) + ease(t, HK.unpause - 0.32, HK.unpause - 0.2);
+    return Math.min(1, up) * (1 - ease(t, HK.stop, HK.stop + 0.2));
+  };
+  function ttDtap(t) {
+    let o = null;
+    for (const s of SEEKS) if (s.kind === 'dtap' && t >= s.t && t < s.t + 0.6) o = { dir: s.dir, u: t - s.t };
+    return o;
+  }
+  function ttSheets(t) {
+    const g = MENU.gear, it = MENU.item, hf = MENU.half;
+    $('mytShade').style.opacity = (ease(t, g, g + 0.15) * (1 - ease(t, hf + 0.02, hf + 0.18))).toFixed(3);
+    const s1 = $('mytSheet1'), s2 = $('mytSheet2');
+    if (t >= g && t < it) {
+      s1.style.display = 'block';
+      s1.style.top = (VH - 24 - 405).toFixed(1) + 'px';
+      s1.style.transform = `translateY(${((1 - easeOut(prog(t, g, g + 0.22))) * 440).toFixed(1)}px)`;
+      $('mytRowSpeed').style.top = '116px';
+      $('mytRowSpeed').style.opacity = t >= it - 0.1 ? 1 : 0;
+    } else s1.style.display = 'none';
+    if (t >= it && t < hf + 0.2) {
+      s2.style.display = 'block';
+      s2.style.top = (VH - 24 - 416).toFixed(1) + 'px';
+      s2.style.transform = `translateY(${(ease(t, hf + 0.02, hf + 0.2, easeIn) * 440).toFixed(1)}px)`;
+      for (const r of s2.querySelectorAll('.sp')) {
+        const v = r.dataset.v;
+        r.classList.toggle('on', v === (t >= hf ? '0.5x' : 'Normal'));
+        r.classList.toggle('hl', v === '0.5x' && t >= hf - 0.1 && t < hf + 0.03);
+      }
+    } else s2.style.display = 'none';
+  }
+  async function drawMYT(t) {
+    const pos = ytPos(t), frozen = t >= HK.freeze && t < HK.unpause;
+    await showImg($('mytFrame'), frozen ? FREEZE_IMG : ytSrc(pos));
+    const sink = ease(t, HK.stop, HK.cut, easeIn);
+    const sx = scrubShift(t) * 2, smear = Math.abs(sx) * 0.55;
+    $('fxHBb').setAttribute('stdDeviation', `${smear.toFixed(2)} 0`);
+    $('mytFrame').style.filter = [smear > 0.3 ? 'url(#fxHB)' : '', sink > 0 ? `brightness(${(1 - 0.5 * sink).toFixed(3)}) saturate(${(1 - 0.6 * sink).toFixed(3)})` : ''].join(' ').trim();
+    const z = pauseZoom(t), zp = pulseAt(t, YT_HITS);
+    $('mytFrame').style.transform = `translate(${sx.toFixed(2)}px, 0px) translate(${YT_PZ.x}px, ${YT_PZ.y}px) scale(${zp.toFixed(5)}) translate(${-YT_PZ.x}px, ${-YT_PZ.y}px) translate(${ZO.x}px, ${ZO.y}px) scale(${z.toFixed(5)}) translate(${-ZO.x}px, ${-ZO.y}px)`;
+    // the controls: up from the tap before the pause; a double tap shows only its own sign and the bar
+    const c = ttControls(t), dt = ttDtap(t), ui = c * (dt ? 0 : 1);
+    $('mytDim').style.opacity = ui.toFixed(3);
+    $('mytIcons').style.opacity = ui.toFixed(3);
+    $('mytBar').style.opacity = c.toFixed(3);
+    $('mytThin').style.opacity = (1 - c).toFixed(3);
+    $('mytPPd').setAttribute('d', frozen ? MYT_PLAY : MYT_PAUSE);
+    $('mytCur').textContent = fmt(pos);
+    const frac = clamp(pos / YT_DUR, 0, 1);
+    $('mytPlayed').style.width = (frac * 100).toFixed(3) + '%';
+    $('mytLoaded').style.width = (Math.min(1, (pos + 24) / YT_DUR) * 100).toFixed(3) + '%';
+    $('mytKnob').style.left = (frac * 100).toFixed(3) + '%';
+    $('mytThinP').style.width = (frac * 100).toFixed(3) + '%';
+    const drag = ytDragging(t);
+    $('mytKnob').style.transform = `scale(${drag ? 1.45 : 1})`;
+    const tip = $('mytTip');
+    tip.style.opacity = drag ? 1 : 0;
+    if (drag) {
+      tip.style.left = clamp(30 + frac * 330, 74, 316).toFixed(1) + 'px';
+      $('mytTipT').textContent = fmt(pos);
+      await showImg($('mytTipImg'), ytThumb(pos));
+    }
+    for (const [id, dir] of [['mytDtapR', 1], ['mytDtapL', -1]]) {
+      const el = $(id), on = dt && dt.dir === dir;
+      el.style.opacity = on ? (dt.u < 0.4 ? 1 : 1 - (dt.u - 0.4) / 0.2).toFixed(3) : 0;
+      el.style.transform = on ? `scale(${(1 + 0.18 * Math.exp(-dt.u / 0.05)).toFixed(3)})` : '';
+    }
+    ttSheets(t);
+    // the wear of the search, and the whip at the cut
+    const fx = ytFx(t), wo = whipOut(t), layer = $('myt');
+    $('mytVig').style.opacity = (0.1 + 0.6 * fx.vig).toFixed(3);
+    layer.style.transform = `translate(${fx.sx.toFixed(2)}px, ${(fx.sy + 90 * wo * wo).toFixed(2)}px) rotate(${fx.rot.toFixed(3)}deg) scale(${fx.scale.toFixed(4)})`;
+    const blur = 26 * wo, ca = fx.ca + 6 * wo;
+    setFx(blur, ca);
+    const f = [];
+    if (ca > 0.25) f.push('url(#fxCA)');
+    if (blur > 0.25) f.push('url(#fxVB)');
+    if (fx.vig > 0) f.push(`saturate(${fx.sat.toFixed(3)}) contrast(${fx.con.toFixed(3)})`);
+    layer.style.filter = f.join(' ');
+    drawTTCaps(t);
+    drawHL(t, ytHL(t));
+  }
+
+  /* captions: white, a hard black outline, lowercase, in TikTok Sans; in with a two-frame pop */
+  const TT_CAPS = [];
+  const capT = (a, b, html, y) => TT_CAPS.push({ a, b, html, y });
+  function drawTTCaps(t) {
+    const el = $('ttCapA'), c = TT_CAPS.find((x) => t >= x.a && t < x.b);
+    if (!c) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    if (el.dataset.k !== c.html) { el.innerHTML = `<div class="stroke">${c.html}</div><div class="fill">${c.html}</div>`; el.dataset.k = c.html; }
+    el.style.top = c.y + 'px';
+    el.style.transform = `translateY(-50%) scale(${t - c.a < 2 / 60 ? 1.12 : 1})`;
+  }
+
+  /* drawn with a finger: a lumpy red loop that overshoots where it started, put down in 0.2 s at a
+     jerky 12 fps; an arrow from the caption that blinks on and off */
+  function drawScrawl(t, o) {
+    const svg = $('hl');
+    if (!o || t < o.t0 || t >= o.t1) { svg.innerHTML = ''; return; }
+    const b = o.box, cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2, rx = (b.x1 - b.x0) / 2 + 11, ry = (b.y1 - b.y0) / 2 + 10;
+    const p = Math.min(1, (Math.floor((t - o.t0) * 12) + 1) / 12 / 0.2);
+    const pts = [], N = 54, sweep = Math.PI * 2 * 1.2, a0 = -2.3;
+    for (let i = 0; i <= Math.round(N * p); i++) {
+      const s = i / N, th = a0 + sweep * s;
+      const wob = 1 + 0.09 * Math.sin(3 * th + 0.7) + 0.05 * Math.sin(7 * th + 2.1) + 0.035 * Math.sin(11 * th + 0.3);
+      const drift = 1 + 0.17 * s;
+      pts.push(`${(cx + Math.cos(th) * rx * wob * drift + 2.5 * s).toFixed(1)},${(cy + Math.sin(th) * ry * wob * drift * (1 + 0.12 * s) - 3 * s).toFixed(1)}`);
+    }
+    const RED = '#ff2d2d', W_ = 2.7;
+    let s = `<path d="M${pts.join('L')}" fill="none" stroke="${RED}" stroke-width="${W_}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const from = o.from && o.from();
+    if (from && t >= o.t0 + 0.2 && Math.floor((t - o.t0 - 0.2) / 0.22) % 2 === 0) {
+      const r = from.getBoundingClientRect();
+      const A0 = { x: r.left + r.width / 2, y: r.bottom + 5 }, A1 = { x: cx - rx * 0.1, y: cy - ry * 1.2 - 4 };
+      const C = { x: (A0.x + A1.x) / 2 + 26, y: (A0.y + A1.y) / 2 };
+      const ap = [];
+      for (let i = 0; i <= 16; i++) {
+        const u = i / 16, x = (1 - u) * (1 - u) * A0.x + 2 * (1 - u) * u * C.x + u * u * A1.x, y = (1 - u) * (1 - u) * A0.y + 2 * (1 - u) * u * C.y + u * u * A1.y;
+        ap.push({ x: x + Math.sin(u * 13 + 1) * 1.6, y: y + Math.cos(u * 9) * 1.2 });
+      }
+      const e = ap[ap.length - 1], q = ap[ap.length - 3], ang = Math.atan2(e.y - q.y, e.x - q.x), L = 11;
+      s += `<path d="M${ap.map((v) => v.x.toFixed(1) + ',' + v.y.toFixed(1)).join('L')}M${(e.x - Math.cos(ang - 0.6) * L).toFixed(1)},${(e.y - Math.sin(ang - 0.6) * L).toFixed(1)}L${e.x.toFixed(1)},${e.y.toFixed(1)}L${(e.x - Math.cos(ang + 0.5) * L * 1.1).toFixed(1)},${(e.y - Math.sin(ang + 0.5) * L * 1.1).toFixed(1)}" fill="none" stroke="${RED}" stroke-width="${W_}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+    svg.innerHTML = s;
+  }
+
+  function ttInit() {
+    $('phone').style.top = PH.y + 'px';
+    $('phone').style.transform = `scale(${PH.k.toFixed(5)})`;
+    $('mytVid').style.transform = `scale(${VK.toFixed(6)})`;
+    $('ttCap').style.display = 'block';
+    for (const c of ['1fae9', '1f940']) { const im = new Image(); im.src = `/promo/_src/emoji/${c}.png`; }
+  }
+
   async function drawYT(t) {
     const pos = ytPos(t);
     const frozen = t >= HK.freeze && t < HK.unpause;
@@ -1265,7 +1509,7 @@
     if (winEl.style.display === 'none') placeWin(WIN, WIN.r, 1);
     measureFbRing();   // the keyboard re-fits as notes come and go: follow it
     const land = HK.steps[3] + 0.06;
-    drawFbCursor(t);
+    if (TT) $('fbCursor').style.opacity = 0; else drawFbCursor(t);   // a finger leaves no cursor
     drawHL(t, fbHL(t));
     // in from above, smeared, overexposed, and settling; a glow as the chord is found
     const wi = whipIn(t), exp = 1 - easeOut(prog(t, HK.cut, HK.cut + 1.3));
@@ -1281,30 +1525,41 @@
 
   function buildHook() {
     Object.assign(T, { reveal: -10, end: HK.end, out: HK.out });
-    head(HK.freeze + 0.04, HK.freeze + 1.75, `Trying to find <em class="hi">that one chord?</em>`, { y: 112, hi: HI.etude });
-    head(HK.freeze + 1.98, HK.unpause - 0.1, `<em class="hi">Good luck.</em>`, { y: 112, hi: HI.etude });
-    head(HK.pause + 0.02, HK.steps[3] - 0.02, `Or just <em class="hi">step to it.</em>`, { y: 150 });
-    head(HK.steps[3] + 0.12, HK.end - 0.15, `<em class="hi">There it is.</em>`, { y: 150 });
+    if (TT) {
+      const emo = (c) => `<img class="emo" src="/promo/_src/emoji/${c}.png" alt="">`;
+      capT(0, HK.freeze, 'pov: learning piano from youtube', 108);
+      capT(HK.freeze, HK.unpause, `good luck finding <span class="this">THIS</span> chord ${emo('1fae9')}${emo('1f940')}`, 108);
+      capT(HK.stop - 3, HK.cut, 'ahhh… almost, almost, almost', 108);
+      capT(HK.pause, HK.steps[3], 'or just step to it', 122);
+      capT(HK.steps[3], HK.end - 0.1, 'there it is', 122);
+    } else {
+      head(HK.freeze + 0.04, HK.freeze + 1.75, `Trying to find <em class="hi">that one chord?</em>`, { y: 112, hi: HI.etude });
+      head(HK.freeze + 1.98, HK.unpause - 0.1, `<em class="hi">Good luck.</em>`, { y: 112, hi: HI.etude });
+      head(HK.pause + 0.02, HK.steps[3] - 0.02, `Or just <em class="hi">step to it.</em>`, { y: 150 });
+      head(HK.steps[3] + 0.12, HK.end - 0.15, `<em class="hi">There it is.</em>`, { y: 150 });
+    }
+    const D = HK.D;
     const fb = { piece: 'revolutionary', view: 'roll', hand: 'both', speed: 1, ppsMul: 1.6 };
     // small shots, one runner each in the cloud. The video needs no app; each app shot starts from a
     // state set up at its start, or a moment before (pre) and run on to it unseen
-    [[0, 2.5], [2.5, 5], [5, 7.5], [7.5, 10], [10, 12.2], [12.2, HK.fbAudio]].forEach(([a, b], i) =>
+    (TT ? [[0, 2.5], [2.5, 5], [5, 7.5], [7.5, 10], [10, 12], [12, HK.fbAudio]] : [[0, 2.5], [2.5, 5], [5, 7.5], [7.5, 10], [10, 12.2], [12.2, HK.fbAudio]]).forEach(([a, b], i) =>
       shot(i ? `youtube-${i + 1}` : 'youtube', a, b, { app: false }));
     const playing = (t0) => { placeWin(WIN, WIN.r, 1); return appState({ ...fb, pos: FB_FROM + (t0 - HK.fbAudio), playAt: t0 }, t0); };
     const framedPlaying = async (t0) => { await framingFromPause(); await playing(t0); };
-    shot('fallboard-1', HK.fbAudio, 16.3, { setup: playing });
-    shot('fallboard-2', 16.3, 18.3, { setup: framedPlaying });
-    shot('fallboard-3', 18.3, 19.4, { setup: framedPlaying });
-    shot('fallboard-3b', 19.4, 20.5, { pre: 18.6, setup: framedPlaying });
+    shot('fallboard-1', HK.fbAudio, 16.3 + D, { setup: playing });
+    shot('fallboard-2', 16.3 + D, 18.3 + D, { setup: framedPlaying });
+    shot('fallboard-3', 18.3 + D, 19.4 + D, { setup: framedPlaying });
+    shot('fallboard-3b', 19.4 + D, 20.5 + D, { pre: 18.6 + D, setup: framedPlaying });
     // paused on the second step's note, a moment before the third step
-    shot('fallboard-4', 20.5, HK.end, { pre: 20.1, setup: async (t0) => { await framingFromPause(); await appState({ ...fb, pos: LAND - 2 * SIXTEENTH }, t0); } });
-    shot('end', HK.end, 24.4, { setup: (t0) => appState({ ...fb, pos: run(LAND, HK.playOn)(t0), playAt: t0 }, t0) });
-    shot('end-2', 24.4, HK.out, { setup: (t0) => appState({ ...fb, pos: run(LAND, HK.playOn)(t0), playAt: t0 }, t0) });
-    // the mouse on the app's own buttons: down, and a moment later up and the click
+    shot('fallboard-4', 20.5 + D, HK.end, { pre: 20.1 + D, setup: async (t0) => { await framingFromPause(); await appState({ ...fb, pos: LAND - 2 * SIXTEENTH }, t0); } });
+    shot('end', HK.end, 24.4 + D, { setup: (t0) => appState({ ...fb, pos: run(LAND, HK.playOn)(t0), playAt: t0 }, t0) });
+    shot('end-2', 24.4 + D, HK.out, { setup: (t0) => appState({ ...fb, pos: run(LAND, HK.playOn)(t0), playAt: t0 }, t0) });
+    // the mouse (in the TikTok cut a finger) on the app's own buttons: down, and a moment later up and the click
+    const fire = TT ? pointer : mouse;
     const press = (sel, t) => {
       let h = null;
-      act(t - 0.07, () => { const el = q(sel), c = centreOf(el); h = { el, x: c.x, y: c.y }; mouse('pointerdown', el, c.x, c.y); });
-      act(t, () => { if (!h) { const el = q(sel), c = centreOf(el); h = { el, x: c.x, y: c.y }; } mouse('pointerup', h.el, h.x, h.y); h.el.dispatchEvent(new A.MouseEvent('click', { bubbles: true, cancelable: true, detail: 1, clientX: h.x, clientY: h.y, view: A })); h = null; });
+      act(t - 0.07, () => { const el = q(sel), c = centreOf(el); h = { el, x: c.x, y: c.y }; fire('pointerdown', el, c.x, c.y); });
+      act(t, () => { if (!h) { const el = q(sel), c = centreOf(el); h = { el, x: c.x, y: c.y }; } fire('pointerup', h.el, h.x, h.y); h.el.dispatchEvent(new A.MouseEvent('click', { bubbles: true, cancelable: true, detail: 1, clientX: h.x, clientY: h.y, view: A })); h = null; });
     };
     press('#playBtn', HK.pause);
     for (const s of HK.steps) press('#nextBtn', s);
@@ -1345,10 +1600,10 @@
     await A.FB.library.load();
     await settle(600);
     placeWin(WIN, WIN.r, 1);
-    if (CUT === 'hook') {
+    if (HOOKY) {
       buildHook();
       buildHits();
-      hoverRules();
+      if (TT) ttInit(); else hoverRules();
     } else {
       plan();
       buildCut();
@@ -1370,7 +1625,7 @@
   async function renderAudio(events, seconds, mix = 'A') {
     const sr = 48000;
     events = events.filter((e) => !e.mix || e.mix.includes(mix));
-    const HOOK = CUT === 'hook';
+    const HOOK = HOOKY;
     const ctx = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr);
     const piano = new FB.Piano('/samples/');
     await piano.preload();
@@ -1672,6 +1927,10 @@
       const n = noise(ctx, 0.8), f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2500;
       n.connect(f); f.connect(g); g.gain.setValueAtTime(0, t); g.gain.exponentialRampToValueAtTime(0.002, t + 0.05); g.gain.exponentialRampToValueAtTime(0.09, t + 0.69); g.gain.linearRampToValueAtTime(0, t + 0.71);
       n.start(t); n.stop(t + 0.8);
+    } else if (kind === 'mtap') {
+      // a fingertip on glass, barely there
+      const n = noise(ctx, 0.02), f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2600; f.Q.value = 1.2;
+      n.connect(f); f.connect(g); env(0.06, 0.0006, 0.004); n.start(t); n.stop(t + 0.02);
     } else if (kind === 'whoosh') {
       const n = noise(ctx, 1.0), f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.1;
       f.frequency.setValueAtTime(260, t); f.frequency.exponentialRampToValueAtTime(2600, t + 0.7);
@@ -1704,6 +1963,6 @@
   }
   /* a soundtrack from shots rendered earlier: the hook's own sounds (everything but the app's piano)
      come from the code as it is now, not from the shots' logs, so a sound-only run hears its changes */
-  const freshEvents = (ev) => (CUT === 'hook' ? [...hookEvents(), ...ev.filter((e) => !e.keep)] : ev);
+  const freshEvents = (ev) => (HOOKY ? [...hookEvents(), ...ev.filter((e) => !e.keep)] : ev);
   window.FILM = { ready, begin, frame, skip, drain, freshEvents, probe, renderAudio, get shots() { return shots; }, T, hits: () => ({ yt: YT_HITS, miss: MISS_HITS, fb: FB_HITS }) };
 })();
