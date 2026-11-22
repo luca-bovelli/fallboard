@@ -193,6 +193,8 @@
   #fbCursor svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.4)); }
   /* the TikTok cut */
   #myt { display: none; overflow: hidden; }
+  /* the bar above the phone stays black, however far the phone zooms */
+  #phoneClip { position: absolute; inset: 0; clip-path: inset(168px 0 0 0); }
   #phone { position: absolute; left: 0; width: 390px; height: 844px; transform-origin: 0 0; overflow: hidden; background: #0f0f0f; }
   #mytPage { position: absolute; left: 0; top: 0; width: 390px; height: 844px; overflow: hidden; }
   #mytPlayer { position: absolute; left: 0; top: 48px; width: 390px; height: 219.375px; overflow: hidden; background: #000; font-family: YTRoboto, Arial, sans-serif; color: #fff; }
@@ -349,7 +351,7 @@
 </div>
 <!-- the TikTok cut: YouTube's iPhone web page, as a screen recording would show it -->
 <div class="layer" id="myt">
-  <div id="phone">
+  <div id="phoneClip"><div id="phone">
     <div id="mytPage"></div>
     <div id="mytPlayer">
       <div id="mytVid"><img id="mytFrame" alt=""></div>
@@ -366,7 +368,7 @@
     <div id="mytShade"></div>
     <div id="mytSheet1" class="sheet"><img src="/promo/_src/myt/sheet-settings.png" alt=""><div class="hl" id="mytRowSpeed"></div></div>
     <div id="mytSheet2" class="sheet"><div class="handle"></div><div class="sp" data-v="0.25x"><svg class="ck" viewBox="0 0 24 24"><path d="M9.4 16.6 4.8 12l-1.4 1.4 6 6 12-12-1.4-1.4z"/></svg><span>0.25x</span></div><div class="sp" data-v="0.5x"><svg class="ck" viewBox="0 0 24 24"><path d="M9.4 16.6 4.8 12l-1.4 1.4 6 6 12-12-1.4-1.4z"/></svg><span>0.5x</span></div><div class="sp" data-v="0.75x"><svg class="ck" viewBox="0 0 24 24"><path d="M9.4 16.6 4.8 12l-1.4 1.4 6 6 12-12-1.4-1.4z"/></svg><span>0.75x</span></div><div class="sp" data-v="Normal"><svg class="ck" viewBox="0 0 24 24"><path d="M9.4 16.6 4.8 12l-1.4 1.4 6 6 12-12-1.4-1.4z"/></svg><span>Normal</span></div><div class="sp" data-v="1.25x"><svg class="ck" viewBox="0 0 24 24"><path d="M9.4 16.6 4.8 12l-1.4 1.4 6 6 12-12-1.4-1.4z"/></svg><span>1.25x</span></div><div class="sp" data-v="1.5x"><svg class="ck" viewBox="0 0 24 24"><path d="M9.4 16.6 4.8 12l-1.4 1.4 6 6 12-12-1.4-1.4z"/></svg><span>1.5x</span></div><div class="sp" data-v="1.75x"><svg class="ck" viewBox="0 0 24 24"><path d="M9.4 16.6 4.8 12l-1.4 1.4 6 6 12-12-1.4-1.4z"/></svg><span>1.75x</span></div><div class="sp" data-v="2x"><svg class="ck" viewBox="0 0 24 24"><path d="M9.4 16.6 4.8 12l-1.4 1.4 6 6 12-12-1.4-1.4z"/></svg><span>2x</span></div></div>
-  </div>
+  </div></div>
   <div id="mytVig"></div>
 </div>
 <div class="layer" id="endLayer" style="opacity:0">
