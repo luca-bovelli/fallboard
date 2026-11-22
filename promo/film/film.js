@@ -1059,18 +1059,19 @@
     return { t0: HK.steps[3] + 0.06, t1: HK.playOn, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA') };
   }
 
-  /* a pulse: the picture jumps in a little, peaking on the note, and settles straight back */
-  const bump = (u, A, k = 0.06) => (u < 0 ? A * Math.exp(-((u / 0.045) ** 2)) : A * (1 + u / k) * Math.exp(-u / k));
+  /* a pulse: the picture jumps in a little the moment the note hits (at its top two frames later),
+     then falls back softly */
+  const bump = (u, A, k = 0.15, drop = false) => (u < 0 ? 0 : drop ? A * (1 + u / k) * Math.exp(-u / k) : A * (1 - Math.exp(-u / 0.012)) * Math.exp(-u / k));
   function pulseAt(t, hits) {
     let z = 0;
-    for (const h of hits) { const u = t - h.t; if (u > -0.2 && u < 1.2) z += bump(u, h.A, h.k); }
+    for (const h of hits) { const u = t - h.t; if (u > -0.2 && u < 1.2) z += bump(u, h.A, h.k, h.drop); }
     return 1 + z;
   }
   /* the video's right-hand chords up to the pause, found in its sound (its bars 25-27, about 1.03x
      the score's time); after the pause only the misses */
   const YT_CHORDS = [48.38, 48.84, 49.33, 49.78, 50.25, 50.70, 50.95, 51.22, 51.44, 52.30];
-  const YT_HITS = YT_CHORDS.map((s, i) => ({ t: s - 48.0, A: i === 8 ? 0.045 : 0.025 }));
-  const MISS_HITS = BOOMS.map((t, k) => ({ t, A: Math.min(0.06, 0.04 + 0.001 * k) }));
+  const YT_HITS = YT_CHORDS.map((s, i) => ({ t: s - 48.0, A: i === 8 ? 0.026 : 0.015 }));
+  const MISS_HITS = BOOMS.map((t, k) => ({ t, A: Math.min(0.04, 0.026 + 0.0007 * k) }));
   const YT_PZ = { x: W / 2, y: 330 }, FB_PZ = { x: W / 2, y: H * 0.62 };
   /* Fallboard's: in at full zoom on the cut and quickly back, then a pulse on every right-hand chord
      it plays and every step (from the score, on the film's clock); the found chord, held, creeps in */
@@ -1091,14 +1092,14 @@
       const s = k / 1000, dur = Math.max(...ns.map((n) => n.t1 - n.t0)), land = Math.abs(s - LAND) < 0.01;
       let t;
       if (s < sPause) t = HK.fbAudio + (s - FB_FROM);
-      else if (land) { t = HK.steps[3] + 0.012; hits.push({ t: HK.playOn + LEAD, A: 0.025 }); }
+      else if (land) { t = HK.steps[3] + 0.012; hits.push({ t: HK.playOn + LEAD, A: 0.015 }); }
       else if (s > LAND) t = HK.playOn + LEAD + (s - LAND);
       else continue;
       if (t < HK.cut + 0.3 || t > HK.end || land) continue;
-      hits.push({ t, A: dur > 0.8 ? 0.045 : 0.025 });
+      hits.push({ t, A: dur > 0.8 ? 0.026 : 0.015 });
     }
-    for (const s of HK.steps.slice(0, 3)) hits.push({ t: s + 0.012, A: 0.012 });
-    FB_HITS = [{ t: HK.cut, A: 0.15, k: 0.13 }, ...hits].sort((x, y) => x.t - y.t);
+    for (const s of HK.steps.slice(0, 3)) hits.push({ t: s + 0.012, A: 0.008 });
+    FB_HITS = [{ t: HK.cut, A: 0.15, k: 0.13, drop: true }, ...hits].sort((x, y) => x.t - y.t);
   }
   const fbPulse = (t) => (CUT === 'hook' && t >= HK.cut && t < HK.end + 0.1 ? pulseAt(t, FB_HITS) + hold(t, HK.steps[3] + 0.012, HK.playOn, 0.06) : 1);
   /* a stage point to the screen, through the camera and the lunge */
@@ -1108,17 +1109,32 @@
     return { x: FB_PZ.x + (x - FB_PZ.x) * z, y: FB_PZ.y + (y - FB_PZ.y) * z + hookDy };
   }
 
+  /* a scrub moves the picture the way the playhead goes (back: left), a few pixels and smeared
+     along it: with the drag's speed while dragging, a short kick on each click along the bar */
+  function scrubShift(t) {
+    let x = 0;
+    if (ytDragging(t)) x += clamp((ytPos(t + 0.004) - ytPos(t - 0.004)) / 0.008 / 26, -1, 1) * 11;
+    let prev = ytPos(HK.frenzy - 0.01);
+    for (const s of SEEKS) {
+      const u = t - s.t;
+      if (u >= 0 && u < 0.8) x += Math.sign(s.p - prev) * Math.min(1, Math.abs(s.p - prev) / 3) * bump(u, 12 / 0.75, 0.11);
+      prev = s.p;
+    }
+    return clamp(x, -16, 16);
+  }
   async function drawYT(t) {
     const pos = ytPos(t);
     const frozen = t >= HK.freeze && t < HK.unpause;
     await showImg($('ytFrame'), frozen ? FREEZE_IMG : ytSrc(pos));
     // the tape stopping: the picture sinks with it
     const sink = ease(t, HK.stop, HK.cut, easeIn);
-    $('ytFrame').style.filter = sink > 0 ? `brightness(${(1 - 0.5 * sink).toFixed(3)}) saturate(${(1 - 0.6 * sink).toFixed(3)})` : '';
+    const sx = scrubShift(t), smear = Math.abs(sx) * 0.55;
+    $('fxHBb').setAttribute('stdDeviation', `${smear.toFixed(2)} 0`);
+    $('ytFrame').style.filter = [smear > 0.3 ? 'url(#fxHB)' : '', sink > 0 ? `brightness(${(1 - 0.5 * sink).toFixed(3)}) saturate(${(1 - 0.6 * sink).toFixed(3)})` : ''].join(' ').trim();
     // the freeze: a bump in that keeps creeping closer, and the chord highlighted
     const z = pauseZoom(t), zp = pulseAt(t, YT_HITS);
     $('ytFrame').style.transformOrigin = '0 0';
-    $('ytFrame').style.transform = z !== 1 || zp !== 1 ? `translate(${YT_PZ.x}px, ${YT_PZ.y}px) scale(${zp.toFixed(5)}) translate(${-YT_PZ.x}px, ${-YT_PZ.y}px) translate(${ZO.x}px, ${ZO.y}px) scale(${z.toFixed(5)}) translate(${-ZO.x}px, ${-ZO.y}px)` : '';
+    $('ytFrame').style.transform = z !== 1 || zp !== 1 || sx !== 0 ? `translate(${sx.toFixed(2)}px, 0px) translate(${YT_PZ.x}px, ${YT_PZ.y}px) scale(${zp.toFixed(5)}) translate(${-YT_PZ.x}px, ${-YT_PZ.y}px) translate(${ZO.x}px, ${ZO.y}px) scale(${z.toFixed(5)}) translate(${-ZO.x}px, ${-ZO.y}px)` : '';
     drawHL(t, ytHL(t));
     // the big centre icon when it pauses and plays
     const big = $('ytBig');
@@ -1277,7 +1293,8 @@
     const framedPlaying = async (t0) => { await framingFromPause(); await playing(t0); };
     shot('fallboard-1', HK.fbAudio, 16.3, { setup: playing });
     shot('fallboard-2', 16.3, 18.3, { setup: framedPlaying });
-    shot('fallboard-3', 18.3, 20.5, { setup: framedPlaying });
+    shot('fallboard-3', 18.3, 19.4, { setup: framedPlaying });
+    shot('fallboard-3b', 19.4, 20.5, { pre: 18.6, setup: framedPlaying });
     // paused on the second step's note, a moment before the third step
     shot('fallboard-4', 20.5, HK.end, { pre: 20.1, setup: async (t0) => { await framingFromPause(); await appState({ ...fb, pos: LAND - 2 * SIXTEENTH }, t0); } });
     shot('end', HK.end, 24.4, { setup: (t0) => appState({ ...fb, pos: run(LAND, HK.playOn)(t0), playAt: t0 }, t0) });
