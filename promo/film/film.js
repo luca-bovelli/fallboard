@@ -8,7 +8,8 @@
 (function () {
   'use strict';
   const Q = new URLSearchParams(location.search);
-  const FPS = 60, DT = 1000 / FPS;
+  const FPS = +Q.get('fps') || 60, DT = 1000 / FPS;
+  const CUT = Q.get('cut') || 'main';
   const VERT = (Q.get('format') || '16x9') === '9x16';
   document.body.classList.toggle('vertical', VERT);
   const W = window.innerWidth, H = window.innerHeight;
@@ -51,10 +52,12 @@
     scan: { w: 372, h: 482, cx: 884, cy: 420, rot: 2.6 },
     pay: { w: 330, cx: 640, cy: 438 },
   };
-  const WIN = (() => {
+  let WIN = (() => {
     const s = LAY.win.s, w = LAY.app.w * s, h = LAY.app.h * s;
     return { x: (W - w) / 2, y: H - h - LAY.win.bottom, w, h, s, r: LAY.win.r };
   })();
+
+  if (CUT === 'hook') WIN = { x: 0, y: 0, w: W, h: H, s: W / LAY.app.w, r: 0 };
 
   /* ------------------------------------------------------------------ the piece and its plan */
   const P0 = 14.55;          // the Revolutionary Étude, bar 9: the left hand's run into the theme
@@ -101,22 +104,62 @@
   /* ------------------------------------------------------------------ headlines */
   const heads = [];   // { a, b, html, y, size, hi }
   function head(a, b, html, o = {}) { heads.push({ a, b, html, y: o.y, size: o.size || LAY.head.size, hi: o.hi || HI.etude }); }
+  /* each character in its own box (words kept whole), numbered in reading order */
+  function lettered(html) {
+    const box = document.createElement('div');
+    box.innerHTML = html;
+    let i = 0;
+    const walk = (node) => {
+      for (const n of [...node.childNodes]) {
+        if (n.nodeType !== 3) { walk(n); continue; }
+        const frag = document.createDocumentFragment();
+        for (const word of n.textContent.split(/(\s+)/)) {
+          if (!word) continue;
+          if (/^\s+$/.test(word)) { frag.appendChild(document.createTextNode(' ')); continue; }
+          const w = document.createElement('span');
+          w.className = 'w';
+          for (const ch of word) { const c = document.createElement('span'); c.className = 'ch'; c.textContent = ch; c.dataset.i = i++; w.appendChild(c); }
+          frag.appendChild(w);
+        }
+        n.replaceWith(frag);
+      }
+    };
+    walk(box);
+    return box.innerHTML;
+  }
+  const STAGGER = 0.024;
+  /* a letter's rise: from below, past its place a little, back */
+  const rise = (u) => (u <= 0 ? 1 : Math.exp(-u / 0.085) * Math.cos((2 * Math.PI * u) / 0.4));
   function drawHeads(t) {
-    const live = heads.filter((h) => t >= h.a - 0.01 && t < h.b + 0.3);
+    const live = heads.filter((h) => t >= h.a - 0.01 && t < h.b + 0.6);
     const slots = [$('headA'), $('headB')];
-    slots.forEach((el, i) => {
-      const h = live[i];
+    let halo = 0;
+    slots.forEach((el, k) => {
+      const h = live[k];
       if (!h) { el.style.opacity = 0; el.dataset.k = ''; return; }
-      const k = h.a + h.html;
-      if (el.dataset.k !== k) { el.innerHTML = h.html; el.dataset.k = k; }
-      const inP = ease(t, h.a, h.a + 0.42), outP = ease(t, h.b, h.b + 0.26, easeIn);
+      const key = h.a + h.html;
+      if (el.dataset.k !== key) { el.innerHTML = lettered(h.html); el.dataset.k = key; el._ch = [...el.querySelectorAll('.ch')].map((c) => ({ c, i: +c.dataset.i, em: !!c.closest('em') })); }
+      el.style.opacity = 1;
       el.style.fontSize = h.size + 'px';
       el.style.setProperty('--hi', h.hi);
       el.style.top = h.y + 'px';
-      el.style.opacity = (inP * (1 - outP)).toFixed(4);
-      el.style.transform = `translateY(calc(-50% + ${(lerp(14, 0, inP) - 8 * outP).toFixed(2)}px))`;
-      el.style.filter = outP > 0 ? `blur(${(outP * 6).toFixed(2)}px)` : '';
+      el.style.transform = 'translateY(-50%)';
+      el.style.filter = '';
+      const n = el._ch.length;
+      for (const { c, i, em } of el._ch) {
+        const u = t - h.a - i * STAGGER, v = t - h.b;
+        const inA = clamp(u / 0.09, 0, 1), outA = clamp(v / 0.16, 0, 1);
+        const y = 0.62 * rise(u) + 0.22 * easeIn(clamp(v / 0.18, 0, 1));
+        const heavy = 1 - easeOut(clamp(u / 0.38, 0, 1));
+        c.style.opacity = (inA * (1 - outA)).toFixed(3);
+        c.style.transform = `translateY(${y.toFixed(4)}em)`;
+        c.style.fontWeight = em ? Math.round(500 + 300 * heavy) : Math.round(700 + 200 * heavy);
+      }
+      halo = Math.max(halo, clamp((t - h.a) / 0.3, 0, 1) * (1 - clamp((t - h.b) / 0.35, 0, 1)));
+      if (k === 0) { const hb = $('headHalo'); hb.style.top = h.y + 'px'; }
     });
+    const hb = $('headHalo');
+    hb.style.opacity = (CUT === 'hook' ? halo : 0).toFixed(3);
   }
 
   /* what the camera pushes up under the headlines fades to black there, on Fallboard's C∞ curve */
@@ -139,9 +182,10 @@
     }
     return cur;
   }
+  let hookDy = 0;
   function drawCam(t) {
     const c = camAt(t);
-    $('stage').style.transform = `translate(${c.x}px, ${c.y}px) scale(${c.s.toFixed(5)}) translate(${-c.x}px, ${-c.y}px)`;
+    $('stage').style.transform = `translate(0px, ${hookDy.toFixed(2)}px) translate(${c.x}px, ${c.y}px) scale(${c.s.toFixed(5)}) translate(${-c.x}px, ${-c.y}px)`;
   }
 
   /* ------------------------------------------------------------------ the app's frame */
@@ -564,6 +608,7 @@
     if (S.view !== o.view) click(`#viewSeg button[data-view="${o.view}"]`);
     if (S.hand !== o.hand) click(`#handSeg button[data-hand="${o.hand}"]`);
     S.speed = o.speed;
+    if (o.ppsMul) { if (!A.__pps0) A.__pps0 = S.pps; S.pps = A.__pps0 * o.ppsMul; }
     // close any open rail control, then open the one wanted
     doc().dispatchEvent(new A.PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' }));
     if (o.rail === 'hand') click('#handToggle');
@@ -589,6 +634,7 @@
     curShot = shots[i];
     const t0 = curShot.a;
     taps.length = 0; $('taps').textContent = '';
+    if (CUT === 'hook') { framed = false; camKeys.length = 0; }
     scroll = null;
     log = [];
     if (curShot.setup) await curShot.setup(t0);
@@ -597,6 +643,7 @@
     logging = true;
     if (curShot.name === 'opening') log.push(...painEvents());
     if (curShot.name === 'reveal') log.push(...revealEvents());
+    if (curShot.name === 'youtube') log.push(...hookEvents());
   }
 
   function frame(f) {
@@ -610,10 +657,27 @@
       if (scroll && t >= scroll.a && t <= scroll.b + 0.02) scroll.el.scrollTop = lerp(scroll.from, scroll.to, easeCam(prog(t, scroll.a, scroll.b)));
       appTo(t);
     }
-    compose(t);
+    return compose(t);
   }
 
   function compose(t) {
+    if (CUT === 'hook') {
+      const inYT = t < HK.cut;
+      $('yt').style.display = inYT ? 'block' : 'none';
+      $('topfade').style.display = 'none';
+      if (inYT) {
+        $('endLayer').style.opacity = 0;
+        bg(t, 'orchid', 0, 0);
+        placeWin(WIN, WIN.r, 0);
+        for (const id of ['player', 'scan', 'paywall', 'cursor']) $(id).style.display = 'none';
+        $('keys').style.display = 'none';
+        $('fbCursor').style.opacity = 0; $('fxWash').style.opacity = 0; $('stage').style.filter = '';
+        drawHeads(t);
+        return drawYT(t);
+      }
+      $('yt').style.filter = '';
+      hookDy = drawFb(t);
+    }
     const R = T.reveal;
     // the opening
     const inOpening = t < R;
@@ -673,6 +737,424 @@
     camKeys.sort((a, b) => a.t - b.t);
   }
 
+  /* ================================================================== the hook cut (?cut=hook)
+     Rousseau's video of the étude, braking onto one chord (bar 27, beat 4: E♭ F A D over F) while
+     its sound runs on into the chord and holds; the search for it, ever faster, ever worse, at 0.5×,
+     until the tape stops; Fallboard's own playback of the same build-up, and Fallboard stepping to
+     the chord with its own buttons. */
+  const HK = {
+    brake: 4.48, freeze: 4.84, unpause: 8.04, half: 10.70, frenzy: 12.3, stop: 14.4,
+    fbAudio: 14.3, cut: 15.2, pause: 18.87, steps: [19.297, 19.752, 20.206, 20.661], playOn: 21.57, end: 22.7, out: 26.1,
+  };
+  const SRC0 = 45.0, YT_DUR = 181.6, CHORD_SRC = 52.84, FREEZE_SRC = 52.72, FB_FROM = 43.64, LAND = 48.636;
+  const YT60_LAST = 790;
+  const FREEZE_IMG = '/promo/_src/yt/0193.jpg';   // the 25 fps original of 52.72 s: the chord on the keys
+  /* the chord in the video, in film px (the video fills the 1280×720 frame) */
+  const YT_RING = { cx: 868, cy: 322, rx: 122, ry: 54 };
+  const STOP_LEN = HK.cut - HK.stop;
+  const BRAKE = HK.freeze - HK.brake;   // speed falls as 1 - u²: the picture loses BRAKE/3 on the sound
+
+  /* the search: three drags that miss, the speed menu, and then clicks along the bar that come faster
+     and faster, none of them on the chord */
+  const DRAGS = [{ a: 8.55, b: 8.85, to: 50.2 }, { a: 9.35, b: 9.58, to: 54.3 }, { a: 9.95, b: 10.15, to: 50.4 }];
+  const SEEKS = (() => {
+    const out = [];
+    let t = HK.frenzy, d = 0.36, seed = 20261122, prev = 51.75;
+    const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+    while (t < 14.26) {
+      let p;
+      do p = 50.3 + rnd() * 6.2; while (Math.abs(p - FREEZE_SRC) < 0.4 || Math.abs(p - prev) < 1.1);
+      out.push({ t, p });
+      prev = p; t += d; d = Math.max(0.04, d * 0.8);
+    }
+    return out;
+  })();
+  const BOOMS = [...DRAGS.map((d) => d.b), ...SEEKS.map((s) => s.t)];
+  const YSEG = (() => {
+    const g = [];
+    g.push({ a: 0, b: HK.brake, p: 48.0, s: 1 });
+    g.push({ a: HK.brake, b: HK.freeze, brake: 48.0 + HK.brake });
+    g.push({ a: HK.freeze, b: HK.unpause, hold: FREEZE_SRC });
+    let p = FREEZE_SRC, t = HK.unpause;
+    for (const d of DRAGS) {
+      g.push({ a: t, b: d.a, p, s: 1 });
+      const from = p + (d.a - t);
+      g.push({ a: d.a, b: d.b, drag: [from, d.to] });
+      p = d.to; t = d.b;
+    }
+    g.push({ a: t, b: HK.half, p, s: 1 });
+    p += HK.half - t;
+    g.push({ a: HK.half, b: SEEKS[0].t, p, s: 0.5 });
+    SEEKS.forEach((s, i) => g.push({ a: s.t, b: i + 1 < SEEKS.length ? SEEKS[i + 1].t : HK.stop, p: s.p, s: 0.5 }));
+    g.push({ a: HK.stop, b: 99, tape: true });
+    return g;
+  })();
+  const lastSeg = YSEG[YSEG.length - 2];
+  const posAtStop = lastSeg.p + (HK.stop - lastSeg.a) * 0.5;
+  function ytPos(t) {
+    let pos = 48.0;
+    for (const g of YSEG) {
+      if (t < g.a) break;
+      if (g.hold !== undefined) pos = g.hold;
+      else if (g.brake !== undefined) { const u = clamp((t - g.a) / BRAKE, 0, 1); pos = g.brake + BRAKE * (u - u * u * u / 3); }
+      else if (g.drag) pos = lerp(g.drag[0], g.drag[1], easeCam(prog(t, g.a, g.b)));
+      else if (g.tape) { const k = prog(t, HK.stop, HK.cut); pos = posAtStop + 0.5 * STOP_LEN * (k - k * k / 2); }
+      else pos = g.p + (Math.min(t, g.b) - g.a) * g.s;
+    }
+    return pos;
+  }
+  const ytDragging = (t) => DRAGS.some((d) => t >= d.a && t < d.b);
+  const onBar = (t) => (t >= DRAGS[0].a - 0.25 && t < DRAGS[2].b + 0.03) || (t >= HK.frenzy - 0.2 && t < SEEKS[SEEKS.length - 1].t + 0.12);
+  const MENU = { gear: 10.30, item: 10.47, half: 10.68 };
+
+  /* every sound of the hook that is not the app's own piano. mix: A booms, then a FAHH; B booms only;
+     C a FAHH on each drag, booms in the frenzy */
+  function hookEvents() {
+    const ev = [];
+    const clip = (o) => ev.push({ k: 'c', ...o });
+    // the video's own sound: played through the brake into the chord, which rings out and is held
+    clip({ t: 0, file: 'yt-norm', off: 48.0 - 40, dur: HK.freeze + 0.3, fadeOut: 0.26 });
+    clip({ t: HK.freeze - 0.03, file: 'yt-drone', off: 0.2, dur: HK.unpause - HK.freeze + 0.25,
+      env: [[0, 0], [0.4, 0.55], [HK.unpause - HK.freeze - 0.2, 0.42], [HK.unpause - HK.freeze + 0.22, 0]] });
+    for (const g of YSEG) {
+      if (g.hold !== undefined || g.drag || g.tape || g.brake !== undefined || g.a === 0) continue;
+      if (g.s === 1) clip({ t: g.a, file: 'yt-norm', off: g.p - 40, dur: g.b - g.a });
+      else clip({ t: g.a, file: 'yt-slow', off: (g.p - 50) * 2, dur: g.b - g.a, fadeIn: 0.004, fadeOut: 0.006 });
+    }
+    // the tape stops: speed and pitch fall together, the top goes, the level goes
+    clip({ t: HK.stop, file: 'yt-slow', off: (posAtStop - 50) * 2, dur: STOP_LEN, tape: true });
+    // the mouse
+    for (const t of [HK.freeze - 0.02, HK.unpause, ...DRAGS.map((d) => d.a), MENU.gear, MENU.item, MENU.half]) ev.push({ k: 's', t, kind: 'mclick' });
+    for (const d of DRAGS) for (let t = d.a + 0.03; t < d.b; t += 0.045) ev.push({ k: 's', t, kind: 'tick' });
+    for (const s of SEEKS) ev.push({ k: 's', t: s.t, kind: 'mclick' });
+    // the freeze lands as one hit: the click, a low F, the ring
+    ev.push({ k: 's', t: HK.freeze, kind: 'freeze' });
+    ev.push({ k: 's', t: HK.freeze + 0.1, kind: 'scribble' });
+    ev.push({ k: 's', t: HK.freeze + 1.98, kind: 'drop' });
+    // every miss: the boom (C: a FAHH on the drags)
+    DRAGS.forEach((d) => {
+      ev.push({ k: 'c', t: d.b - 0.05, file: 'sfx/vine-boom.mp3', bus: 'boom', gain: 0.6, mix: 'AB' });
+      ev.push({ k: 'c', t: d.b - 0.14, file: 'sfx/fahh.mp3', bus: 'boom', gain: 2.6, mix: 'C' });
+    });
+    SEEKS.forEach((s) => ev.push({ k: 'c', t: s.t - 0.05, file: 'sfx/vine-boom.mp3', bus: 'boom', gain: 0.6 }));
+    ev.push({ k: 'c', t: SEEKS[SEEKS.length - 1].t + 0.02, file: 'sfx/fahh.mp3', bus: 'boom', gain: 3.2, mix: 'A' });
+    // strings under the search: an F and its fifth, and a wrong note more with each miss
+    const CL = [54, 64, 59, 73, 74, 69, 63, 67, 70, 66, 61, 76, 57, 72];
+    ev.push({ k: 'str', t: HK.unpause, midi: 41, g: 1 }, { k: 'str', t: HK.unpause, midi: 48, g: 0.7 });
+    BOOMS.forEach((t, i) => { if (i < 3 || (i - 3) % 2 === 0) { const m = CL[Math.min(CL.length - 1, i < 3 ? i : 3 + (i - 3) / 2)]; ev.push({ k: 'str', t, midi: m, g: 0.6 }); } });
+    ev.push({ k: 'str', t: HK.half, midi: 73, g: 0.5 });
+    // Fallboard: its piano fades in under the stopping tape; a swell into the cut, and a hit on it
+    ev.push({ k: 'bus', t0: HK.fbAudio, t1: HK.cut, from: 0, to: 1 });
+    ev.push({ k: 's', t: HK.cut - 0.7, kind: 'swell' });
+    ev.push({ k: 's', t: HK.cut, kind: 'impact' });
+    for (const t of [HK.pause, ...HK.steps, HK.playOn]) ev.push({ k: 's', t: t - 0.07, kind: 'mclick' });
+    ev.push({ k: 's', t: HK.steps[3] + 0.06, kind: 'scribble' });
+    ev.push({ k: 's', t: HK.steps[3] + 0.02, kind: 'chime' });
+    ev.push({ k: 's', t: HK.end - 0.05, kind: 'whoosh' });
+    ev.push({ k: 's', t: HK.end + 0.55, kind: 'shimmer' });
+    return ev.map((e) => ({ ...e, keep: true }));
+  }
+
+  const PLAY_D = 'M 12,26 18.5,22 18.5,14 12,10 z M 18.5,22 25,18 25,18 18.5,14 z';
+  const PAUSE_D = 'M 12,26 16,26 16,10 12,10 z M 21,26 25,26 25,10 21,10 z';
+  const ytSrc = (pos) => `/promo/_src/yt60/${String(clamp(Math.round((pos - SRC0) * 60), 0, YT60_LAST)).padStart(4, '0')}.jpg`;
+  const ytThumb = (pos) => `/promo/_src/yt/${String(clamp(Math.round((pos - SRC0) * 25), 0, 324)).padStart(4, '0')}.jpg`;
+  async function showImg(img, src) { if (img.dataset.src !== src) { img.dataset.src = src; img.src = src; await img.decode().catch(() => {}); } }
+
+  /* a ring drawn by hand, quickly and cleanly: one tapered stroke that runs a little past where it
+     began, its radius breathing slightly, tilted a few degrees. p is how much of it is drawn. */
+  function handRing(svg, ring, p, scale = 1) {
+    if (p <= 0) { svg.innerHTML = ''; return; }
+    const sweep = Math.PI * 2 * 1.14, a0 = -2.55, tilt = -0.07, N = 140, width = 4.2 * scale;
+    const pts = [];
+    const n = Math.max(2, Math.round(N * p));
+    for (let i = 0; i <= n; i++) {
+      const s = (i / N), th = a0 + sweep * s;
+      const r = (1 + 0.028 * Math.sin(2 * th + 1.3) + 0.016 * Math.sin(3 * th + 0.4)) * lerp(0.95, 1.07, s);
+      const x = Math.cos(th) * ring.rx * r, y = Math.sin(th) * ring.ry * r;
+      pts.push({ x: ring.cx + x * Math.cos(tilt) - y * Math.sin(tilt), y: ring.cy + x * Math.sin(tilt) + y * Math.cos(tilt), s });
+    }
+    const L = [], R = [];
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
+      const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+      const s = pts[i].s;
+      // pressure: lands quickly, swells, lifts off at the end
+      const w = width * Math.min(1, 0.25 + s / 0.08) * (0.82 + 0.18 * Math.sin(Math.PI * s)) * Math.min(1, (1 - s) / 0.16 + 0.12);
+      const nx = (-dy / len) * w / 2, ny = (dx / len) * w / 2;
+      L.push(`${(pts[i].x + nx).toFixed(2)},${(pts[i].y + ny).toFixed(2)}`);
+      R.push(`${(pts[i].x - nx).toFixed(2)},${(pts[i].y - ny).toFixed(2)}`);
+    }
+    svg.innerHTML = `<path d="M${L.join('L')}L${R.reverse().join('L')}Z" fill="#ffd84a" style="filter:drop-shadow(0 0 ${(5 * scale).toFixed(1)}px rgb(255 216 74 / 0.7))"/>`;
+  }
+  const drawOn = (t, t0) => bezier(0.3, 0.1, 0.2, 1)(prog(t, t0, t0 + 0.5));
+
+  /* a path of [time, point] keys, eased between */
+  function along(t, keys) {
+    let p = keys[0][1];
+    for (let i = 0; i < keys.length; i++) {
+      if (t >= keys[i][0]) p = keys[i][1];
+      if (i + 1 < keys.length && t >= keys[i][0] && t < keys[i + 1][0]) {
+        const e = easeCam(prog(t, keys[i][0], keys[i + 1][0]));
+        p = { x: lerp(keys[i][1].x, keys[i + 1][1].x, e), y: lerp(keys[i][1].y, keys[i + 1][1].y, e) };
+      }
+    }
+    return p;
+  }
+
+  /* the cursor: resting on the video, a click to pause and one to play, three drags, the speed menu,
+     then the clicks along the bar */
+  const YT_CLICK = { x: 590, y: 468 };
+  function ytCursor(t) {
+    const pr = $('ytProg').getBoundingClientRect();
+    const barX = (pos) => pr.left + (pos / YT_DUR) * pr.width, barY = pr.bottom - 7.5;
+    const at = (pos) => ({ x: barX(pos), y: barY });
+    const ctr = (id, dx) => { const r = $(id).getBoundingClientRect(); return { x: r.left + (dx ?? r.width / 2), y: r.top + r.height / 2 }; };
+    const item = (id) => ctr(id, Math.min(90, $(id).getBoundingClientRect().width * 0.4));
+    const keys = [[0, { x: 676, y: 548 }], [HK.freeze - 0.5, YT_CLICK], [HK.unpause + 0.06, YT_CLICK]];
+    let p0 = FREEZE_SRC, t0 = HK.unpause;
+    for (const d of DRAGS) {
+      const from = p0 + (d.a - t0);
+      keys.push([d.a - 0.06, at(from)], [d.a, at(from)], [d.b, at(d.to)]);
+      p0 = d.to; t0 = d.b;
+    }
+    keys.push([MENU.gear - 0.04, ctr('ytGear')], [MENU.gear + 0.03, ctr('ytGear')]);
+    keys.push([MENU.item - 0.04, item('ytSpeedItem')], [MENU.item + 0.03, item('ytSpeedItem')]);
+    keys.push([MENU.half - 0.04, item('ytHalf')], [MENU.half + 0.1, item('ytHalf')]);
+    keys.push([11.4, { x: 1000, y: 612 }], [HK.frenzy - 0.12, at(54.4)]);
+    let prevT = HK.frenzy - 0.12;
+    for (const s of SEEKS) {
+      const move = Math.min(0.16, (s.t - prevT) * 0.75);
+      keys.push([s.t - move, keys[keys.length - 1][1]], [s.t, at(s.p)]);
+      prevT = s.t;
+    }
+    keys.sort((a, b) => a[0] - b[0]);
+    return along(t, keys);
+  }
+  const ytPress = (t) => ytDragging(t) || [HK.freeze, HK.unpause + 0.02, MENU.gear, MENU.item, MENU.half, ...SEEKS.map((s) => s.t)].some((x) => t >= x - 0.05 && t < x + 0.03);
+
+  /* what the search does to the picture: every miss shakes it, punches in and splits its colour, and
+     it all wears on: the hand gets less steady, the colour drains, the edges darken */
+  function ytFx(t) {
+    let sx = 0, sy = 0, rot = 0, punch = 0, ca = 0, m = 0;
+    BOOMS.forEach((tb, k) => {
+      const u = t - tb;
+      if (u < 0) return;
+      m++;
+      if (u > 0.7) return;
+      const s = Math.min(1, 0.5 + 0.035 * k), e = Math.exp(-u / 0.13);
+      sx += s * e * Math.sin(2 * Math.PI * 14 * u + k * 1.7) * 15;
+      sy += s * e * Math.cos(2 * Math.PI * 11 * u + k * 2.3) * 10;
+      rot += s * e * Math.sin(2 * Math.PI * 9 * u + k) * 0.8;
+      punch += s * Math.exp(-u / 0.085) * 0.055;
+      ca += s * Math.exp(-u / 0.12) * 8;
+    });
+    const w = ease(t, HK.unpause, HK.stop, (x) => x);
+    sx += w * 3.2 * (Math.sin(t * 2.1) + 0.6 * Math.sin(t * 3.7 + 1));
+    sy += w * 2.4 * (Math.sin(t * 1.7 + 2) + 0.5 * Math.sin(t * 4.3));
+    const grade = clamp(m / 16, 0, 1);
+    return {
+      sx: clamp(sx, -20, 20), sy: clamp(sy, -16, 16), rot: clamp(rot, -1.4, 1.4),
+      scale: 1 + 0.032 * ease(t, HK.unpause - 0.1, HK.unpause + 0.4) + Math.min(0.11, punch),
+      ca: Math.min(13, ca), sat: 1 - 0.42 * grade, con: 1 + 0.1 * grade, vig: grade,
+    };
+  }
+  /* the whip at the cut: both sides move down, the way the notes fall, smeared */
+  const whipOut = (t) => easeIn(prog(t, HK.cut - 0.16, HK.cut));
+  const whipIn = (t) => 1 - easeOut(prog(t, HK.cut, HK.cut + 0.26));
+  function setFx(blurY, caPx) {
+    $('fxVBb').setAttribute('stdDeviation', `0 ${blurY.toFixed(2)}`);
+    $('fxCAr').setAttribute('dx', caPx.toFixed(2));
+    $('fxCAb').setAttribute('dx', (-caPx).toFixed(2));
+  }
+
+  async function drawYT(t) {
+    const pos = ytPos(t);
+    const frozen = t >= HK.freeze && t < HK.unpause;
+    await showImg($('ytFrame'), frozen ? FREEZE_IMG : ytSrc(pos));
+    // the tape stopping: the picture sinks with it
+    const sink = ease(t, HK.stop, HK.cut, easeIn);
+    $('ytFrame').style.filter = sink > 0 ? `brightness(${(1 - 0.5 * sink).toFixed(3)}) saturate(${(1 - 0.6 * sink).toFixed(3)})` : '';
+    // the freeze: the chord ringed by hand, the rest dimmed
+    const ringOut = ease(t, HK.unpause - 0.3, HK.unpause, easeIn);
+    handRing($('ytRing'), YT_RING, drawOn(t, HK.freeze + 0.1));
+    $('ytRing').style.opacity = (1 - ringOut).toFixed(3);
+    const dim = ease(t, HK.freeze, HK.freeze + 0.4) * (1 - ringOut);
+    const R_ = YT_RING;
+    $('ytDim').style.background = `radial-gradient(ellipse ${R_.rx * 1.35}px ${R_.ry * 1.7}px at ${R_.cx}px ${R_.cy}px, rgb(0 0 0 / 0) 68%, rgb(0 0 0 / 0.7) 100%)`;
+    $('ytDim').style.opacity = dim.toFixed(3);
+    // the big centre icon when it pauses and plays
+    const big = $('ytBig');
+    const flash = (t0) => { const k = prog(t, t0, t0 + 0.55); return k > 0 && k < 1 ? k : 0; };
+    const fp = flash(HK.freeze), fu = flash(HK.unpause), k = fp || fu;
+    $('ytBigIcon').innerHTML = `<path d="${fp ? PAUSE_D : PLAY_D}"/>`;
+    big.style.opacity = k ? (1 - k).toFixed(3) : 0;
+    big.style.transform = `scale(${(1 + k * 0.9).toFixed(3)})`;
+    // the controls: up from the start, as the mouse is on the video
+    const chrome = 1 - ease(t, HK.stop + 0.2, HK.stop + 0.5);
+    $('ytChrome').style.opacity = chrome.toFixed(3);
+    $('ytGrad').style.opacity = (0.35 + 0.65 * chrome).toFixed(3);
+    const frac = pos / YT_DUR;
+    $('ytPlayed').style.width = (frac * 100).toFixed(3) + '%';
+    $('ytLoaded').style.width = (Math.min(1, (pos + 24) / YT_DUR) * 100).toFixed(3) + '%';
+    $('ytPlayPath').setAttribute('d', frozen ? PLAY_D : PAUSE_D);
+    $('ytTime').textContent = fmt(pos) + ' / ' + fmt(YT_DUR);
+    const cur = ytCursor(t), pr = $('ytProg').getBoundingClientRect();
+    const near = onBar(t);
+    $('ytRail').style.height = near ? '5px' : '3px';
+    $('ytKnob').style.left = (frac * 100).toFixed(3) + '%';
+    $('ytKnob').style.transform = `scale(${near ? 1 : 0})`;
+    $('ytHover').style.width = near ? clamp(cur.x - pr.left, 0, pr.width) + 'px' : '0px';
+    // the preview over the bar, wherever the mouse is on it
+    const tip = $('ytTip');
+    tip.style.opacity = near ? 1 : 0;
+    if (near) {
+      const hp = clamp((cur.x - pr.left) / pr.width, 0, 1) * YT_DUR;
+      tip.style.left = clamp(cur.x - pr.left + 12, 81, pr.width - 81 + 24) + 'px';
+      $('ytTipT').textContent = fmt(hp);
+      await showImg($('ytTipImg'), ytThumb(hp));
+    }
+    // the settings menu
+    $('ytMenu').style.opacity = t >= MENU.gear && t < HK.half ? 1 : 0;
+    $('ytMain').classList.toggle('on', t < MENU.item);
+    $('ytSpeeds').classList.toggle('on', t >= MENU.item);
+    $('ytSpeedItem').classList.toggle('hl', t >= MENU.item - 0.08 && t < MENU.item);
+    $('ytHalf').classList.toggle('hl', t >= MENU.half - 0.08);
+    $('ytHalf').classList.toggle('on', t >= HK.half);
+    $('ytNormal').classList.toggle('on', t < HK.half);
+    $('ytSpeedItem').querySelector('.vl').textContent = t >= HK.half ? '0.5' : 'Normal';
+    // the cursor
+    const c = $('ytCursor');
+    c.style.opacity = (1 - ease(t, HK.stop, HK.stop + 0.3)).toFixed(3);
+    c.style.transform = `translate(${(cur.x - 2.5).toFixed(2)}px, ${(cur.y - 1.5).toFixed(2)}px) scale(${ytPress(t) ? 0.9 : 1})`;
+    // the wear of the search, and the whip at the cut
+    const fx = ytFx(t), wo = whipOut(t);
+    $('ytVig').style.opacity = (0.12 + 0.62 * fx.vig).toFixed(3);
+    const layer = $('yt');
+    layer.style.transform = `translate(${fx.sx.toFixed(2)}px, ${(fx.sy + 90 * wo * wo).toFixed(2)}px) rotate(${fx.rot.toFixed(3)}deg) scale(${fx.scale.toFixed(4)})`;
+    const blur = 26 * wo, ca = fx.ca + 6 * wo;
+    setFx(blur, ca);
+    const f = [];
+    if (ca > 0.25) f.push('url(#fxCA)');
+    if (blur > 0.25) f.push('url(#fxVB)');
+    if (fx.vig > 0) f.push(`saturate(${fx.sat.toFixed(3)}) contrast(${fx.con.toFixed(3)})`);
+    layer.style.filter = f.join(' ');
+  }
+
+  /* Fallboard's half: its own buttons, pressed with a mouse, and the ring on the same chord */
+  let fbRing = null;
+  function measureFbRing() {
+    const G = A.FB.debug.G, kb = q('#kbd').getBoundingClientRect();
+    const wb = (m) => { let n = 0; for (let k = 21; k < m; k++) if (!isBlack(k)) n++; return n; };
+    const x0 = kb.left + (wb(75) - G.left) * G.W - G.W * 0.3, x1 = kb.left + (wb(86) - G.left + 1) * G.W;   // E♭5 to D6
+    const a = toStage({ x: x0, y: kb.top }), b = toStage({ x: x1, y: kb.top });
+    fbRing = { cx: (a.x + b.x) / 2, cy: a.y - 6, rx: (b.x - a.x) / 2 + 20, ry: 44 * (VERT ? 0.6 : 1) };
+  }
+  /* the mouse over the app, in the app's own pixels */
+  function fbCursorAt(t) {
+    const c = (sel) => centreOf(q(sel));
+    const play = c('#playBtn'), next = c('#nextBtn');
+    const off = { x: LAY.app.w * 0.9, y: LAY.app.h * 0.98 };
+    return along(t, [
+      [HK.pause - 1.0, off], [HK.pause - 0.12, { x: play.x + 3, y: play.y + 4 }],
+      [HK.pause + 0.08, { x: play.x + 3, y: play.y + 4 }], [HK.steps[0] - 0.12, { x: next.x + 2, y: next.y + 3 }],
+      [HK.playOn - 0.42, { x: next.x + 2, y: next.y + 3 }], [HK.playOn - 0.1, { x: play.x + 2, y: play.y + 3 }],
+      [HK.playOn + 0.25, { x: play.x + 2, y: play.y + 3 }], [HK.playOn + 0.9, { x: play.x + 160, y: play.y + 60 }],
+    ]);
+  }
+  const FB_PRESS = [HK.pause, ...HK.steps, HK.playOn];
+  function drawFbCursor(t) {
+    const el = $('fbCursor');
+    const vis = ease(t, HK.pause - 1.0, HK.pause - 0.8) * (1 - ease(t, HK.playOn + 0.5, HK.playOn + 0.9));
+    el.style.opacity = vis.toFixed(3);
+    const p = fbCursorAt(t), sp = toStage(p), c = camAt(t);
+    const x = c.x + (sp.x - c.x) * c.s, y = c.y + (sp.y - c.y) * c.s;
+    const down = FB_PRESS.some((x0) => t >= x0 - 0.07 && t < x0 + 0.02);
+    el.style.transform = `translate(${(x - 2.5).toFixed(2)}px, ${(y - 1.5).toFixed(2)}px) scale(${down ? 0.9 : 1})`;
+    // the app's own hover, on whichever button is under it
+    for (const sel of ['#playBtn', '#nextBtn', '#prevBtn']) {
+      const b = q(sel), r = b.getBoundingClientRect();
+      const over = vis > 0.5 && p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom;
+      if (over) b.setAttribute('data-fxhover', ''); else b.removeAttribute('data-fxhover');
+    }
+  }
+  /* the camera frames the chord and the buttons together as the mouse comes in, and lets go as it
+     plays on. Measured once, on the frame the move starts, with the app laid out as it is then */
+  let framed = false;
+  function frameFb(t) {
+    if (framed || t < HK.pause - 1.05) return;
+    framed = true;
+    measureFbRing();
+    const r = fbRing, a = toStage(centreOf(q('#prevBtn'))), b = toStage(centreOf(q('#nextBtn')));
+    const box = { x0: Math.min(r.cx - r.rx, a.x - 30) - 40, x1: Math.max(r.cx + r.rx, b.x + 30) + 40, y0: r.cy - r.ry - 150, y1: Math.max(a.y, b.y) + 40 };
+    const s = Math.min(1.3, W / (box.x1 - box.x0), H / (box.y1 - box.y0));
+    const vw = W / s, vh = H / s;
+    const x0 = clamp((box.x0 + box.x1) / 2 - vw / 2, 0, W - vw), y0 = clamp((box.y0 + box.y1) / 2 - vh / 2, 0, H - vh);
+    camKeys.length = 0;
+    if (s > 1.01) cam(HK.pause - 1.05, s, (x0 * s) / (s - 1), (y0 * s) / (s - 1), 1.1);
+    cam(HK.playOn + 0.1, 1, W / 2, H / 2, 0.9);
+  }
+  function drawFb(t) {
+    if (winEl.style.display === 'none') placeWin(WIN, WIN.r, 1);
+    frameFb(t);
+    measureFbRing();   // the keyboard re-fits as notes come and go: follow it
+    const land = HK.steps[3] + 0.06;
+    handRing($('fbRing'), fbRing, drawOn(t, land));
+    $('fbRing').style.opacity = (1 - ease(t, HK.playOn - 0.05, HK.playOn + 0.25, easeIn)).toFixed(3);
+    drawFbCursor(t);
+    // in from above, smeared, overexposed, and settling; a glow as the chord is found
+    const wi = whipIn(t), exp = 1 - easeOut(prog(t, HK.cut, HK.cut + 1.3));
+    const glow = t >= land ? Math.exp(-(t - land) / 0.3) : 0;
+    setFx(26 * wi, 0);
+    const f = [];
+    if (wi > 0.01) f.push('url(#fxVB)');
+    f.push(`brightness(${(1 + 1.35 * exp * exp + 0.14 * glow).toFixed(3)}) saturate(${(1.06 - 0.5 * exp * exp).toFixed(3)})`);
+    $('stage').style.filter = f.join(' ');
+    $('fxWash').style.opacity = (0.55 * Math.pow(1 - easeOut(prog(t, HK.cut, HK.cut + 0.55)), 2)).toFixed(3);
+    return -90 * wi * wi;
+  }
+
+  function buildHook() {
+    Object.assign(T, { reveal: -10, end: HK.end, out: HK.out });
+    head(HK.freeze + 0.04, HK.freeze + 1.75, `Trying to find <em class="hi">that one chord?</em>`, { y: 112, hi: HI.etude });
+    head(HK.freeze + 1.98, HK.unpause - 0.1, `<em class="hi">Good luck.</em>`, { y: 112, hi: HI.etude });
+    head(HK.pause + 0.02, HK.steps[3] - 0.02, `Or just <em class="hi">step to it.</em>`, { y: 150 });
+    head(HK.steps[3] + 0.12, HK.end - 0.15, `<em class="hi">There it is.</em>`, { y: 150 });
+    const fb = { piece: 'revolutionary', view: 'roll', hand: 'both', speed: 1, ppsMul: 1.6 };
+    // the video needs no app, so it splits freely: one runner each in the cloud
+    shot('youtube', 0, 5, { app: false });
+    shot('youtube-search', 5, 10, { app: false });
+    shot('youtube-frenzy', 10, HK.fbAudio, { app: false });
+    shot('fallboard', HK.fbAudio, HK.end, { setup: (t0) => appState({ ...fb, pos: FB_FROM, playAt: HK.fbAudio }, t0) });
+    shot('end', HK.end, HK.out, { setup: (t0) => appState({ ...fb, pos: run(LAND, HK.playOn)(HK.end), playAt: HK.end }, t0) });
+    // the mouse on the app's own buttons: down, and a moment later up and the click
+    const press = (sel, t) => {
+      let h = null;
+      act(t - 0.07, () => { const el = q(sel), c = centreOf(el); h = { el, x: c.x, y: c.y }; mouse('pointerdown', el, c.x, c.y); });
+      act(t, () => { if (!h) { const el = q(sel), c = centreOf(el); h = { el, x: c.x, y: c.y }; } mouse('pointerup', h.el, h.x, h.y); h.el.dispatchEvent(new A.MouseEvent('click', { bubbles: true, cancelable: true, detail: 1, clientX: h.x, clientY: h.y, view: A })); h = null; });
+    };
+    press('#playBtn', HK.pause);
+    for (const s of HK.steps) press('#nextBtn', s);
+    press('#playBtn', HK.playOn);
+  }
+  function mouse(type, el, x, y) {
+    el.dispatchEvent(new A.PointerEvent(type, { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, buttons: type === 'pointerdown' ? 1 : 0, view: A }));
+  }
+  /* the app's :hover rules, copied onto [data-fxhover], so a scripted mouse shows them */
+  function hoverRules() {
+    const css = [];
+    const walk = (rules, wrap) => {
+      for (const r of rules) {
+        if (r.cssRules && r.media) walk(r.cssRules, /hover/.test(r.media.mediaText) ? wrap : (s) => wrap(`@media ${r.media.mediaText}{${s}}`));
+        else if (r.selectorText && r.selectorText.includes(':hover')) css.push(wrap(`${r.selectorText.replace(/:hover/g, '[data-fxhover]')}{${r.style.cssText}}`));
+      }
+    };
+    for (const sh of doc().styleSheets) { try { walk(sh.cssRules, (s) => s); } catch (e) { /* another origin */ } }
+    const st = doc().createElement('style');
+    st.textContent = css.join('\n');
+    doc().head.appendChild(st);
+  }
+
   /* ------------------------------------------------------------------ setup */
   async function ready() {
     await document.fonts.ready;
@@ -690,9 +1172,14 @@
     await A.FB.library.load();
     await settle(600);
     placeWin(WIN, WIN.r, 1);
-    plan();
-    buildCut();
-    buildCamera();
+    if (CUT === 'hook') {
+      buildHook();
+      hoverRules();
+    } else {
+      plan();
+      buildCut();
+      buildCamera();
+    }
     acts.sort((a, b) => a.t - b.t);
     measureIcon();
     return { fps: FPS, duration: T.out, frames: Math.round(T.out * FPS), shots: shots.map((s) => ({ name: s.name, f0: s.f0, f1: s.f1 })) };
@@ -700,14 +1187,16 @@
 
   /* what was played in this shot, in film time */
   function drain() {
-    const out = log.filter((e) => e.t >= curShot.a - 1e-6 && e.t < curShot.b - 1e-6 || e.k === 'n' && e.bus !== 'app');
+    const out = log.filter((e) => e.keep || e.t >= curShot.a - 1e-6 && e.t < curShot.b - 1e-6 || e.k === 'n' && e.bus !== 'app');
     log = [];
     return out;
   }
 
   /* ------------------------------------------------------------------ sound */
-  async function renderAudio(events, seconds) {
+  async function renderAudio(events, seconds, mix = 'A') {
     const sr = 48000;
+    events = events.filter((e) => !e.mix || e.mix.includes(mix));
+    const HOOK = CUT === 'hook';
     const ctx = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr);
     const piano = new FB.Piano('/samples/');
     await piano.preload();
@@ -717,11 +1206,29 @@
     window.AudioContext = Real;
     piano.voices = { add() {}, delete() {}, size: 0, values: () => [][Symbol.iterator]() };
     const appBus = piano.bus;
-    // the opening's video: a laptop's speaker, and at 0.5× a time-stretch that smears
+    for (const e of events) if (e.k === 'bus') {
+      appBus.gain.setValueAtTime(1.5 * e.from, e.t0);
+      appBus.gain.linearRampToValueAtTime(1.5 * e.to, e.t1);
+    }
+    // everything ends in the master, and the master fades with the picture
+    const fadeOut = ctx.createGain();
+    fadeOut.connect(ctx.destination);
+    if (HOOK) { fadeOut.gain.setValueAtTime(1, T.out - 0.9); fadeOut.gain.linearRampToValueAtTime(0, T.out - 0.05); }
     const master = ctx.createDynamicsCompressor();
     master.threshold.value = -6; master.knee.value = 8; master.ratio.value = 4; master.attack.value = 0.004; master.release.value = 0.2;
-    master.connect(ctx.destination);
+    master.connect(fadeOut);
+    // a room for the synthesized parts
+    const verb = ctx.createConvolver();
+    verb.buffer = (() => {
+      const len = Math.round(sr * 2.6), b = ctx.createBuffer(2, len, sr);
+      let s = 4242;
+      for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) { s = (s * 16807) % 2147483647; d[i] = (s / 1073741823.5 - 1) * Math.exp(-i / (sr * 0.55)) * Math.min(1, i / (sr * 0.01)); } }
+      return b;
+    })();
+    const verbOut = ctx.createGain(); verbOut.gain.value = 0.32;
+    verb.connect(verbOut); verbOut.connect(master);
     const mono = (src) => { const g = ctx.createGain(); g.channelCount = 1; g.channelCountMode = 'explicit'; g.channelInterpretation = 'speakers'; src.connect(g); return g; };
+    // the opening's video (main cut): a laptop's speaker, and at 0.5× a time-stretch that smears
     const video = ctx.createGain(); video.gain.value = 0.95;
     const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 170;
     const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5200; lp.Q.value = 0.5;
@@ -737,22 +1244,33 @@
     const dmix = ctx.createGain(); dmix.gain.value = 0.7;
     smear.connect(slp); slp.connect(trem); slp.connect(dly); dly.connect(dmix); dmix.connect(trem);
     mono(trem).connect(master);
-    // the app's piano is already wired to its own limiter; route that limiter on through the master too
+    // the booms: their own hard limiter, so a pile of them is loud but not louder than one
+    const boomBus = ctx.createDynamicsCompressor();
+    boomBus.threshold.value = -10; boomBus.knee.value = 0; boomBus.ratio.value = 20; boomBus.attack.value = 0.001; boomBus.release.value = 0.08;
+    const boomOut = ctx.createGain(); boomOut.gain.value = 1.5;
+    boomBus.connect(boomOut); boomOut.connect(fadeOut);
     const buses = { app: appBus, video, smear };
 
-    // kills: a stop silences what was scheduled before it
+    // kills: a stop silences what was scheduled before it. In the hook a pause is a lifted hand on
+    // a held pedal: what sounds rings on, what was to come never starts
     const kills = events.filter((e) => e.k === 'x').map((e) => e.t).sort((a, b) => a - b);
+    const played = [];
     for (const e of events) {
       if (e.k !== 'n' || e.t < 0 || e.t > seconds) continue;
       let end = e.t + Math.max(0.05, e.dur);
       if (e.bus === 'app') {
         const k = kills.find((x) => x >= (e.at ?? e.t) - 1e-6);
         if (k !== undefined && k <= e.t + 1e-4) continue;
+        let dur = e.dur;
+        const stepping = HOOK && e.t >= HK.pause - 0.6 && e.t < HK.playOn - 0.01;
+        if (stepping) dur = Math.max(dur, e.t < HK.pause ? 2.2 : 1.4);
         piano.bus = buses.app;
-        const v = piano.noteOn(e.midi, e.t, e.dur, e.vel);
-        if (v && k !== undefined) {
+        const v = piano.noteOn(e.midi, e.t, dur, e.vel);
+        played.push({ t: e.t, midi: e.midi, dur });
+        const hard = k !== undefined && !(HOOK && Math.abs(k - HK.pause) < 0.05);
+        if (v && hard) {
           v.g.gain.cancelScheduledValues(k);
-          v.g.gain.setTargetAtTime(0, k, 0.03);
+          v.g.gain.setTargetAtTime(0, k, HOOK ? 0.25 : 0.03);
         }
       } else {
         piano.bus = buses[e.bus];
@@ -764,8 +1282,116 @@
       }
     }
     for (const e of events) if (e.k === 's') sfx(ctx, master, e.kind, e.t);
+    // recordings: stretches of the hook's video, the booms, the FAHH
+    const clips = {};
+    for (const e of events) {
+      if (e.k !== 'c') continue;
+      if (!clips[e.file]) clips[e.file] = await ctx.decodeAudioData(await (await fetch('/promo/_src/' + e.file + (e.file.includes('.') ? '' : '.wav'))).arrayBuffer());
+      const src = ctx.createBufferSource(), g = ctx.createGain();
+      src.buffer = clips[e.file];
+      const gain = e.gain ?? 0.9, dur = e.dur ?? src.buffer.duration;
+      const out = e.bus === 'boom' ? boomBus : master;
+      if (e.tape) {
+        // a record slowing to a stop: speed and pitch fall as one, the top end and the level go with them
+        const tl = ctx.createBiquadFilter(); tl.type = 'lowpass'; tl.Q.value = 0.7;
+        src.connect(tl); tl.connect(g); g.connect(out);
+        src.playbackRate.setValueAtTime(1, e.t); src.playbackRate.exponentialRampToValueAtTime(0.05, e.t + dur);
+        tl.frequency.setValueAtTime(3600, e.t); tl.frequency.exponentialRampToValueAtTime(180, e.t + dur);
+        g.gain.setValueAtTime(gain, e.t); g.gain.setTargetAtTime(0, e.t + dur * 0.35, dur * 0.25);
+        src.start(e.t, Math.max(0, e.off), dur * 0.6);
+        continue;
+      }
+      src.connect(g); g.connect(out);
+      if (e.env) {
+        g.gain.setValueAtTime(0, e.t);
+        for (const [dt, v] of e.env) g.gain.linearRampToValueAtTime(v * gain / 0.9, e.t + dt);
+      } else if (e.dur === undefined) {
+        g.gain.value = gain;
+      } else {
+        const fi = e.fadeIn ?? 0.012, fo = e.fadeOut ?? 0.012;
+        g.gain.setValueAtTime(0, e.t); g.gain.linearRampToValueAtTime(gain, e.t + fi);
+        g.gain.setValueAtTime(gain, e.t + dur - fo); g.gain.linearRampToValueAtTime(0, e.t + dur);
+      }
+      src.start(e.t, Math.max(0, e.off || 0), dur + 0.02);
+    }
+    if (HOOK) { strings(ctx, master, verb, events.filter((e) => e.k === 'str')); pads(ctx, master, verb, played); }
     const buf = await ctx.startRendering();
     return wav(buf);
+  }
+
+  const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  /* the search's strings: bowed saws, an F and its fifth, a wrong note added with each miss; the
+     bowing gets faster and more anxious, and at the tape stop they sink with it */
+  function strings(ctx, master, verb, notes) {
+    if (!notes.length) return;
+    const t0 = Math.min(...notes.map((n) => n.t)), stop = HK.stop, end = HK.cut;
+    const bus = ctx.createGain(), lpf = ctx.createBiquadFilter(), tremG = ctx.createGain();
+    lpf.type = 'lowpass'; lpf.Q.value = 0.4;
+    lpf.frequency.setValueAtTime(900, t0); lpf.frequency.linearRampToValueAtTime(2600, stop); lpf.frequency.exponentialRampToValueAtTime(300, end);
+    bus.connect(lpf); lpf.connect(tremG); tremG.connect(master);
+    const send = ctx.createGain(); send.gain.value = 0.5; tremG.connect(send); send.connect(verb);
+    bus.gain.setValueAtTime(0.0001, t0); bus.gain.linearRampToValueAtTime(0.5, t0 + 1.2); bus.gain.linearRampToValueAtTime(1, stop);
+    bus.gain.setTargetAtTime(0, stop + 0.1, STOP_LEN * 0.3);
+    // tremolo: slow and faint at first, then a shiver
+    const tl = ctx.createOscillator(), td = ctx.createGain();
+    tl.frequency.setValueAtTime(4, t0); tl.frequency.linearRampToValueAtTime(11, stop);
+    td.gain.setValueAtTime(0, t0); td.gain.linearRampToValueAtTime(0.45, stop);
+    tremG.gain.value = 0.7; tl.connect(td); td.connect(tremG.gain); tl.start(t0); tl.stop(end + 0.5);
+    const vib = ctx.createOscillator(), vd = ctx.createGain(); vib.frequency.value = 5.4; vd.gain.value = 7;
+    vib.connect(vd); vib.start(t0); vib.stop(end + 0.5);
+    for (const n of notes) {
+      const g = ctx.createGain(); g.connect(bus);
+      const lvl = 0.022 * n.g * (n.midi < 50 ? 1.3 : 1);
+      g.gain.setValueAtTime(0, n.t); g.gain.linearRampToValueAtTime(lvl, n.t + 0.45);
+      for (const dc of [-9, 0, 8]) {
+        const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz(n.midi); o.detune.value = dc;
+        vd.connect(o.detune);
+        o.detune.setValueAtTime(dc, stop); o.detune.linearRampToValueAtTime(dc - 1900, end);
+        o.connect(g); o.start(n.t); o.stop(end + 0.3);
+      }
+    }
+  }
+  /* the release: soft pads on the chords Fallboard's piano is playing, voiced wide — the bass in two
+     octaves, the chord's notes across two more. A found chord blooms a little. */
+  function pads(ctx, master, verb, played) {
+    const ns = played.filter((n) => n.t >= HK.cut - 0.3).sort((a, b) => a.t - b.t);
+    const groups = [];
+    for (const n of ns) {
+      const g = groups[groups.length - 1];
+      if (g && Math.abs(g.t - n.t) < 0.006) g.notes.push(n); else groups.push({ t: n.t, notes: [n] });
+    }
+    const chords = [];
+    for (const g of groups) {
+      const upper = g.notes.filter((n) => n.midi >= 58);
+      if (upper.length < 3) continue;
+      const near = played.filter((n) => n.t >= g.t - 0.95 && n.t <= g.t + 0.1);
+      const bass = Math.min(...near.map((n) => n.midi));
+      const pcs = [...new Set(upper.map((n) => n.midi % 12))];
+      const key = pcs.slice().sort().join() + '/' + (bass % 12);
+      if (chords.length && chords[chords.length - 1].key === key) continue;
+      chords.push({ t: g.t, pcs, bass, key });
+    }
+    const bus = ctx.createGain(), lpf = ctx.createBiquadFilter();
+    lpf.type = 'lowpass'; lpf.frequency.value = 1500; lpf.Q.value = 0.3;
+    bus.connect(lpf); lpf.connect(master);
+    const send = ctx.createGain(); send.gain.value = 0.9; lpf.connect(send); send.connect(verb);
+    bus.gain.setValueAtTime(0, HK.cut - 0.05); bus.gain.linearRampToValueAtTime(1, HK.cut + 0.6);
+    const land = HK.steps[3];
+    chords.forEach((c, i) => {
+      const t1 = i + 1 < chords.length ? chords[i + 1].t : T.out;
+      const found = Math.abs(c.t - land) < 0.05;
+      const b = 36 + (c.bass % 12);
+      const voices = [b, b + 12];
+      for (const pc of c.pcs) { voices.push(55 + ((pc - 55 % 12 + 12) % 12)); voices.push(67 + ((pc - 67 % 12 + 12) % 12)); }
+      const g = ctx.createGain(); g.connect(bus);
+      const lvl = (found ? 0.016 : 0.0105);
+      g.gain.setValueAtTime(0, c.t); g.gain.linearRampToValueAtTime(lvl, c.t + (found ? 0.5 : 0.18));
+      g.gain.setValueAtTime(lvl, t1); g.gain.setTargetAtTime(0, t1, 0.18);
+      for (const m of voices) for (const dc of [-6, 6]) {
+        const o = ctx.createOscillator(); o.type = m < 50 ? 'triangle' : 'sawtooth'; o.frequency.value = hz(m); o.detune.value = dc;
+        o.connect(g); o.start(c.t); o.stop(t1 + 1.2);
+      }
+    });
   }
 
   function noise(ctx, secs) {
@@ -793,11 +1419,77 @@
       const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(860, t + 0.06);
       o.connect(g); env(0.22, 0.004, 0.05); o.start(t); o.stop(t + 0.4);
     } else if (kind === 'drop') {
-      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(92, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.5);
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(87.31, t); o.frequency.exponentialRampToValueAtTime(43.65, t + 0.5);
       o.connect(g); env(0.26, 0.01, 0.16); o.start(t); o.stop(t + 1.2);
       const n = noise(ctx, 0.5), f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 260;
       const gn = ctx.createGain(); n.connect(f); f.connect(gn); gn.connect(out);
       gn.gain.setValueAtTime(0, t); gn.gain.linearRampToValueAtTime(0.12, t + 0.01); gn.gain.setTargetAtTime(0, t + 0.01, 0.08); n.start(t); n.stop(t + 0.5);
+    } else if (kind === 'freeze') {
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(87.31, t); o.frequency.exponentialRampToValueAtTime(43.65, t + 0.35);
+      o.connect(g); env(0.32, 0.004, 0.09); o.start(t); o.stop(t + 0.8);
+    } else if (kind === 'scribble') {
+      // a marker on glass: a rough, quick loop
+      const n = noise(ctx, 0.6), f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2900; f.Q.value = 1.4;
+      n.connect(f); f.connect(g);
+      g.gain.setValueAtTime(0, t);
+      const bumps = [0.16, 0.07, 0.2, 0.09, 0.18, 0.06, 0.14, 0.05, 0.1];
+      bumps.forEach((v, k) => g.gain.setTargetAtTime(v * 0.55, t + k * 0.045, 0.012));
+      g.gain.setTargetAtTime(0, t + bumps.length * 0.045, 0.03);
+      n.start(t); n.stop(t + 0.6);
+    } else if (kind === 'riser') {
+      const n = noise(ctx, 1.3), f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.3;
+      f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(6500, t + 1.08);
+      n.connect(f); f.connect(g);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.13, t + 1.06); g.gain.linearRampToValueAtTime(0, t + 1.12);
+      n.start(t); n.stop(t + 1.3);
+      const o = ctx.createOscillator(), og = ctx.createGain(); o.type = 'sine';
+      o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(760, t + 1.08);
+      o.connect(og); og.connect(out); og.gain.setValueAtTime(0, t); og.gain.linearRampToValueAtTime(0.045, t + 1.05); og.gain.linearRampToValueAtTime(0, t + 1.1);
+      o.start(t); o.stop(t + 1.2);
+    } else if (kind === 'impact') {
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(77.78, t); o.frequency.exponentialRampToValueAtTime(38.89, t + 0.55);
+      o.connect(g); env(0.5, 0.004, 0.22); o.start(t); o.stop(t + 1.6);
+      const n = noise(ctx, 0.4), f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1400;
+      const ng = ctx.createGain(); n.connect(f); f.connect(ng); ng.connect(out);
+      ng.gain.setValueAtTime(0, t); ng.gain.linearRampToValueAtTime(0.22, t + 0.003); ng.gain.setTargetAtTime(0, t + 0.004, 0.05); n.start(t); n.stop(t + 0.4);
+      for (const [fq, a] of [[1864.7, 0.03], [2489.0, 0.022], [3136.0, 0.016]]) {
+        const s2 = ctx.createOscillator(), sg = ctx.createGain(); s2.type = 'sine'; s2.frequency.value = fq;
+        s2.connect(sg); sg.connect(out); sg.gain.setValueAtTime(0, t); sg.gain.linearRampToValueAtTime(a, t + 0.01); sg.gain.setTargetAtTime(0, t + 0.01, 0.45);
+        s2.start(t); s2.stop(t + 2.5);
+      }
+    } else if (kind === 'key') {
+      const n = noise(ctx, 0.03), f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3800; f.Q.value = 1.6;
+      n.connect(f); f.connect(g); env(0.22, 0.0008, 0.005); n.start(t); n.stop(t + 0.03);
+      const o = ctx.createOscillator(), og = ctx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(260, t); o.frequency.exponentialRampToValueAtTime(140, t + 0.03);
+      o.connect(og); og.connect(out); og.gain.setValueAtTime(0, t); og.gain.linearRampToValueAtTime(0.1, t + 0.002); og.gain.setTargetAtTime(0, t + 0.003, 0.012);
+      o.start(t); o.stop(t + 0.1);
+    } else if (kind === 'chime' || kind === 'shimmer') {
+      const notes = kind === 'chime' ? [[1244.5, 0], [1396.9, 0.035], [1760, 0.07], [2349.3, 0.105]] : [[1864.7, 0], [2349.3, 0.05], [2793.8, 0.1]];
+      for (const [fq, dt] of notes) {
+        const s2 = ctx.createOscillator(), sg = ctx.createGain(); s2.type = 'sine'; s2.frequency.value = fq;
+        s2.connect(sg); sg.connect(out);
+        const a = kind === 'chime' ? 0.05 : 0.03;
+        sg.gain.setValueAtTime(0, t + dt); sg.gain.linearRampToValueAtTime(a, t + dt + 0.008); sg.gain.setTargetAtTime(0, t + dt + 0.01, kind === 'chime' ? 0.6 : 0.8);
+        s2.start(t + dt); s2.stop(t + dt + 4);
+      }
+    } else if (kind === 'swish') {
+      const n = noise(ctx, 0.4), f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.9;
+      f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(3400, t + 0.25);
+      n.connect(f); f.connect(g); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05, t + 0.08); g.gain.setTargetAtTime(0, t + 0.12, 0.06);
+      n.start(t); n.stop(t + 0.4);
+    } else if (kind === 'mclick') {
+      // a mouse button: down and up, close together
+      for (const [dt, fq, a] of [[0, 4200, 0.12], [0.07, 3000, 0.07]]) {
+        const n = noise(ctx, 0.02), f = ctx.createBiquadFilter(), gg = ctx.createGain(); f.type = 'bandpass'; f.frequency.value = fq; f.Q.value = 2.5;
+        n.connect(f); f.connect(gg); gg.connect(out);
+        gg.gain.setValueAtTime(0, t + dt); gg.gain.linearRampToValueAtTime(a, t + dt + 0.0008); gg.gain.setTargetAtTime(0, t + dt + 0.001, 0.004);
+        n.start(t + dt); n.stop(t + dt + 0.02);
+      }
+    } else if (kind === 'swell') {
+      // a reversed cymbal into the cut: noise that only grows
+      const n = noise(ctx, 0.8), f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2500;
+      n.connect(f); f.connect(g); g.gain.setValueAtTime(0, t); g.gain.exponentialRampToValueAtTime(0.002, t + 0.05); g.gain.exponentialRampToValueAtTime(0.09, t + 0.69); g.gain.linearRampToValueAtTime(0, t + 0.71);
+      n.start(t); n.stop(t + 0.8);
     } else if (kind === 'whoosh') {
       const n = noise(ctx, 1.0), f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.1;
       f.frequency.setValueAtTime(260, t); f.frequency.exponentialRampToValueAtTime(2600, t + 0.7);

@@ -1,14 +1,26 @@
-# The launch film (promo/film): every shot on its own runner, then the soundtrack is made from
-# what each shot played and the shots are joined. Run by hand from Actions, or with
-#   gh workflow run render-film.yml -f formats=16x9
+# The promo films (promo/film): every shot on its own runner, then the soundtrack is made from
+# what each shot played and the shots are joined. Run by hand from Actions, or through the API:
+#   POST /repos/luca-bovelli/fallboard/actions/workflows/render-film.yml/dispatches
+#   {"ref":"main","inputs":{"cut":"hook","formats":"16x9","mixes":"A,B,C"}}
+# The hook uses Rousseau's video and other sources we may not publish: they come from the
+# encrypted promo-src release asset (promo/scripts/src-assets.sh), opened with PROMO_SRC_KEY.
 name: Render Film
 
 on:
   workflow_dispatch:
     inputs:
+      cut:
+        description: 'Which film: main or hook'
+        default: 'main'
       formats:
         description: 'Formats, comma separated (16x9, 9x16)'
         default: '16x9,9x16'
+      fps:
+        description: 'Frames per second'
+        default: '60'
+      mixes:
+        description: 'Sound mixes, comma separated (hook: A, B, C); empty for the one mix'
+        default: ''
 
 jobs:
   plan:
@@ -26,7 +38,9 @@ jobs:
       fail-fast: false
       matrix:
         format: ${{ fromJson(needs.plan.outputs.formats) }}
-        shot: [0, 1, 2, 3, 4, 5, 6]
+        chunk: [0, 1, 2, 3, 4, 5, 6]
+    env:
+      TAG: ${{ inputs.cut == 'main' && matrix.format || format('{0}-{1}', inputs.cut, matrix.format) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -37,12 +51,18 @@ jobs:
           sudo apt-get update && sudo apt-get install -y ffmpeg
           npm install --no-save playwright@1.49.1
           npx playwright install --with-deps chromium
-      - name: Shot ${{ matrix.shot }} (${{ matrix.format }})
-        run: node promo/scripts/film.js --format=${{ matrix.format }} --shots=${{ matrix.shot }}
+      - name: Private sources
+        if: inputs.cut != 'main'
+        env:
+          PROMO_SRC_KEY: ${{ secrets.PROMO_SRC_KEY }}
+        run: bash promo/scripts/src-assets.sh fetch
+      - name: Shots ${{ matrix.chunk }}/7 (${{ matrix.format }})
+        run: node promo/scripts/film.js --cut=${{ inputs.cut }} --format=${{ matrix.format }} --fps=${{ inputs.fps }} --chunk=${{ matrix.chunk }}/7
       - uses: actions/upload-artifact@v4
         with:
-          name: shot-${{ matrix.format }}-${{ matrix.shot }}
-          path: promo/film/out/${{ matrix.format }}/
+          name: shot-${{ env.TAG }}-${{ matrix.chunk }}
+          path: promo/film/out/${{ env.TAG }}/
+          if-no-files-found: ignore
 
   assemble:
     needs: [plan, shots]
@@ -51,6 +71,8 @@ jobs:
       fail-fast: false
       matrix:
         format: ${{ fromJson(needs.plan.outputs.formats) }}
+    env:
+      TAG: ${{ inputs.cut == 'main' && matrix.format || format('{0}-{1}', inputs.cut, matrix.format) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -61,22 +83,28 @@ jobs:
           sudo apt-get update && sudo apt-get install -y ffmpeg
           npm install --no-save playwright@1.49.1
           npx playwright install --with-deps chromium
+      - name: Private sources
+        if: inputs.cut != 'main'
+        env:
+          PROMO_SRC_KEY: ${{ secrets.PROMO_SRC_KEY }}
+        run: bash promo/scripts/src-assets.sh fetch
       - uses: actions/download-artifact@v4
         with:
-          pattern: shot-${{ matrix.format }}-*
+          pattern: shot-${{ env.TAG }}-*
           merge-multiple: true
-          path: promo/film/out/${{ matrix.format }}
+          path: promo/film/out/${{ env.TAG }}
       - name: Soundtrack and join
         run: |
-          node promo/scripts/film.js --format=${{ matrix.format }} --assemble
-          f=promo/exports/fallboard-${{ matrix.format }}.mp4
-          ffprobe -v error -show_entries stream=codec_type,width,height,r_frame_rate -show_entries format=duration -of compact=p=0 "$f"
+          node promo/scripts/film.js --cut=${{ inputs.cut }} --format=${{ matrix.format }} --fps=${{ inputs.fps }} --assemble --mixes=${{ inputs.mixes }}
           mkdir -p promo/_preview
-          ffmpeg -v error -y -i "$f" -vf "fps=1,scale=480:-1,tile=6x7" -frames:v 1 promo/_preview/sheet-${{ matrix.format }}.jpg
+          for f in promo/exports/fallboard-$TAG*.mp4; do
+            ffprobe -v error -show_entries stream=codec_type,width,height,r_frame_rate -show_entries format=duration -of compact=p=0 "$f"
+          done
+          f=$(ls promo/exports/fallboard-$TAG*.mp4 | head -1)
+          ffmpeg -v error -y -i "$f" -vf "fps=2,scale=320:-1,tile=8x7" -frames:v 1 promo/_preview/sheet-$TAG.jpg
       - uses: actions/upload-artifact@v4
         with:
-          name: film-${{ matrix.format }}
+          name: film-${{ env.TAG }}
           path: |
-            promo/exports/fallboard-${{ matrix.format }}.mp4
-            promo/_preview/sheet-${{ matrix.format }}.jpg
-            promo/film/out/${{ matrix.format }}/sound.wav
+            promo/exports/fallboard-${{ env.TAG }}*.mp4
+            promo/_preview/sheet-${{ env.TAG }}.jpg

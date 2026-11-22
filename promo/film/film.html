@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Fallboard Film</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=Newsreader:ital,opsz,wght@1,6..72,500..600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..900&family=Newsreader:ital,opsz,wght@1,6..72,500..800&family=Roboto:wght@400;500&display=swap">
 <style>
   /* Fallboard's tokens (dist/index.html), the same set the signed-off stills used */
   :root {
@@ -132,6 +132,65 @@
   body.vertical .end-sub { font-size: 14px; }
 
   #black { background: #000; opacity: 0; }
+
+  /* ---------------------------------------------------------------- a YouTube player, full screen, as a screen recording shows it */
+  #yt { background: #000; display: none; font-family: Roboto, Arial, sans-serif; color: #fff; }
+  #yt img.frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  #ytDim { position: absolute; inset: 0; opacity: 0; }
+  #ytRing { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  #ytRing ellipse, #fbRing ellipse { fill: none; stroke: #ffd84a; stroke-width: 3.5; stroke-linecap: round; filter: drop-shadow(0 0 6px rgb(255 216 74 / 0.75)); }
+  .ytp-gradient { position: absolute; left: 0; right: 0; bottom: 0; height: 120px; background: linear-gradient(to top, rgb(0 0 0 / 0.62), rgb(0 0 0 / 0.34) 45%, rgb(0 0 0 / 0)); }
+  .ytp-chrome { position: absolute; left: 0; right: 0; bottom: 0; height: 120px; opacity: 0; }
+  .ytp-progress { position: absolute; left: 12px; right: 12px; bottom: 50px; height: 16px; }
+  .ytp-progress .rail { position: absolute; left: 0; right: 0; bottom: 6px; height: 3px; background: rgb(255 255 255 / 0.2); transition: none; }
+  .ytp-progress .loaded { position: absolute; left: 0; top: 0; bottom: 0; background: rgb(255 255 255 / 0.4); }
+  .ytp-progress .played { position: absolute; left: 0; top: 0; bottom: 0; background: #f03; }
+  .ytp-progress .hover { position: absolute; top: 0; bottom: 0; background: rgb(255 255 255 / 0.5); }
+  .ytp-progress .knob { position: absolute; bottom: 7.5px; width: 13px; height: 13px; margin: 0 0 -6.5px -6.5px; border-radius: 50%; background: #f03; transform: scale(0); }
+  .ytp-controls { position: absolute; left: 12px; right: 12px; bottom: 0; height: 48px; display: flex; align-items: center; }
+  .ytp-controls svg { width: 48px; height: 48px; flex: none; fill: #fff; filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.5)); }
+  .ytp-controls svg.s36 { width: 48px; height: 48px; }
+  .ytp-time { font-size: 13px; line-height: 48px; padding: 0 10px 0 6px; text-shadow: 0 0 2px rgb(0 0 0 / 0.5); font-variant-numeric: normal; white-space: nowrap; }
+  .ytp-controls .sp { flex: 1; }
+  .ytp-tooltip { position: absolute; bottom: 74px; width: 162px; margin-left: -81px; opacity: 0; text-align: center; }
+  .ytp-tooltip .thumb { width: 162px; height: 91px; border-radius: 8px; border: 2px solid #fff; overflow: hidden; background: #000; box-sizing: border-box; }
+  .ytp-tooltip .thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .ytp-tooltip .tt { margin-top: 4px; font-size: 13px; font-weight: 500; text-shadow: 0 0 4px rgb(0 0 0 / 0.75); }
+  .ytp-big { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: rgb(0 0 0 / 0.5); opacity: 0; display: grid; place-items: center; }
+  .ytp-big svg { width: 36px; height: 36px; fill: #fff; }
+  .ytp-menu { position: absolute; right: 12px; bottom: 61px; width: 251px; border-radius: 12px; background: rgb(28 28 28 / 0.9); padding: 8px 0; opacity: 0; font-size: 13px; text-shadow: 0 0 2px rgb(0 0 0 / 0.5); overflow: hidden; transform-origin: 100% 100%; }
+  .ytp-menu .it { height: 40px; display: flex; align-items: center; padding: 0 15px 0 0; }
+  .ytp-menu .it .ic { width: 24px; height: 24px; margin: 0 15px 0 10px; display: grid; place-items: center; }
+  .ytp-menu .it .ic svg { width: 24px; height: 24px; fill: #fff; }
+  .ytp-menu .it .lb { flex: 1; font-weight: 500; }
+  .ytp-menu .it .vl { color: #fff; font-weight: 400; }
+  .ytp-menu .it .vl::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 10px; border: solid #fff; border-width: 2px 2px 0 0; transform: rotate(45deg) translateY(-1px); }
+  .ytp-menu .it.hl, .ytp-menu .sp-it.hl { background: rgb(255 255 255 / 0.1); }
+  .ytp-menu .sp-head { height: 48px; display: flex; align-items: center; padding: 0 15px 0 12px; border-bottom: 1px solid rgb(255 255 255 / 0.2); margin: -8px 0 8px; font-weight: 500; }
+  .ytp-menu .sp-head::before { content: ""; display: inline-block; width: 7px; height: 7px; margin: 0 16px 0 6px; border: solid #fff; border-width: 0 0 2px 2px; transform: rotate(45deg); }
+  .ytp-menu .sp-head span { flex: 1; } .ytp-menu .sp-head i { font-style: normal; font-weight: 400; }
+  .ytp-menu .sp-it { height: 40px; display: flex; align-items: center; padding: 0 15px 0 49px; position: relative; }
+  .ytp-menu .sp-it.on::before { content: ""; position: absolute; left: 20px; top: 50%; width: 12px; height: 6px; margin-top: -5px; border: solid #fff; border-width: 0 0 2px 2px; transform: rotate(-45deg); }
+  .ytp-menu .page { display: none; } .ytp-menu .page.on { display: block; }
+  .yt-credit { position: absolute; right: 16px; top: 14px; font: 500 11px/1 var(--font); color: rgb(255 255 255 / 0.55); letter-spacing: 0.01em; }
+  #ytCursor { position: absolute; left: 0; top: 0; width: 22px; height: 22px; opacity: 0; }
+  #ytCursor svg { width: 100%; height: 100%; overflow: visible; }
+  #ytHeads .head { text-shadow: 0 4px 30px rgb(0 0 0 / 0.7); }
+
+  /* the arrow keys beside the app */
+  #keys { position: absolute; display: none; gap: 8px; }
+  .key { width: 46px; height: 46px; border-radius: 10px; background: #1c1c1f; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 -3px 0 rgb(0 0 0 / 0.55), 0 8px 24px rgb(0 0 0 / 0.5); display: grid; place-items: center; }
+  .key svg { width: 20px; height: 20px; fill: none; stroke: #f5f5f7; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .key.wide { width: 104px; }
+  .head .w { display: inline-block; white-space: nowrap; }
+  .head .ch { display: inline-block; will-change: transform; }
+  #headHalo { position: absolute; left: 50%; width: 1100px; height: 220px; margin-left: -550px; transform: translateY(-50%); opacity: 0;
+    background: radial-gradient(ellipse 50% 50% at 50% 50%, rgb(0 0 0 / 0.62), rgb(0 0 0 / 0.36) 55%, rgb(0 0 0 / 0) 100%); }
+  #ytVig { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: radial-gradient(ellipse 72% 70% at 50% 46%, rgb(0 0 0 / 0) 55%, rgb(0 0 0 / 0.85) 100%); }
+  #fxWash { background: #fff; opacity: 0; pointer-events: none; }
+  #fbCursor { position: absolute; left: 0; top: 0; width: 22px; height: 22px; opacity: 0; pointer-events: none; }
+  #fbCursor svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.4)); }
+  #fbRing { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -141,6 +200,20 @@
     <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
     <feDisplacementMap in="SourceGraphic" in2="n" scale="1.1" xChannelSelector="R" yChannelSelector="G"/>
   </filter>
+  <!-- a miss: the colour splits -->
+  <filter id="fxCA" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r"/>
+    <feOffset id="fxCAr" in="r" dx="0" dy="0" result="r2"/>
+    <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g"/>
+    <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b"/>
+    <feOffset id="fxCAb" in="b" dx="0" dy="0" result="b2"/>
+    <feBlend in="r2" in2="g" mode="screen" result="rg"/>
+    <feBlend in="rg" in2="b2" mode="screen"/>
+  </filter>
+  <!-- the whip at the cut: smeared the way the notes fall -->
+  <filter id="fxVB" x="0" y="-10%" width="100%" height="120%" color-interpolation-filters="sRGB">
+    <feGaussianBlur id="fxVBb" in="SourceGraphic" stdDeviation="0 0" edgeMode="duplicate"/>
+  </filter>
 </svg>
 
 <canvas id="bg"></canvas>
@@ -148,6 +221,8 @@
 <div class="layer" id="stage">
   <div class="win" id="win"><iframe id="app" title="Fallboard" scrolling="no"></iframe></div>
   <div id="taps"></div>
+  <svg id="fbRing"></svg>
+  <div id="keys"><div class="key wide" id="keySpace"><svg viewBox="0 0 24 24"><path d="M5 11v4h14v-4"/></svg></div><div class="key" id="keyL"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></div><div class="key" id="keyR"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
 
   <div class="prop player" id="player">
     <canvas id="vid"></canvas>
@@ -184,6 +259,44 @@
   <div class="cursor" id="cursor"><svg viewBox="0 0 22 22"><path d="M3 2.2v16.3l4.1-3.9 2.7 6.1 2.9-1.3-2.7-6h5.8z" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round"/></svg></div>
 </div>
 
+<div class="layer" id="yt">
+  <img class="frame" id="ytFrame" alt="">
+  <div id="ytDim"></div>
+  <div id="ytVig"></div>
+  <svg id="ytRing"></svg>
+  <div class="ytp-gradient" id="ytGrad"></div>
+  <div class="ytp-big" id="ytBig"><svg viewBox="0 0 36 36" id="ytBigIcon"></svg></div>
+  <div class="ytp-chrome" id="ytChrome">
+    <div class="ytp-tooltip" id="ytTip"><div class="thumb"><img id="ytTipImg" alt=""></div><div class="tt" id="ytTipT">0:50</div></div>
+    <div class="ytp-progress" id="ytProg"><div class="rail" id="ytRail"><div class="loaded" id="ytLoaded"></div><div class="hover" id="ytHover"></div><div class="played" id="ytPlayed"></div></div><div class="knob" id="ytKnob"></div></div>
+    <div class="ytp-controls">
+      <svg viewBox="0 0 36 36" id="ytPlay"><path id="ytPlayPath" d=""/></svg>
+      <svg viewBox="0 0 36 36"><path d="M 12,24 20.5,18 12,12 V 24 z M 22,12 v 12 h 2 V 12 h -2 z"/></svg>
+      <svg viewBox="0 0 36 36"><path d="M8,21 L12,21 L17,26 L17,10 L12,15 L8,15 L8,21 Z M19,14 L19,22 C20.48,21.32 21.5,19.77 21.5,18 C21.5,16.26 20.48,14.74 19,14 ZM19,11.29 C21.89,12.15 24,14.83 24,18 C24,21.17 21.89,23.85 19,24.71 L19,26.77 C23.01,25.86 26,22.28 26,18 C26,13.72 23.01,10.14 19,9.23 L19,11.29 Z"/></svg>
+      <div class="ytp-time" id="ytTime">0:48 / 3:01</div>
+      <div class="sp"></div>
+      <svg viewBox="0 0 36 36"><path d="M11,11 C9.89,11 9,11.9 9,13 L9,23 C9,24.1 9.89,25 11,25 L25,25 C26.1,25 27,24.1 27,23 L27,13 C27,11.9 26.1,11 25,11 L11,11 Z M11,17 L14,17 L14,19 L11,19 L11,17 Z M20,23 L11,23 L11,21 L20,21 L20,23 Z M25,23 L22,23 L22,21 L25,21 L25,23 Z M25,19 L16,19 L16,17 L25,17 L25,19 Z"/></svg>
+      <svg viewBox="0 0 36 36" id="ytGear"><path d="m 23.94,18.78 c .03,-0.25 .05,-0.51 .05,-0.78 0,-0.27 -0.02,-0.52 -0.05,-0.78 l 1.68,-1.32 c .15,-0.12 .19,-0.33 .09,-0.51 l -1.6,-2.76 c -0.09,-0.17 -0.31,-0.24 -0.48,-0.17 l -1.99,.8 c -0.41,-0.32 -0.86,-0.58 -1.35,-0.78 l -0.30,-2.12 c -0.02,-0.19 -0.19,-0.33 -0.39,-0.33 l -3.2,0 c -0.2,0 -0.36,.14 -0.39,.33 l -0.30,2.12 c -0.48,.2 -0.93,.47 -1.35,.78 l -1.99,-0.8 c -0.18,-0.07 -0.39,0 -0.48,.17 l -1.6,2.76 c -0.10,.17 -0.05,.39 .09,.51 l 1.68,1.32 c -0.03,.25 -0.05,.52 -0.05,.78 0,.26 .02,.52 .05,.78 l -1.68,1.32 c -0.15,.12 -0.19,.33 -0.09,.51 l 1.6,2.76 c .09,.17 .31,.24 .48,.17 l 1.99,-0.8 c .41,.32 .86,.58 1.35,.78 l .30,2.12 c .02,.19 .19,.33 .39,.33 l 3.2,0 c .2,0 .36,-0.14 .39,-0.33 l .30,-2.12 c .48,-0.2 .93,-0.47 1.35,-0.78 l 1.99,.8 c .18,.07 .39,0 .48,-0.17 l 1.6,-2.76 c .09,-0.17 .05,-0.39 -0.09,-0.51 l -1.68,-1.32 0,0 z m -5.94,2.01 c -1.54,0 -2.8,-1.25 -2.8,-2.8 0,-1.54 1.25,-2.8 2.8,-2.8 1.54,0 2.8,1.25 2.8,2.8 0,1.54 -1.25,2.8 -2.8,2.8 l 0,0 z"/></svg>
+      <svg viewBox="0 0 36 36"><path d="M25,17 L17,17 L17,23 L25,23 L25,17 L25,17 Z M29,25 L29,10.98 C29,9.88 28.1,9 27,9 L9,9 C7.9,9 7,9.88 7,10.98 L7,25 C7,26.1 7.9,27 9,27 L27,27 C28.1,27 29,26.1 29,25 L29,25 Z M27,25.02 L9,25.02 L9,10.97 L27,10.97 L27,25.02 L27,25.02 Z"/></svg>
+      <svg viewBox="0 0 36 36"><path d="m 14,14 -4,0 0,2 6,0 0,-6 -2,0 0,4 0,0 z"/><path d="m 22,14 0,-4 -2,0 0,6 6,0 0,-2 -4,0 0,0 z"/><path d="m 20,26 2,0 0,-4 4,0 0,-2 -6,0 0,6 0,0 z"/><path d="m 10,22 4,0 0,4 2,0 0,-6 -6,0 0,2 0,0 z"/></svg>
+    </div>
+    <div class="ytp-menu" id="ytMenu">
+      <div class="page on" id="ytMain">
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 16.2a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4zM11 7h2v6h-2zm0 8h2v2h-2z"/></svg></div><div class="lb">Stable Volume</div></div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M21 3H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H3V5h18v14zM5 15h3v2H5zm5 0h9v2h-9zM5 11h9v2H5zm11 0h3v2h-3z"/></svg></div><div class="lb">Subtitles/CC</div><div class="vl">Off</div></div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></div><div class="lb">Sleep timer</div><div class="vl">Off</div></div>
+        <div class="it" id="ytSpeedItem"><div class="ic"><svg viewBox="0 0 24 24"><path d="M10 8v8l6-4-6-4zm11-5H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H3V5h18v14z"/></svg></div><div class="lb">Playback speed</div><div class="vl">Normal</div></div>
+        <div class="it"><div class="ic"><svg viewBox="0 0 24 24"><path d="M15 17h6v1h-6zm-4 0H3v1h8v2h1v-5h-1zm3-9h1V3h-1v2H3v1h11zm4 3v2h-1v-1h-4v-1zm-5 1v-1H3v1zm3-7h3v1h-3z"/></svg></div><div class="lb">Quality</div><div class="vl">Auto (1080p)</div></div>
+      </div>
+      <div class="page" id="ytSpeeds">
+        <div class="sp-head"><span>Playback speed</span><i>Custom</i></div>
+        <div class="sp-it">0.25</div><div class="sp-it" id="ytHalf">0.5</div><div class="sp-it">0.75</div><div class="sp-it on" id="ytNormal">Normal</div><div class="sp-it">1.25</div><div class="sp-it">1.5</div>
+      </div>
+    </div>
+  </div>
+  <div class="yt-credit">Video: Rousseau</div>
+  <div id="ytCursor"><svg viewBox="0 0 22 22"><path d="M3 2.2v16.3l4.1-3.9 2.7 6.1 2.9-1.3-2.7-6h5.8z" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round"/></svg></div>
+</div>
 <div class="layer" id="endLayer" style="opacity:0">
   <div class="end-center" id="endStage">
     <div class="end-icon" id="endIcon"><img src="/icons/icon-512.png" alt="Fallboard"></div>
@@ -192,8 +305,10 @@
   </div>
 </div>
 
+<div class="layer" id="fxWash"></div>
+<div id="fbCursor"><svg viewBox="0 0 22 22"><path d="M3 2.2v16.3l4.1-3.9 2.7 6.1 2.9-1.3-2.7-6h5.8z" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round"/></svg></div>
 <div class="layer" id="topfade"></div>
-<div class="layer" id="heads"><div class="head" id="headA"></div><div class="head" id="headB"></div></div>
+<div class="layer" id="heads"><div id="headHalo"></div><div class="head" id="headA"></div><div class="head" id="headB"></div></div>
 <div class="layer" id="black"></div>
 
 <script src="/js/score.js"></script>

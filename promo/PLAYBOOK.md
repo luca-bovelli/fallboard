@@ -97,4 +97,12 @@ All of it is `promo/film/film.html` + `promo/film/film.js` (the timeline), `prom
 node promo/scripts/film.js --format=16x9 --stills=12.4,16,24.5
 # the full film in the cloud: Actions → Render Film, or
 gh workflow run render-film.yml -f formats=16x9,9x16
+# the hook (Rousseau's video → Fallboard), one export per sound mix
+gh workflow run render-film.yml -f cut=hook -f formats=16x9 -f mixes=A,B,C
+```
+
+The hook's sources (Rousseau's video, its 60 fps frames, the meme sounds) stay out of git in `promo/_src/`. The cloud gets them from the encrypted `promo-src` release asset, opened with the `PROMO_SRC_KEY` Actions secret (the key is also kept locally in `~/.config/fallboard/promo-src-key`). After changing anything in `promo/_src/`, re-upload it:
+
+```sh
+GH_TOKEN=… PROMO_SRC_KEY=$(cat ~/.config/fallboard/promo-src-key) promo/scripts/src-assets.sh push
 ```

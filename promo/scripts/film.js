@@ -6,6 +6,7 @@
    node promo/scripts/film.js --format=16x9 --chunk=2/7               the 3rd of 7 groups of shots (for CI)
    node promo/scripts/film.js --format=16x9 --all                     every shot
    node promo/scripts/film.js --format=16x9 --assemble                audio from the shots' logs, joined → promo/exports/
+   node promo/scripts/film.js --cut=hook --assemble --mixes=A,B,C     one export per sound mix, on the same picture
 */
 const http = require('http');
 const fs = require('fs');
@@ -18,9 +19,13 @@ const DIST = path.join(ROOT, 'dist');
 const arg = (k) => { const a = process.argv.find((x) => x.startsWith('--' + k + '=')); return a ? a.slice(k.length + 3) : null; };
 const has = (k) => process.argv.includes('--' + k);
 const FORMAT = arg('format') || '16x9';
+const CUT = arg('cut') || 'main';
+const FPS = +(arg('fps') || 60);
+const SCALE = +(arg('scale') || 1);   // below 1: a quick low-resolution draft
 const VERT = FORMAT === '9x16';
 const VIEW = VERT ? { width: 360, height: 640, dpr: 3 } : { width: 1280, height: 720, dpr: 1.5 };
-const OUT = path.join(ROOT, 'promo', 'film', 'out', FORMAT);
+const TAG = CUT === 'main' ? FORMAT : `${CUT}-${FORMAT}`;
+const OUT = path.join(ROOT, 'promo', 'film', 'out', TAG);
 const PREVIEW = path.join(ROOT, 'promo', '_preview');
 const EXPORTS = path.join(ROOT, 'promo', 'exports');
 for (const d of [OUT, PREVIEW, EXPORTS]) fs.mkdirSync(d, { recursive: true });
@@ -42,9 +47,9 @@ function serve() {
 }
 
 function encoder(file) {
-  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-c:v', 'png', '-framerate', '60', '-i', '-',
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '15', '-tune', 'film', '-x264-params', 'aq-mode=3',
-    '-pix_fmt', 'yuv420p', '-r', '60', '-movflags', '+faststart', file], { stdio: ['pipe', 'inherit', 'inherit'] });
+  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-c:v', 'png', '-framerate', String(FPS), '-i', '-',
+    '-c:v', 'libx264', '-preset', SCALE < 1 ? 'veryfast' : 'slow', '-crf', SCALE < 1 ? '20' : '15', '-tune', 'film', '-x264-params', 'aq-mode=3',
+    '-pix_fmt', 'yuv420p', '-r', String(FPS), '-movflags', '+faststart', file], { stdio: ['pipe', 'inherit', 'inherit'] });
   const done = new Promise((res, rej) => ff.on('close', (c) => (c === 0 ? res() : rej(new Error('ffmpeg exited ' + c)))));
   return {
     async write(buf) { if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once('drain', r)); },
@@ -60,7 +65,7 @@ async function open() {
   const page = await ctx.newPage();
   page.on('console', (m) => { if (['error', 'warning'].includes(m.type())) console.log('[page]', m.text()); });
   page.on('pageerror', (e) => console.log('[page error]', e.message));
-  const url = `http://127.0.0.1:${srv.address().port}/promo/film/film.html?format=${FORMAT}`;
+  const url = `http://127.0.0.1:${srv.address().port}/promo/film/film.html?format=${FORMAT}&cut=${CUT}&fps=${FPS}`;
   await page.goto(url, { waitUntil: 'load' });
   const info = await page.evaluate(() => window.FILM.ready());
   const cdp = await ctx.newCDPSession(page);
@@ -68,7 +73,7 @@ async function open() {
 }
 
 async function shoot(cdp) {
-  const { data } = await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, fromSurface: true, clip: { x: 0, y: 0, width: VIEW.width, height: VIEW.height, scale: VIEW.dpr } });
+  const { data } = await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, fromSurface: true, clip: { x: 0, y: 0, width: VIEW.width, height: VIEW.height, scale: VIEW.dpr * SCALE } });
   return Buffer.from(data, 'base64');
 }
 
@@ -116,7 +121,7 @@ async function stills(times) {
       for (let f = sh.f0; f <= last; f++) {
         await s.page.evaluate((k) => window.FILM.frame(k), f);
         if (frames.includes(f)) {
-          const file = path.join(PREVIEW, `film-${FORMAT}-${(f / s.info.fps).toFixed(2)}.png`);
+          const file = path.join(PREVIEW, `film-${TAG}-${(f / s.info.fps).toFixed(2)}.png`);
           fs.writeFileSync(file, await shoot(s.cdp));
           console.log(file);
         }
@@ -126,6 +131,9 @@ async function stills(times) {
 }
 
 async function assemble() {
+  for (const mix of (arg('mixes') || '').split(',')) await assembleMix(mix);
+}
+async function assembleMix(mix) {
   const files = fs.readdirSync(OUT).filter((f) => /^\d\d-.*\.mp4$/.test(f)).sort();
   const events = [];
   for (const f of files) {
@@ -135,13 +143,13 @@ async function assemble() {
   const s = await open();
   let wav;
   try {
-    wav = await s.page.evaluate(([ev, d]) => window.FILM.renderAudio(ev, d), [events, s.info.duration + 0.5]);
+    wav = await s.page.evaluate(([ev, d, m]) => window.FILM.renderAudio(ev, d, m || 'A'), [events, s.info.duration + 0.5, mix]);
   } finally { await s.close(); }
-  const wavFile = path.join(OUT, 'sound.wav');
+  const wavFile = path.join(OUT, `sound${mix ? '-' + mix : ''}.wav`);
   fs.writeFileSync(wavFile, Buffer.from(wav, 'base64'));
   const list = path.join(OUT, 'list.txt');
   fs.writeFileSync(list, files.map((f) => `file '${path.join(OUT, f).replace(/\\/g, '/')}'`).join('\n'));
-  const out = path.join(EXPORTS, `fallboard-${FORMAT}.mp4`);
+  const out = path.join(EXPORTS, `fallboard-${TAG}${mix ? '-' + mix : ''}.mp4`);
   await new Promise((res, rej) => {
     const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list, '-i', wavFile,
       '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '256k', '-shortest', '-movflags', '+faststart', out], { stdio: 'inherit' });
@@ -160,6 +168,7 @@ async function assemble() {
     await s.close();
     let ids = [...Array(n).keys()];
     if (arg('chunk')) { const [k, of] = arg('chunk').split('/').map(Number); ids = ids.filter((i) => i % of === k); }
+    if (!ids.length) return console.log('no shots in this chunk');
     return renderShots(ids);
   }
   console.log('nothing to do; see the header of promo/scripts/film.js');
