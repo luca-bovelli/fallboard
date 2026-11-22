@@ -22,6 +22,7 @@ const FORMAT = arg('format') || '16x9';
 const CUT = arg('cut') || 'main';
 const FPS = +(arg('fps') || 60);
 const SCALE = +(arg('scale') || 1);   // below 1: a quick low-resolution draft
+const HLV = arg('hl');                // the hook's chord highlight, 1–4
 const VERT = FORMAT === '9x16';
 const VIEW = VERT ? { width: 360, height: 640, dpr: 3 } : { width: 1280, height: 720, dpr: 1.5 };
 const TAG = CUT === 'main' ? FORMAT : `${CUT}-${FORMAT}`;
@@ -65,7 +66,7 @@ async function open() {
   const page = await ctx.newPage();
   page.on('console', (m) => { if (['error', 'warning'].includes(m.type())) console.log('[page]', m.text()); });
   page.on('pageerror', (e) => console.log('[page error]', e.message));
-  const url = `http://127.0.0.1:${srv.address().port}/promo/film/film.html?format=${FORMAT}&cut=${CUT}&fps=${FPS}`;
+  const url = `http://127.0.0.1:${srv.address().port}/promo/film/film.html?format=${FORMAT}&cut=${CUT}&fps=${FPS}${HLV ? '&hl=' + HLV : ''}`;
   await page.goto(url, { waitUntil: 'load' });
   const info = await page.evaluate(() => window.FILM.ready());
   const cdp = await ctx.newCDPSession(page);
@@ -121,7 +122,7 @@ async function stills(times) {
       for (let f = sh.f0; f <= last; f++) {
         await s.page.evaluate((k) => window.FILM.frame(k), f);
         if (frames.includes(f)) {
-          const file = path.join(PREVIEW, `film-${TAG}-${(f / s.info.fps).toFixed(2)}.png`);
+          const file = path.join(PREVIEW, `film-${TAG}${HLV ? '-hl' + HLV : ''}-${(f / s.info.fps).toFixed(2)}.png`);
           fs.writeFileSync(file, await shoot(s.cdp));
           console.log(file);
         }

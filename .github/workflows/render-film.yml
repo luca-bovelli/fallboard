@@ -2,7 +2,8 @@
 # what each shot played and the shots are joined. Run by hand from Actions, or through the API:
 #   POST /repos/luca-bovelli/fallboard/actions/workflows/render-film.yml/dispatches
 #   {"ref":"main","inputs":{"cut":"hook","formats":"16x9","mixes":"A,B,C"}}
-# With from_run set to an earlier run's id, the shots are reused and only the sound is remade.
+# With from_run set to an earlier run's id, the shots are reused and only the sound is remade;
+# with stills set, only those frames are made (once per hl value), as PNGs.
 # The hook uses Rousseau's video and other sources we may not publish: they come from the
 # encrypted promo-src release asset (promo/scripts/src-assets.sh), opened with PROMO_SRC_KEY.
 name: Render Film
@@ -20,10 +21,16 @@ on:
         description: 'Frames per second'
         default: '60'
       mixes:
-        description: 'Sound mixes, comma separated (hook: A, B, C); empty for the one mix'
+        description: 'Sound mixes, comma separated (hook: A, B, C, D); empty for the one mix'
         default: ''
       from_run:
         description: 'Sound only: reuse the shots of this earlier run id and remake just the soundtrack'
+        default: ''
+      hl:
+        description: 'Hook: how the chord is highlighted (1 ring, 2 spotlight, 3 corners, 4 arrow); for stills, a list'
+        default: '2'
+      stills:
+        description: 'Stills only: seconds, comma separated (one set per hl value)'
         default: ''
 
 permissions:
@@ -39,9 +46,41 @@ jobs:
       - id: f
         run: echo "formats=$(echo '${{ inputs.formats }}' | jq -Rc 'split(",") | map(gsub(" "; ""))')" >> "$GITHUB_OUTPUT"
 
+  stills:
+    needs: plan
+    if: inputs.stills != ''
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        format: ${{ fromJson(needs.plan.outputs.formats) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Chromium
+        run: |
+          npm install --no-save playwright@1.49.1
+          npx playwright install --with-deps chromium
+      - name: Private sources
+        if: inputs.cut != 'main'
+        env:
+          PROMO_SRC_KEY: ${{ secrets.PROMO_SRC_KEY }}
+        run: bash promo/scripts/src-assets.sh fetch
+      - name: Stills
+        run: |
+          for k in $(echo '${{ inputs.hl }}' | tr ',' ' '); do
+            node promo/scripts/film.js --cut=${{ inputs.cut }} --format=${{ matrix.format }} --fps=${{ inputs.fps }} --hl=$k --stills=${{ inputs.stills }}
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stills-${{ inputs.cut }}-${{ matrix.format }}
+          path: promo/_preview/*.png
+
   shots:
     needs: plan
-    if: inputs.from_run == ''
+    if: inputs.from_run == '' && inputs.stills == ''
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -66,7 +105,7 @@ jobs:
           PROMO_SRC_KEY: ${{ secrets.PROMO_SRC_KEY }}
         run: bash promo/scripts/src-assets.sh fetch
       - name: Shots ${{ matrix.chunk }}/7 (${{ matrix.format }})
-        run: node promo/scripts/film.js --cut=${{ inputs.cut }} --format=${{ matrix.format }} --fps=${{ inputs.fps }} --chunk=${{ matrix.chunk }}/7
+        run: node promo/scripts/film.js --cut=${{ inputs.cut }} --format=${{ matrix.format }} --fps=${{ inputs.fps }} --hl=${{ inputs.hl }} --chunk=${{ matrix.chunk }}/7
       - uses: actions/upload-artifact@v4
         with:
           name: shot-${{ env.TAG }}-${{ matrix.chunk }}
@@ -75,7 +114,7 @@ jobs:
 
   assemble:
     needs: [plan, shots]
-    if: always() && needs.plan.result == 'success' && (needs.shots.result == 'success' || needs.shots.result == 'skipped')
+    if: always() && inputs.stills == '' && needs.plan.result == 'success' && (needs.shots.result == 'success' || needs.shots.result == 'skipped')
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -107,7 +146,7 @@ jobs:
           path: promo/film/out/${{ env.TAG }}
       - name: Soundtrack and join
         run: |
-          node promo/scripts/film.js --cut=${{ inputs.cut }} --format=${{ matrix.format }} --fps=${{ inputs.fps }} --assemble --mixes=${{ inputs.mixes }}
+          node promo/scripts/film.js --cut=${{ inputs.cut }} --format=${{ matrix.format }} --fps=${{ inputs.fps }} --hl=${{ inputs.hl }} --assemble --mixes=${{ inputs.mixes }}
           mkdir -p promo/_preview
           for f in promo/exports/fallboard-$TAG*.mp4; do
             ffprobe -v error -show_entries stream=codec_type,width,height,r_frame_rate -show_entries format=duration -of compact=p=0 "$f"

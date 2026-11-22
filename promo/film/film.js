@@ -749,8 +749,6 @@
   const SRC0 = 45.0, YT_DUR = 181.6, CHORD_SRC = 52.84, FREEZE_SRC = 52.72, FB_FROM = 43.64, LAND = 48.636;
   const YT60_LAST = 790;
   const FREEZE_IMG = '/promo/_src/yt/0193.jpg';   // the 25 fps original of 52.72 s: the chord on the keys
-  /* the chord in the video, in film px (the video fills the 1280×720 frame) */
-  const YT_RING = { cx: 868, cy: 322, rx: 122, ry: 54 };
   const STOP_LEN = HK.cut - HK.stop;
   const BRAKE = HK.freeze - HK.brake;   // speed falls as 1 - u²: the picture loses BRAKE/3 on the sound
 
@@ -808,7 +806,7 @@
   const MENU = { gear: 10.30, item: 10.47, half: 10.68 };
 
   /* every sound of the hook that is not the app's own piano. mix: A booms, then a FAHH; B booms only;
-     C a FAHH on each drag, booms in the frenzy */
+     C a FAHH on each drag, booms in the frenzy; D as A, with "ahh almost almost" over the drags */
   function hookEvents() {
     const ev = [];
     const clip = (o) => ev.push({ k: 'c', ...o });
@@ -837,7 +835,9 @@
       ev.push({ k: 'c', t: d.b - 0.14, file: 'sfx/fahh.mp3', bus: 'boom', gain: 2.6, mix: 'C' });
     });
     SEEKS.forEach((s) => ev.push({ k: 'c', t: s.t - 0.05, file: 'sfx/vine-boom.mp3', bus: 'boom', gain: 0.6 }));
-    ev.push({ k: 'c', t: SEEKS[SEEKS.length - 1].t + 0.02, file: 'sfx/fahh.mp3', bus: 'boom', gain: 3.2, mix: 'A' });
+    ev.push({ k: 'c', t: SEEKS[SEEKS.length - 1].t + 0.02, file: 'sfx/fahh.mp3', bus: 'boom', gain: 3.2, mix: 'AD' });
+    // D: "ahh… almost… almost": the ahh on the first miss, an almost on each of the next two
+    ev.push({ k: 'c', t: DRAGS[1].b - 1.48, file: 'sfx/almost.wav', bus: 'boom', gain: 2.0, mix: 'D' });
     // strings under the search: an F and its fifth, and a wrong note more with each miss
     const CL = [54, 64, 59, 73, 74, 69, 63, 67, 70, 66, 61, 76, 57, 72];
     ev.push({ k: 'str', t: HK.unpause, midi: 41, g: 1 }, { k: 'str', t: HK.unpause, midi: 48, g: 0.7 });
@@ -861,32 +861,6 @@
   const ytThumb = (pos) => `/promo/_src/yt/${String(clamp(Math.round((pos - SRC0) * 25), 0, 324)).padStart(4, '0')}.jpg`;
   async function showImg(img, src) { if (img.dataset.src !== src) { img.dataset.src = src; img.src = src; await img.decode().catch(() => {}); } }
 
-  /* a ring drawn by hand, quickly and cleanly: one tapered stroke that runs a little past where it
-     began, its radius breathing slightly, tilted a few degrees. p is how much of it is drawn. */
-  function handRing(svg, ring, p, scale = 1) {
-    if (p <= 0) { svg.innerHTML = ''; return; }
-    const sweep = Math.PI * 2 * 1.14, a0 = -2.55, tilt = -0.07, N = 140, width = 4.2 * scale;
-    const pts = [];
-    const n = Math.max(2, Math.round(N * p));
-    for (let i = 0; i <= n; i++) {
-      const s = (i / N), th = a0 + sweep * s;
-      const r = (1 + 0.028 * Math.sin(2 * th + 1.3) + 0.016 * Math.sin(3 * th + 0.4)) * lerp(0.95, 1.07, s);
-      const x = Math.cos(th) * ring.rx * r, y = Math.sin(th) * ring.ry * r;
-      pts.push({ x: ring.cx + x * Math.cos(tilt) - y * Math.sin(tilt), y: ring.cy + x * Math.sin(tilt) + y * Math.cos(tilt), s });
-    }
-    const L = [], R = [];
-    for (let i = 0; i < pts.length; i++) {
-      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
-      const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
-      const s = pts[i].s;
-      // pressure: lands quickly, swells, lifts off at the end
-      const w = width * Math.min(1, 0.25 + s / 0.08) * (0.82 + 0.18 * Math.sin(Math.PI * s)) * Math.min(1, (1 - s) / 0.16 + 0.12);
-      const nx = (-dy / len) * w / 2, ny = (dx / len) * w / 2;
-      L.push(`${(pts[i].x + nx).toFixed(2)},${(pts[i].y + ny).toFixed(2)}`);
-      R.push(`${(pts[i].x - nx).toFixed(2)},${(pts[i].y - ny).toFixed(2)}`);
-    }
-    svg.innerHTML = `<path d="M${L.join('L')}L${R.reverse().join('L')}Z" fill="#ffd84a" style="filter:drop-shadow(0 0 ${(5 * scale).toFixed(1)}px rgb(255 216 74 / 0.7))"/>`;
-  }
   const drawOn = (t, t0) => bezier(0.3, 0.1, 0.2, 1)(prog(t, t0, t0 + 0.5));
 
   /* a path of [time, point] keys, eased between */
@@ -968,6 +942,113 @@
     $('fxCAb').setAttribute('dx', (-caPx).toFixed(2));
   }
 
+  /* ------------------------------------------------------------------ the chord, highlighted (?hl=1..4)
+     1 a white ring drawn by hand · 2 a spotlight with the chord's name · 3 corner marks that lock
+     on · 4 an arrow drawn from the headline to the chord. In white, over either picture. */
+  const HL = +(Q.get('hl') || 2);
+  /* the chord's notes where they meet the keys, in the video's 1280×720 frame */
+  const YT_BOX = { x0: 772, y0: 290, x1: 966, y1: 338 };
+  const ZO = { x: (YT_BOX.x0 + YT_BOX.x1) / 2, y: (YT_BOX.y0 + YT_BOX.y1) / 2 };
+  /* the pause: a bump in, a slow creep closer as it waits, a snap back with a little overshoot */
+  function pauseZoom(t) {
+    const F = HK.freeze, U = HK.unpause;
+    if (t < F) return 1;
+    const held = (tt) => {
+      const u = tt - F;
+      return 1 + 0.05 * (1 - Math.exp(-u / 0.05)) + 0.03 * (u / 0.08) * Math.exp(1 - u / 0.08) + 0.05 * easeCam(prog(tt, F + 0.3, U));
+    };
+    if (t < U) return held(t);
+    const u = t - U;
+    return 1 + (held(U) - 1) * Math.exp(-u / 0.1) * Math.cos((2 * Math.PI * u) / 0.42);
+  }
+  /* a tapered stroke through points, pressed on quickly and lifted at its end */
+  function taper(pts, width, lift = 0.16) {
+    const L = [], R = [], n = pts.length;
+    for (let i = 0; i < n; i++) {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+      const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, s = pts[i].s;
+      const w = width * Math.min(1, 0.25 + s / 0.08) * (0.85 + 0.15 * Math.sin(Math.PI * s)) * Math.min(1, (1 - s) / lift + 0.12);
+      const nx = (-dy / len) * w / 2, ny = (dx / len) * w / 2;
+      L.push(`${(pts[i].x + nx).toFixed(2)},${(pts[i].y + ny).toFixed(2)}`);
+      R.push(`${(pts[i].x - nx).toFixed(2)},${(pts[i].y - ny).toFixed(2)}`);
+    }
+    return `M${L.join('L')}L${R.reverse().join('L')}Z`;
+  }
+  function ringPts(ring, p) {
+    const sweep = Math.PI * 2 * 1.14, a0 = -2.55, tilt = -0.07, N = 140, pts = [];
+    const n = Math.max(2, Math.round(N * p));
+    for (let i = 0; i <= n; i++) {
+      const s = i / N, th = a0 + sweep * s;
+      const r = (1 + 0.028 * Math.sin(2 * th + 1.3) + 0.016 * Math.sin(3 * th + 0.4)) * lerp(0.95, 1.07, s);
+      const x = Math.cos(th) * ring.rx * r, y = Math.sin(th) * ring.ry * r;
+      pts.push({ x: ring.cx + x * Math.cos(tilt) - y * Math.sin(tilt), y: ring.cy + x * Math.sin(tilt) + y * Math.cos(tilt), s });
+    }
+    return pts;
+  }
+  const SHADOW = 'filter:drop-shadow(0 1px 2px rgb(0 0 0 / 0.85)) drop-shadow(0 0 12px rgb(0 0 0 / 0.55))';
+  let arrowFrom = null;
+  /* o: { t0, t1, box (screen px), head (the headline's element, for the arrow) } */
+  function drawHL(t, o) {
+    const svg = $('hl');
+    if (!o || t < o.t0 - 0.12 || t > o.t1 + 0.02) { svg.innerHTML = ''; if (!o || t > o.t1) arrowFrom = null; return; }
+    const b = o.box, cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2, w = b.x1 - b.x0, h = b.y1 - b.y0;
+    const p = drawOn(t, o.t0), a = 1 - ease(t, o.t1 - 0.28, o.t1, easeIn), dimIn = ease(t, o.t0 - 0.1, o.t0 + 0.35) * a;
+    const radial = (k) => `<defs><radialGradient id="hlR" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="${w * 0.72}" gradientTransform="translate(${cx} ${cy}) scale(1 ${((h + 60) / w).toFixed(3)}) translate(${-cx} ${-cy})"><stop offset="0.62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${k}"/></radialGradient></defs><rect width="${W}" height="${H}" fill="url(#hlR)" opacity="${dimIn.toFixed(3)}"/>`;
+    let s = '';
+    if (HL === 1) {
+      s += radial(0.7);
+      s += `<path d="${taper(ringPts({ cx, cy, rx: w / 2 + 26, ry: h / 2 + 18 }, p), 4.4)}" fill="#fff" opacity="${a.toFixed(3)}" style="${SHADOW}"/>`;
+    } else if (HL === 2) {
+      const pad = 16, x = b.x0 - pad, y = b.y0 - pad, ww = w + 2 * pad, hh = h + 2 * pad, r = Math.min(hh / 2, 18);
+      s += `<defs><filter id="hlSoft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter>
+        <mask id="hlM" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="#fff"/><rect x="${x}" y="${y}" width="${ww}" height="${hh}" rx="${r}" fill="#000" filter="url(#hlSoft)"/></mask></defs>
+        <rect width="${W}" height="${H}" fill="#000" opacity="${(0.72 * dimIn).toFixed(3)}" mask="url(#hlM)"/>
+        <rect x="${x}" y="${y}" width="${ww}" height="${hh}" rx="${r}" fill="none" stroke="#fff" stroke-opacity="0.9" stroke-width="1.75" pathLength="1" stroke-dasharray="${p.toFixed(4)} 2" opacity="${a.toFixed(3)}"/>`;
+      const k = ease(t, o.t0 + 0.22, o.t0 + 0.55), cyChip = y + hh + 24 + (1 - k) * 8;
+      s += `<g opacity="${(k * a).toFixed(3)}" transform="translate(${cx.toFixed(1)} ${cyChip.toFixed(1)})"><rect x="-50" y="-15" width="100" height="30" rx="15" fill="#fff"/><text x="-1" y="5.5" text-anchor="middle" font-family="Inter" font-weight="700" font-size="15" fill="#111" letter-spacing="-0.01em">F7<tspan font-size="11.5" dy="-4.5" font-weight="600">add13</tspan></text></g>`;
+    } else if (HL === 3) {
+      s += radial(0.55);
+      const u = t - o.t0, sc = 1 + 0.42 * Math.exp(-u / 0.085) * Math.cos((2 * Math.PI * u) / 0.46), op = clamp(u / 0.07, 0, 1) * a;
+      const pad = 14, hx = (w / 2 + pad) * sc, hy = (h / 2 + pad) * sc, arm = Math.min(24, w * 0.2);
+      const d = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => {
+        const X = cx + sx * hx, Y = cy + sy * hy;
+        return `M${X},${Y - sy * arm}L${X},${Y}L${X - sx * arm},${Y}`;
+      }).join('');
+      s += `<path d="${d}" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="${op.toFixed(3)}" style="${SHADOW}"/>`;
+    } else if (HL === 4) {
+      s += radial(0.6);
+      const em = o.head && o.head.querySelector('em');
+      if (!arrowFrom && em && em.getBoundingClientRect().width > 0) { const r = em.getBoundingClientRect(); arrowFrom = { x: r.left + r.width * 0.6, y: r.bottom + 12 }; }
+      if (arrowFrom) {
+        const A0 = arrowFrom, A1 = { x: cx + w * 0.04, y: b.y0 - 16 };
+        const C = { x: lerp(A0.x, A1.x, 0.5) + (A1.y - A0.y) * 0.32, y: lerp(A0.y, A1.y, 0.45) };
+        const pa = bezier(0.35, 0, 0.2, 1)(prog(t, o.t0 + 0.12, o.t0 + 0.55)), N = 60, pts = [];
+        for (let i = 0; i <= Math.max(2, Math.round(N * pa)); i++) {
+          const u = i / N, x = (1 - u) * (1 - u) * A0.x + 2 * (1 - u) * u * C.x + u * u * A1.x, y = (1 - u) * (1 - u) * A0.y + 2 * (1 - u) * u * C.y + u * u * A1.y;
+          pts.push({ x: x + Math.sin(u * 9) * 1.2, y, s: u });
+        }
+        s += `<path d="${taper(pts, 4.6, 0.04)}" fill="#fff" opacity="${a.toFixed(3)}" style="${SHADOW}"/>`;
+        if (pa > 0.96) {
+          const e = pts[pts.length - 1], q = pts[pts.length - 4], ang = Math.atan2(e.y - q.y, e.x - q.x), L = 15 * ease(t, o.t0 + 0.53, o.t0 + 0.62);
+          const head = [-0.5, 0.5].map((da) => `M${e.x},${e.y}L${e.x - Math.cos(ang + da) * L},${e.y - Math.sin(ang + da) * L}`).join('');
+          s += `<path d="${head}" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round" opacity="${a.toFixed(3)}" style="${SHADOW}"/>`;
+        }
+      }
+    }
+    svg.innerHTML = s;
+  }
+  /* the chord's box on screen: in the video, through the pause zoom; in Fallboard, through the camera */
+  function ytHL(t) {
+    const z = pauseZoom(t), m = (x, y) => ({ x: ZO.x + (x - ZO.x) * z, y: ZO.y + (y - ZO.y) * z });
+    const p0 = m(YT_BOX.x0, YT_BOX.y0), p1 = m(YT_BOX.x1, YT_BOX.y1);
+    return { t0: HK.freeze + 0.1, t1: HK.unpause, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA') };
+  }
+  function fbHL(t) {
+    const r = fbRing, c = camAt(t), m = (x, y) => ({ x: c.x + (x - c.x) * c.s, y: c.y + (y - c.y) * c.s });
+    const p0 = m(r.cx - r.rx + 14, r.cy - 44), p1 = m(r.cx + r.rx - 14, r.cy + 16);
+    return { t0: HK.steps[3] + 0.06, t1: HK.playOn, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA') };
+  }
+
   async function drawYT(t) {
     const pos = ytPos(t);
     const frozen = t >= HK.freeze && t < HK.unpause;
@@ -975,14 +1056,11 @@
     // the tape stopping: the picture sinks with it
     const sink = ease(t, HK.stop, HK.cut, easeIn);
     $('ytFrame').style.filter = sink > 0 ? `brightness(${(1 - 0.5 * sink).toFixed(3)}) saturate(${(1 - 0.6 * sink).toFixed(3)})` : '';
-    // the freeze: the chord ringed by hand, the rest dimmed
-    const ringOut = ease(t, HK.unpause - 0.3, HK.unpause, easeIn);
-    handRing($('ytRing'), YT_RING, drawOn(t, HK.freeze + 0.1));
-    $('ytRing').style.opacity = (1 - ringOut).toFixed(3);
-    const dim = ease(t, HK.freeze, HK.freeze + 0.4) * (1 - ringOut);
-    const R_ = YT_RING;
-    $('ytDim').style.background = `radial-gradient(ellipse ${R_.rx * 1.35}px ${R_.ry * 1.7}px at ${R_.cx}px ${R_.cy}px, rgb(0 0 0 / 0) 68%, rgb(0 0 0 / 0.7) 100%)`;
-    $('ytDim').style.opacity = dim.toFixed(3);
+    // the freeze: a bump in that keeps creeping closer, and the chord highlighted
+    const z = pauseZoom(t);
+    $('ytFrame').style.transformOrigin = `${ZO.x}px ${ZO.y}px`;
+    $('ytFrame').style.transform = z !== 1 ? `scale(${z.toFixed(5)})` : '';
+    drawHL(t, ytHL(t));
     // the big centre icon when it pauses and plays
     const big = $('ytBig');
     const flash = (t0) => { const k = prog(t, t0, t0 + 0.55); return k > 0 && k < 1 ? k : 0; };
@@ -1099,9 +1177,8 @@
     frameFb(t);
     measureFbRing();   // the keyboard re-fits as notes come and go: follow it
     const land = HK.steps[3] + 0.06;
-    handRing($('fbRing'), fbRing, drawOn(t, land));
-    $('fbRing').style.opacity = (1 - ease(t, HK.playOn - 0.05, HK.playOn + 0.25, easeIn)).toFixed(3);
     drawFbCursor(t);
+    drawHL(t, fbHL(t));
     // in from above, smeared, overexposed, and settling; a glow as the chord is found
     const wi = whipIn(t), exp = 1 - easeOut(prog(t, HK.cut, HK.cut + 1.3));
     const glow = t >= land ? Math.exp(-(t - land) / 0.3) : 0;
@@ -1259,13 +1336,15 @@
 
     // kills: a stop silences what was scheduled before it. In the hook a pause is a lifted hand on
     // a held pedal: what sounds rings on, what was to come never starts
-    const kills = events.filter((e) => e.k === 'x').map((e) => e.t).sort((a, b) => a - b);
+    // (in the order they were asked for: a play() stops what sounded, then schedules what comes)
+    const kills = events.map((e, i) => (e.k === 'x' ? { t: e.t, i } : null)).filter(Boolean);
     const played = [];
-    for (const e of events) {
+    for (let j = 0; j < events.length; j++) {
+      const e = events[j];
       if (e.k !== 'n' || e.t < 0 || e.t > seconds) continue;
       let end = e.t + Math.max(0.05, e.dur);
       if (e.bus === 'app') {
-        const k = kills.find((x) => x >= (e.at ?? e.t) - 1e-6);
+        const k = (kills.find((x) => x.i > j && x.t >= (e.at ?? e.t) - 1e-6) || {}).t;
         if (k !== undefined && k <= e.t + 1e-4) continue;
         let dur = e.dur;
         const stepping = HOOK && e.t >= HK.pause - 0.6 && e.t < HK.playOn - 0.01;
