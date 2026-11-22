@@ -1565,7 +1565,7 @@
     const fb = { piece: 'revolutionary', view: 'roll', hand: 'both', speed: 1, ppsMul: 1.6, ...(TT ? { keys: { n: 34, left: 9 } } : {}) };
     // small shots, one runner each in the cloud. The video needs no app; each app shot starts from a
     // state set up at its start, or a moment before (pre) and run on to it unseen
-    (TT ? [[0, 2.5], [2.5, 5], [5, 7.5], [7.5, 10], [10, 12], [12, HK.fbAudio]] : [[0, 2.5], [2.5, 5], [5, 7.5], [7.5, 10], [10, 12.2], [12.2, HK.fbAudio]]).forEach(([a, b], i) =>
+    (TT ? [[0, 2.5], [2.5, 5], [5, 7.5], [7.5, 9.6], [9.6, HK.fbAudio]] : [[0, 2.5], [2.5, 5], [5, 7.5], [7.5, 10], [10, 12.2], [12.2, HK.fbAudio]]).forEach(([a, b], i) =>
       shot(i ? `youtube-${i + 1}` : 'youtube', a, b, { app: false }));
     const playing = (t0) => { placeWin(WIN, WIN.r, 1); return appState({ ...fb, pos: FB_FROM + (t0 - HK.fbAudio), playAt: t0 }, t0); };
     const framedPlaying = async (t0) => { await framingFromPause(); await playing(t0); };
