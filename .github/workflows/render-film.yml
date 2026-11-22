@@ -2,6 +2,7 @@
 # what each shot played and the shots are joined. Run by hand from Actions, or through the API:
 #   POST /repos/luca-bovelli/fallboard/actions/workflows/render-film.yml/dispatches
 #   {"ref":"main","inputs":{"cut":"hook","formats":"16x9","mixes":"A,B,C"}}
+# With from_run set to an earlier run's id, the shots are reused and only the sound is remade.
 # The hook uses Rousseau's video and other sources we may not publish: they come from the
 # encrypted promo-src release asset (promo/scripts/src-assets.sh), opened with PROMO_SRC_KEY.
 name: Render Film
@@ -21,6 +22,13 @@ on:
       mixes:
         description: 'Sound mixes, comma separated (hook: A, B, C); empty for the one mix'
         default: ''
+      from_run:
+        description: 'Sound only: reuse the shots of this earlier run id and remake just the soundtrack'
+        default: ''
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
   plan:
@@ -33,6 +41,7 @@ jobs:
 
   shots:
     needs: plan
+    if: inputs.from_run == ''
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -66,6 +75,7 @@ jobs:
 
   assemble:
     needs: [plan, shots]
+    if: always() && needs.plan.result == 'success' && (needs.shots.result == 'success' || needs.shots.result == 'skipped')
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -92,6 +102,8 @@ jobs:
         with:
           pattern: shot-${{ env.TAG }}-*
           merge-multiple: true
+          run-id: ${{ inputs.from_run || github.run_id }}
+          github-token: ${{ github.token }}
           path: promo/film/out/${{ env.TAG }}
       - name: Soundtrack and join
         run: |

@@ -815,7 +815,7 @@
     // the video's own sound: played through the brake into the chord, which rings out and is held
     clip({ t: 0, file: 'yt-norm', off: 48.0 - 40, dur: HK.freeze + 0.3, fadeOut: 0.26 });
     clip({ t: HK.freeze - 0.03, file: 'yt-drone', off: 0.2, dur: HK.unpause - HK.freeze + 0.25,
-      env: [[0, 0], [0.4, 0.55], [HK.unpause - HK.freeze - 0.2, 0.42], [HK.unpause - HK.freeze + 0.22, 0]] });
+      env: [[0, 0], [0.4, 0.8], [HK.unpause - HK.freeze - 0.2, 0.62], [HK.unpause - HK.freeze + 0.22, 0]] });
     for (const g of YSEG) {
       if (g.hold !== undefined || g.drag || g.tape || g.brake !== undefined || g.a === 0) continue;
       if (g.s === 1) clip({ t: g.a, file: 'yt-norm', off: g.p - 40, dur: g.b - g.a });
@@ -1200,9 +1200,17 @@
     const ctx = new OfflineAudioContext(2, Math.ceil(seconds * sr), sr);
     const piano = new FB.Piano('/samples/');
     await piano.preload();
-    const Real = window.AudioContext;
+    // the piano's own limiter goes out through the film's fade, not straight to the speakers
+    const fadeOut = ctx.createGain();
+    fadeOut.connect(ctx.destination);
+    const pianoOut = ctx.createGain();
+    pianoOut.gain.value = HOOK ? 1.2 : 1;
+    pianoOut.connect(fadeOut);
+    const Real = window.AudioContext, connect = AudioNode.prototype.connect;
     window.AudioContext = function () { return ctx; };
+    AudioNode.prototype.connect = function (to, ...rest) { return connect.call(this, to === ctx.destination ? pianoOut : to, ...rest); };
     piano.ensure(false);
+    AudioNode.prototype.connect = connect;
     window.AudioContext = Real;
     piano.voices = { add() {}, delete() {}, size: 0, values: () => [][Symbol.iterator]() };
     const appBus = piano.bus;
@@ -1211,8 +1219,6 @@
       appBus.gain.linearRampToValueAtTime(1.5 * e.to, e.t1);
     }
     // everything ends in the master, and the master fades with the picture
-    const fadeOut = ctx.createGain();
-    fadeOut.connect(ctx.destination);
     if (HOOK) { fadeOut.gain.setValueAtTime(1, T.out - 0.9); fadeOut.gain.linearRampToValueAtTime(0, T.out - 0.05); }
     const master = ctx.createDynamicsCompressor();
     master.threshold.value = -6; master.knee.value = 8; master.ratio.value = 4; master.attack.value = 0.004; master.release.value = 0.2;
@@ -1247,7 +1253,7 @@
     // the booms: their own hard limiter, so a pile of them is loud but not louder than one
     const boomBus = ctx.createDynamicsCompressor();
     boomBus.threshold.value = -10; boomBus.knee.value = 0; boomBus.ratio.value = 20; boomBus.attack.value = 0.001; boomBus.release.value = 0.08;
-    const boomOut = ctx.createGain(); boomOut.gain.value = 1.5;
+    const boomOut = ctx.createGain(); boomOut.gain.value = 0.7;
     boomBus.connect(boomOut); boomOut.connect(fadeOut);
     const buses = { app: appBus, video, smear };
 
@@ -1384,7 +1390,7 @@
       const voices = [b, b + 12];
       for (const pc of c.pcs) { voices.push(55 + ((pc - 55 % 12 + 12) % 12)); voices.push(67 + ((pc - 67 % 12 + 12) % 12)); }
       const g = ctx.createGain(); g.connect(bus);
-      const lvl = (found ? 0.016 : 0.0105);
+      const lvl = (found ? 0.04 : 0.026);
       g.gain.setValueAtTime(0, c.t); g.gain.linearRampToValueAtTime(lvl, c.t + (found ? 0.5 : 0.18));
       g.gain.setValueAtTime(lvl, t1); g.gain.setTargetAtTime(0, t1, 0.18);
       for (const m of voices) for (const dc of [-6, 6]) {
