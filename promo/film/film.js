@@ -818,7 +818,7 @@
   const MENU = { gear: 10.30, item: 10.47, half: 10.68 };
 
   /* every sound of the hook that is not the app's own piano. mix: A booms, then a FAHH; B booms only;
-     C a FAHH on each drag, booms in the frenzy; D as A, with "ahh almost almost" over the drags */
+     C a FAHH on each drag, booms in the frenzy; D as A, with "ahh almost almost" over the frenzy instead of the FAHH */
   function hookEvents() {
     const ev = [];
     const clip = (o) => ev.push({ k: 'c', ...o });
@@ -843,13 +843,14 @@
     ev.push({ k: 's', t: HK.freeze + 1.98, kind: 'drop' });
     // every miss: the boom (C: a FAHH on the drags)
     DRAGS.forEach((d) => {
-      ev.push({ k: 'c', t: d.b - 0.05, file: 'sfx/vine-boom.mp3', bus: 'boom', gain: 0.6, mix: 'AB' });
+      ev.push({ k: 'c', t: d.b - 0.05, file: 'sfx/vine-boom.mp3', bus: 'boom', gain: 0.6, mix: 'ABD' });
       ev.push({ k: 'c', t: d.b - 0.14, file: 'sfx/fahh.mp3', bus: 'boom', gain: 2.6, mix: 'C' });
     });
     SEEKS.forEach((s) => ev.push({ k: 'c', t: s.t - 0.05, file: 'sfx/vine-boom.mp3', bus: 'boom', gain: 0.6 }));
-    ev.push({ k: 'c', t: SEEKS[SEEKS.length - 1].t + 0.02, file: 'sfx/fahh.mp3', bus: 'boom', gain: 3.2, mix: 'AD' });
-    // D: "ahh… almost… almost": the ahh on the first miss, an almost on each of the next two
-    ev.push({ k: 'c', t: DRAGS[1].b - 1.48, file: 'sfx/almost.wav', bus: 'boom', gain: 2.0, mix: 'D' });
+    ev.push({ k: 'c', t: SEEKS[SEEKS.length - 1].t + 0.02, file: 'sfx/fahh.mp3', bus: 'boom', gain: 3.2, mix: 'A' });
+    // D: "ahh… almost… almost… almost" over the frenzy, ending as the tape stops (its last word ends
+    // 2.82 s in; the ahh comes in just as the clicks start)
+    ev.push({ k: 'c', t: HK.stop - 2.82, file: 'sfx/almost.wav', gain: 2.4, mix: 'D' });
     // strings under the search: an F and its fifth, and a wrong note more with each miss
     const CL = [54, 64, 59, 73, 74, 69, 63, 67, 70, 66, 61, 76, 57, 72];
     ev.push({ k: 'str', t: HK.unpause, midi: 41, g: 1 }, { k: 'str', t: HK.unpause, midi: 48, g: 0.7 });
