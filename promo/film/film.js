@@ -1337,11 +1337,11 @@
     const pts = [], N = 54, sweep = Math.PI * 2 * 1.2, a0 = -2.3;
     for (let i = 0; i <= Math.round(N * p); i++) {
       const s = i / N, th = a0 + sweep * s;
-      const wob = 1 + 0.09 * Math.sin(3 * th + 0.7) + 0.05 * Math.sin(7 * th + 2.1) + 0.035 * Math.sin(11 * th + 0.3);
+      const wob = 1 + 0.045 * Math.sin(3 * th + 0.7) + 0.018 * Math.sin(7 * th + 2.1) + 0.008 * Math.sin(11 * th + 0.3);
       const drift = 1 + 0.17 * s;
       pts.push(`${(cx + Math.cos(th) * rx * wob * drift + 2.5 * s).toFixed(1)},${(cy + Math.sin(th) * ry * wob * drift * (1 + 0.12 * s) - 3 * s).toFixed(1)}`);
     }
-    const RED = '#ff2d2d', W_ = 2.7;
+    const RED = '#ff2d2d', W_ = 4.4;
     let s = `<path d="M${pts.join('L')}" fill="none" stroke="${RED}" stroke-width="${W_}" stroke-linecap="round" stroke-linejoin="round"/>`;
     const from = o.from && o.from();
     if (from && t >= o.t0 + 0.2 && Math.floor((t - o.t0 - 0.2) / 0.22) % 2 === 0) {
@@ -1351,9 +1351,9 @@
       const ap = [];
       for (let i = 0; i <= 16; i++) {
         const u = i / 16, x = (1 - u) * (1 - u) * A0.x + 2 * (1 - u) * u * C.x + u * u * A1.x, y = (1 - u) * (1 - u) * A0.y + 2 * (1 - u) * u * C.y + u * u * A1.y;
-        ap.push({ x: x + Math.sin(u * 13 + 1) * 1.6, y: y + Math.cos(u * 9) * 1.2 });
+        ap.push({ x: x + Math.sin(u * 7 + 1) * 1.2, y: y + Math.cos(u * 5) * 0.9 });
       }
-      const e = ap[ap.length - 1], q = ap[ap.length - 3], ang = Math.atan2(e.y - q.y, e.x - q.x), L = 11;
+      const e = ap[ap.length - 1], q = ap[ap.length - 3], ang = Math.atan2(e.y - q.y, e.x - q.x), L = 14;
       s += `<path d="M${ap.map((v) => v.x.toFixed(1) + ',' + v.y.toFixed(1)).join('L')}M${(e.x - Math.cos(ang - 0.6) * L).toFixed(1)},${(e.y - Math.sin(ang - 0.6) * L).toFixed(1)}L${e.x.toFixed(1)},${e.y.toFixed(1)}L${(e.x - Math.cos(ang + 0.5) * L * 1.1).toFixed(1)},${(e.y - Math.sin(ang + 0.5) * L * 1.1).toFixed(1)}" fill="none" stroke="${RED}" stroke-width="${W_}" stroke-linecap="round" stroke-linejoin="round"/>`;
     }
     svg.innerHTML = s;
