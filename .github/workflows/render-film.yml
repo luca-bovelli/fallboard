@@ -30,7 +30,7 @@ on:
         description: 'Hook: how the chord is highlighted (1 ring, 2 spotlight, 3 corners, 4 arrow); for stills, a list'
         default: '2'
       stills:
-        description: 'Stills only: seconds, comma separated (one set per hl value)'
+        description: 'Stills only: seconds, comma separated (each hl value on its own runner)'
         default: ''
 
 permissions:
@@ -42,9 +42,12 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       formats: ${{ steps.f.outputs.formats }}
+      hls: ${{ steps.f.outputs.hls }}
     steps:
       - id: f
-        run: echo "formats=$(echo '${{ inputs.formats }}' | jq -Rc 'split(",") | map(gsub(" "; ""))')" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "formats=$(echo '${{ inputs.formats }}' | jq -Rc 'split(",") | map(gsub(" "; ""))')" >> "$GITHUB_OUTPUT"
+          echo "hls=$(echo '${{ inputs.hl }}' | jq -Rc 'split(",") | map(gsub(" "; ""))')" >> "$GITHUB_OUTPUT"
 
   stills:
     needs: plan
@@ -54,6 +57,7 @@ jobs:
       fail-fast: false
       matrix:
         format: ${{ fromJson(needs.plan.outputs.formats) }}
+        hl: ${{ fromJson(needs.plan.outputs.hls) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -69,13 +73,10 @@ jobs:
           PROMO_SRC_KEY: ${{ secrets.PROMO_SRC_KEY }}
         run: bash promo/scripts/src-assets.sh fetch
       - name: Stills
-        run: |
-          for k in $(echo '${{ inputs.hl }}' | tr ',' ' '); do
-            node promo/scripts/film.js --cut=${{ inputs.cut }} --format=${{ matrix.format }} --fps=${{ inputs.fps }} --hl=$k --stills=${{ inputs.stills }}
-          done
+        run: node promo/scripts/film.js --cut=${{ inputs.cut }} --format=${{ matrix.format }} --fps=${{ inputs.fps }} --hl=${{ matrix.hl }} --stills=${{ inputs.stills }}
       - uses: actions/upload-artifact@v4
         with:
-          name: stills-${{ inputs.cut }}-${{ matrix.format }}
+          name: stills-${{ inputs.cut }}-${{ matrix.format }}-hl${{ matrix.hl }}
           path: promo/_preview/*.png
 
   shots:
