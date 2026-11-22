@@ -183,9 +183,15 @@
     return cur;
   }
   let hookDy = 0;
+  /* the camera as screen = p * s + (tx, ty) */
+  function viewAt(t) {
+    if (CUT === 'hook') return hookView(t);
+    const c = camAt(t);
+    return { s: c.s, tx: c.x * (1 - c.s), ty: c.y * (1 - c.s) };
+  }
   function drawCam(t) {
-    const c = camAt(t), z = fbPulse(t);
-    $('stage').style.transform = `translate(0px, ${hookDy.toFixed(2)}px) translate(${FB_PZ.x}px, ${FB_PZ.y}px) scale(${z.toFixed(5)}) translate(${-FB_PZ.x}px, ${-FB_PZ.y}px) translate(${c.x}px, ${c.y}px) scale(${c.s.toFixed(5)}) translate(${-c.x}px, ${-c.y}px)`;
+    const v = viewAt(t), z = fbPulse(t);
+    $('stage').style.transform = `translate(0px, ${hookDy.toFixed(2)}px) translate(${FB_PZ.x}px, ${FB_PZ.y}px) scale(${z.toFixed(5)}) translate(${-FB_PZ.x}px, ${-FB_PZ.y}px) translate(${v.tx.toFixed(3)}px, ${v.ty.toFixed(3)}px) scale(${v.s.toFixed(5)})`;
   }
 
   /* ------------------------------------------------------------------ the app's frame */
@@ -632,9 +638,9 @@
   let actIdx = 0, curShot = null;
   async function begin(i) {
     curShot = shots[i];
-    const t0 = curShot.a;
+    const t0 = curShot.pre ?? curShot.a;
     taps.length = 0; $('taps').textContent = '';
-    if (CUT === 'hook') { framed = false; camKeys.length = 0; }
+    if (CUT === 'hook') { fbView = null; camKeys.length = 0; }
     scroll = null;
     log = [];
     if (curShot.setup) await curShot.setup(t0);
@@ -644,20 +650,25 @@
     if (curShot.name === 'opening') log.push(...painEvents());
     if (curShot.name === 'reveal') log.push(...revealEvents());
     if (curShot.name === 'youtube') log.push(...hookEvents());
+    if (curShot.pre !== undefined) for (let f = Math.round(t0 * FPS); f < curShot.f0; f++) skip(f);
   }
 
-  function frame(f) {
+  /* the app (and its timed actions) on to frame f, without drawing the film */
+  function skip(f) {
     const t = f / FPS, s = curShot;
     // timed actions on the app happen on the frame they fall in, at their own moment
     if (s.app !== false) {
       while (actIdx < acts.length && acts[actIdx].t < t + 1e-6) {
         const a = acts[actIdx++];
-        if (a.t >= s.a - 1e-6) { appTo(a.t); a.fn(); A.__vclock.sync(); }
+        if (a.t >= (s.pre ?? s.a) - 1e-6) { appTo(a.t); a.fn(); A.__vclock.sync(); }
       }
       if (scroll && t >= scroll.a && t <= scroll.b + 0.02) scroll.el.scrollTop = lerp(scroll.from, scroll.to, easeCam(prog(t, scroll.a, scroll.b)));
       appTo(t);
     }
-    return compose(t);
+  }
+  function frame(f) {
+    skip(f);
+    return compose(f / FPS);
   }
 
   function compose(t) {
@@ -746,6 +757,7 @@
     brake: 4.48, freeze: 4.84, unpause: 8.04, half: 10.70, frenzy: 12.3, stop: 14.4,
     fbAudio: 14.3, cut: 15.2, pause: 18.87, steps: [19.297, 19.752, 20.206, 20.661], playOn: 21.57, end: 22.7, out: 26.1,
   };
+  const SIXTEENTH = 60 / 132 / 4;   // the étude's sixteenth on Fallboard's clock
   const SRC0 = 45.0, YT_DUR = 181.6, CHORD_SRC = 52.84, FREEZE_SRC = 52.72, FB_FROM = 43.64, LAND = 48.636;
   const YT60_LAST = 790;
   const FREEZE_IMG = '/promo/_src/yt/0193.jpg';   // the 25 fps original of 52.72 s: the chord on the keys
@@ -928,7 +940,7 @@
     const grade = clamp(m / 16, 0, 1);
     return {
       sx: clamp(sx, -20, 20), sy: clamp(sy, -16, 16), rot: clamp(rot, -1.4, 1.4),
-      scale: 1 + 0.032 * ease(t, HK.unpause - 0.1, HK.unpause + 0.4) + (lungeAt(t, MISS_HITS) - 1),
+      scale: 1 + 0.032 * ease(t, HK.unpause - 0.1, HK.unpause + 0.4) + (pulseAt(t, MISS_HITS) - 1),
       ca: Math.min(13, ca), sat: 1 - 0.42 * grade, con: 1 + 0.1 * grade, vig: grade,
     };
   }
@@ -944,22 +956,21 @@
   /* ------------------------------------------------------------------ the chord, highlighted (?hl=1..4)
      1 a white ring drawn by hand · 2 a spotlight with the chord's name · 3 corner marks that lock
      on · 4 an arrow drawn from the headline to the chord. In white, over either picture. */
-  const HL = +(Q.get('hl') || 2);
+  const HL = +(Q.get('hl') || 1);
   /* the chord's notes where they meet the keys, in the video's 1280×720 frame */
   const YT_BOX = { x0: 772, y0: 290, x1: 966, y1: 338 };
   const ZO = { x: (YT_BOX.x0 + YT_BOX.x1) / 2, y: (YT_BOX.y0 + YT_BOX.y1) / 2 };
   /* the pause: a bump in, a slow creep closer as it waits, a snap back with a little overshoot */
-  function pauseZoom(t) {
-    const F = HK.freeze, U = HK.unpause;
-    if (t < F) return 1;
-    const held = (tt) => {
-      const u = tt - F;
-      return 1 + 0.05 * (1 - Math.exp(-u / 0.05)) + 0.03 * (u / 0.08) * Math.exp(1 - u / 0.08) + 0.05 * easeCam(prog(tt, F + 0.3, U));
-    };
-    if (t < U) return held(t);
-    const u = t - U;
-    return 1 + (held(U) - 1) * Math.exp(-u / 0.1) * Math.cos((2 * Math.PI * u) / 0.42);
+  /* a held frame creeps in: fast at first, then slower and slower, never back (ln, so its slope only
+     falls); letting go springs it back with a little overshoot */
+  const creep = (u, A, D) => (A * Math.log(1 + u / 0.03)) / Math.log(1 + D / 0.03);
+  function hold(t, a, b, A) {
+    if (t < a) return 0;
+    if (t < b) return creep(t - a, A, b - a);
+    const u = t - b;
+    return u > 1.2 ? 0 : A * Math.exp(-u / 0.1) * Math.cos((2 * Math.PI * u) / 0.42);
   }
+  const pauseZoom = (t) => 1 + hold(t, HK.freeze, HK.unpause, 0.1);
   /* a tapered stroke through points, pressed on quickly and lifted at its end */
   function taper(pts, width, lift = 0.16) {
     const L = [], R = [], n = pts.length;
@@ -1048,30 +1059,21 @@
     return { t0: HK.steps[3] + 0.06, t1: HK.playOn, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA') };
   }
 
-  /* the lunge: a chord (or a miss) pushes the picture in, fast and then slower and slower
-     (logarithmic in time), and its end snaps it back for the next one */
-  const lunge = (u, A, ref) => (A * Math.log(1 + u / 0.045)) / Math.log(1 + ref / 0.045);
-  function lungeAt(t, hits) {
+  /* a pulse: the picture jumps in a little, peaking on the note, and settles straight back */
+  const bump = (u, A, k = 0.06) => (u < 0 ? A * Math.exp(-((u / 0.045) ** 2)) : A * (1 + u / k) * Math.exp(-u / k));
+  function pulseAt(t, hits) {
     let z = 0;
-    for (const h of hits) {
-      if (t < h.t || t > h.rel + 0.08) continue;
-      z += t < h.rel ? lunge(t - h.t, h.A, h.ref) : lunge(h.rel - h.t, h.A, h.ref) * (1 - easeOut(prog(t, h.rel, h.rel + 0.08)));
-    }
+    for (const h of hits) { const u = t - h.t; if (u > -0.2 && u < 1.2) z += bump(u, h.A, h.k); }
     return 1 + z;
   }
-  const seal = (hits, end) => {
-    hits.sort((a, b) => a.t - b.t);
-    hits.forEach((h, i) => { const nx = i + 1 < hits.length ? hits[i + 1].t : end; h.rel = Math.min(h.rel ?? nx, nx); });
-    return hits;
-  };
-  /* the video's right-hand chords up to the pause, found in its sound (its bars 25–27, about 1.03×
-     the score's time); after the pause only the misses lunge */
+  /* the video's right-hand chords up to the pause, found in its sound (its bars 25-27, about 1.03x
+     the score's time); after the pause only the misses */
   const YT_CHORDS = [48.38, 48.84, 49.33, 49.78, 50.25, 50.70, 50.95, 51.22, 51.44, 52.30];
-  const YT_HITS = seal(YT_CHORDS.map((s, i) => ({ t: s - 48.0, A: i === 8 ? 0.06 : 0.035, ref: 0.4, rel: s - 48.0 + (i >= 5 && i <= 7 ? 0.24 : i === 8 ? 0.94 : 0.46) })), HK.brake);
-  const MISS_HITS = seal(BOOMS.map((t, k) => ({ t, A: Math.min(0.09, 0.05 + 0.002 * k), ref: 0.4, rel: t + 0.9 })), HK.stop);
+  const YT_HITS = YT_CHORDS.map((s, i) => ({ t: s - 48.0, A: i === 8 ? 0.045 : 0.025 }));
+  const MISS_HITS = BOOMS.map((t, k) => ({ t, A: Math.min(0.06, 0.04 + 0.001 * k) }));
   const YT_PZ = { x: W / 2, y: 330 }, FB_PZ = { x: W / 2, y: H * 0.62 };
-  /* Fallboard's: a big lunge on the cut, then every right-hand chord it plays (from the score, on
-     the film's clock); the found chord keeps creeping in while it is held, until play */
+  /* Fallboard's: in at full zoom on the cut and quickly back, then a pulse on every right-hand chord
+     it plays and every step (from the score, on the film's clock); the found chord, held, creeps in */
   let FB_HITS = [];
   function buildHits() {
     const groups = new Map();
@@ -1089,19 +1091,20 @@
       const s = k / 1000, dur = Math.max(...ns.map((n) => n.t1 - n.t0)), land = Math.abs(s - LAND) < 0.01;
       let t;
       if (s < sPause) t = HK.fbAudio + (s - FB_FROM);
-      else if (land) { t = HK.steps[3] + 0.012; hits.push({ t: HK.playOn + LEAD, A: 0.035, ref: 0.4, rel: HK.playOn + LEAD + dur }); }
+      else if (land) { t = HK.steps[3] + 0.012; hits.push({ t: HK.playOn + LEAD, A: 0.025 }); }
       else if (s > LAND) t = HK.playOn + LEAD + (s - LAND);
       else continue;
-      if (t < HK.cut + 0.6 || t > HK.end) continue;
-      hits.push({ t, A: land ? 0.05 : dur > 0.8 ? 0.06 : 0.035, ref: 0.4, rel: land ? HK.playOn : t + dur });
+      if (t < HK.cut + 0.3 || t > HK.end || land) continue;
+      hits.push({ t, A: dur > 0.8 ? 0.045 : 0.025 });
     }
-    FB_HITS = seal([{ t: HK.cut, A: 0.15, ref: 0.7 }, ...hits], HK.end);
+    for (const s of HK.steps.slice(0, 3)) hits.push({ t: s + 0.012, A: 0.012 });
+    FB_HITS = [{ t: HK.cut, A: 0.15, k: 0.13 }, ...hits].sort((x, y) => x.t - y.t);
   }
-  const fbPulse = (t) => (CUT === 'hook' && t >= HK.cut && t < HK.end + 0.1 ? lungeAt(t, FB_HITS) : 1);
+  const fbPulse = (t) => (CUT === 'hook' && t >= HK.cut && t < HK.end + 0.1 ? pulseAt(t, FB_HITS) + hold(t, HK.steps[3] + 0.012, HK.playOn, 0.06) : 1);
   /* a stage point to the screen, through the camera and the lunge */
   function stageToScreen(t, p) {
-    const c = camAt(t), z = fbPulse(t);
-    const x = c.x + (p.x - c.x) * c.s, y = c.y + (p.y - c.y) * c.s;
+    const v = viewAt(t), z = fbPulse(t);
+    const x = p.x * v.s + v.tx, y = p.y * v.s + v.ty;
     return { x: FB_PZ.x + (x - FB_PZ.x) * z, y: FB_PZ.y + (y - FB_PZ.y) * z + hookDy };
   }
 
@@ -1113,7 +1116,7 @@
     const sink = ease(t, HK.stop, HK.cut, easeIn);
     $('ytFrame').style.filter = sink > 0 ? `brightness(${(1 - 0.5 * sink).toFixed(3)}) saturate(${(1 - 0.6 * sink).toFixed(3)})` : '';
     // the freeze: a bump in that keeps creeping closer, and the chord highlighted
-    const z = pauseZoom(t), zp = lungeAt(t, YT_HITS);
+    const z = pauseZoom(t), zp = pulseAt(t, YT_HITS);
     $('ytFrame').style.transformOrigin = '0 0';
     $('ytFrame').style.transform = z !== 1 || zp !== 1 ? `translate(${YT_PZ.x}px, ${YT_PZ.y}px) scale(${zp.toFixed(5)}) translate(${-YT_PZ.x}px, ${-YT_PZ.y}px) translate(${ZO.x}px, ${ZO.y}px) scale(${z.toFixed(5)}) translate(${-ZO.x}px, ${-ZO.y}px)` : '';
     drawHL(t, ytHL(t));
@@ -1213,23 +1216,36 @@
   }
   /* the camera frames the chord and the buttons together as the mouse comes in, and lets go as it
      plays on. Measured once, on the frame the move starts, with the app laid out as it is then */
-  let framed = false;
-  function frameFb(t) {
-    if (framed || t < HK.pause - 1.05) return;
-    framed = true;
+  /* the framing: the chord and the buttons together. Measured with the app paused at FRAME_T's
+     place, so every shot gets the same numbers; then one movement in, and one out */
+  const FRAME_T = HK.pause - 1.45;
+  let fbView = null;
+  function computeFraming() {
     measureFbRing();
     const r = fbRing, a = toStage(centreOf(q('#prevBtn'))), b = toStage(centreOf(q('#nextBtn')));
     const box = { x0: Math.min(r.cx - r.rx, a.x - 30) - 40, x1: Math.max(r.cx + r.rx, b.x + 30) + 40, y0: r.cy - r.ry - 150, y1: Math.max(a.y, b.y) + 40 };
     const s = Math.min(1.3, W / (box.x1 - box.x0), H / (box.y1 - box.y0));
     const vw = W / s, vh = H / s;
-    const x0 = clamp((box.x0 + box.x1) / 2 - vw / 2, 0, W - vw), y0 = clamp((box.y0 + box.y1) / 2 - vh / 2, 0, H - vh);
-    camKeys.length = 0;
-    if (s > 1.01) cam(HK.pause - 1.05, s, (x0 * s) / (s - 1), (y0 * s) / (s - 1), 1.1);
-    cam(HK.playOn + 0.1, 1, W / 2, H / 2, 0.9);
+    fbView = { s, x0: clamp((box.x0 + box.x1) / 2 - vw / 2, 0, W - vw), y0: clamp((box.y0 + box.y1) / 2 - vh / 2, 0, H - vh) };
+  }
+  async function framingFromPause() {
+    placeWin(WIN, WIN.r, 1);
+    await appState({ piece: 'revolutionary', view: 'roll', hand: 'both', speed: 1, ppsMul: 1.6, pos: FB_FROM + (FRAME_T - HK.fbAudio) }, FRAME_T);
+    placeWin(WIN, WIN.r, 1);
+    computeFraming();
+  }
+  /* the scale moves evenly (log-linear) and the view's rectangle is a mix of the whole frame and the
+     framed one, so the zoom and the pan are one movement and the view never leaves the picture */
+  const EZ = bezier(0.6, 0, 0.32, 1);
+  function hookView(t) {
+    if (!fbView || t < FRAME_T) return { s: 1, tx: 0, ty: 0 };
+    const a = FRAME_T, b = HK.pause + 0.05, c = HK.playOn + 0.02, d = HK.playOn + 1.0;
+    const k = t < b ? EZ(prog(t, a, b)) : t < c ? 1 : 1 - EZ(prog(t, c, d));
+    const s = Math.pow(fbView.s, k), mix = fbView.s > 1 ? (1 - 1 / s) / (1 - 1 / fbView.s) : 0;
+    return { s, tx: -fbView.x0 * mix * s, ty: -fbView.y0 * mix * s };
   }
   function drawFb(t) {
     if (winEl.style.display === 'none') placeWin(WIN, WIN.r, 1);
-    frameFb(t);
     measureFbRing();   // the keyboard re-fits as notes come and go: follow it
     const land = HK.steps[3] + 0.06;
     drawFbCursor(t);
@@ -1253,12 +1269,19 @@
     head(HK.pause + 0.02, HK.steps[3] - 0.02, `Or just <em class="hi">step to it.</em>`, { y: 150 });
     head(HK.steps[3] + 0.12, HK.end - 0.15, `<em class="hi">There it is.</em>`, { y: 150 });
     const fb = { piece: 'revolutionary', view: 'roll', hand: 'both', speed: 1, ppsMul: 1.6 };
-    // the video needs no app, so it splits freely: one runner each in the cloud
-    shot('youtube', 0, 5, { app: false });
-    shot('youtube-search', 5, 10, { app: false });
-    shot('youtube-frenzy', 10, HK.fbAudio, { app: false });
-    shot('fallboard', HK.fbAudio, HK.end, { setup: (t0) => appState({ ...fb, pos: FB_FROM, playAt: HK.fbAudio }, t0) });
-    shot('end', HK.end, HK.out, { setup: (t0) => appState({ ...fb, pos: run(LAND, HK.playOn)(HK.end), playAt: HK.end }, t0) });
+    // small shots, one runner each in the cloud. The video needs no app; each app shot starts from a
+    // state set up at its start, or a moment before (pre) and run on to it unseen
+    [[0, 2.5], [2.5, 5], [5, 7.5], [7.5, 10], [10, 12.2], [12.2, HK.fbAudio]].forEach(([a, b], i) =>
+      shot(i ? `youtube-${i + 1}` : 'youtube', a, b, { app: false }));
+    const playing = (t0) => { placeWin(WIN, WIN.r, 1); return appState({ ...fb, pos: FB_FROM + (t0 - HK.fbAudio), playAt: t0 }, t0); };
+    const framedPlaying = async (t0) => { await framingFromPause(); await playing(t0); };
+    shot('fallboard-1', HK.fbAudio, 16.3, { setup: playing });
+    shot('fallboard-2', 16.3, 18.3, { setup: framedPlaying });
+    shot('fallboard-3', 18.3, 20.5, { setup: framedPlaying });
+    // paused on the second step's note, a moment before the third step
+    shot('fallboard-4', 20.5, HK.end, { pre: 20.1, setup: async (t0) => { await framingFromPause(); await appState({ ...fb, pos: LAND - 2 * SIXTEENTH }, t0); } });
+    shot('end', HK.end, 24.4, { setup: (t0) => appState({ ...fb, pos: run(LAND, HK.playOn)(t0), playAt: t0 }, t0) });
+    shot('end-2', 24.4, HK.out, { setup: (t0) => appState({ ...fb, pos: run(LAND, HK.playOn)(t0), playAt: t0 }, t0) });
     // the mouse on the app's own buttons: down, and a moment later up and the click
     const press = (sel, t) => {
       let h = null;
@@ -1661,5 +1684,5 @@
     const S = A.FB.debug.S;
     return { t: +filmNow().toFixed(3), pos: +(S.playing ? S.anchorT + Math.max(0, filmNow() + base / 1000 - S.anchorCtx) * S.speed : S.t).toFixed(3), playing: S.playing, speed: S.speed, hand: S.hand, view: S.view, piece: S.meta && S.meta.id, library: A.FB.library.isOpen() };
   }
-  window.FILM = { ready, begin, frame, drain, probe, renderAudio, get shots() { return shots; }, T, hits: () => ({ yt: YT_HITS, miss: MISS_HITS, fb: FB_HITS }) };
+  window.FILM = { ready, begin, frame, skip, drain, probe, renderAudio, get shots() { return shots; }, T, hits: () => ({ yt: YT_HITS, miss: MISS_HITS, fb: FB_HITS }) };
 })();

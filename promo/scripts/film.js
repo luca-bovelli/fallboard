@@ -3,7 +3,8 @@
 
    node promo/scripts/film.js --format=16x9 --stills=12.4,16.0,24.5   stills (promo/_preview/film-…png)
    node promo/scripts/film.js --format=16x9 --shots=0,1               shots → promo/film/out/<format>/NN-name.mp4 + .json
-   node promo/scripts/film.js --format=16x9 --chunk=2/7               the 3rd of 7 groups of shots (for CI)
+   node promo/scripts/film.js --format=16x9 --chunk=2/12              the 3rd of 12 groups of shots (for CI)
+   node promo/scripts/film.js --cut=hook --only=youtube-3,fallboard-4  just these shots
    node promo/scripts/film.js --format=16x9 --all                     every shot
    node promo/scripts/film.js --format=16x9 --assemble                audio from the shots' logs, joined → promo/exports/
    node promo/scripts/film.js --cut=hook --assemble --mixes=A,B,C     one export per sound mix, on the same picture
@@ -48,7 +49,7 @@ function serve() {
 }
 
 function encoder(file) {
-  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-c:v', 'png', '-framerate', String(FPS), '-i', '-',
+  const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', String(FPS), '-i', '-',
     '-c:v', 'libx264', '-preset', SCALE < 1 ? 'veryfast' : 'slow', '-crf', SCALE < 1 ? '20' : '15', '-tune', 'film', '-x264-params', 'aq-mode=3',
     '-pix_fmt', 'yuv420p', '-r', String(FPS), '-movflags', '+faststart', file], { stdio: ['pipe', 'inherit', 'inherit'] });
   const done = new Promise((res, rej) => ff.on('close', (c) => (c === 0 ? res() : rej(new Error('ffmpeg exited ' + c)))));
@@ -73,8 +74,8 @@ async function open() {
   return { srv, browser, page, cdp, info, close: async () => { await browser.close(); srv.close(); } };
 }
 
-async function shoot(cdp) {
-  const { data } = await cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, fromSurface: true, clip: { x: 0, y: 0, width: VIEW.width, height: VIEW.height, scale: VIEW.dpr * SCALE } });
+async function shoot(cdp, format = 'jpeg') {
+  const { data } = await cdp.send('Page.captureScreenshot', { format, quality: format === 'jpeg' ? 95 : undefined, optimizeForSpeed: true, fromSurface: true, clip: { x: 0, y: 0, width: VIEW.width, height: VIEW.height, scale: VIEW.dpr * SCALE } });
   return Buffer.from(data, 'base64');
 }
 
@@ -120,10 +121,11 @@ async function stills(times) {
       await s.page.evaluate((k) => window.FILM.begin(k), i);
       const last = Math.max(...frames);
       for (let f = sh.f0; f <= last; f++) {
+        if (!frames.includes(f) && !frames.includes(f + 1)) { await s.page.evaluate((k) => window.FILM.skip(k), f); continue; }
         await s.page.evaluate((k) => window.FILM.frame(k), f);
         if (frames.includes(f)) {
           const file = path.join(PREVIEW, `film-${TAG}${HLV ? '-hl' + HLV : ''}-${(f / s.info.fps).toFixed(2)}.png`);
-          fs.writeFileSync(file, await shoot(s.cdp));
+          fs.writeFileSync(file, await shoot(s.cdp, 'png'));
           console.log(file);
         }
       }
@@ -168,7 +170,8 @@ async function assembleMix(mix) {
     const n = s.info.shots.length;
     await s.close();
     let ids = [...Array(n).keys()];
-    if (arg('chunk')) { const [k, of] = arg('chunk').split('/').map(Number); ids = ids.filter((i) => i % of === k); }
+    if (arg('only')) { const want = arg('only').split(','); ids = ids.filter((i) => want.includes(s.info.shots[i].name)); }
+    if (arg('chunk')) { const [k, of] = arg('chunk').split('/').map(Number); ids = ids.filter((_, j) => j % of === k); }
     if (!ids.length) return console.log('no shots in this chunk');
     return renderShots(ids);
   }

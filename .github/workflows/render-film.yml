@@ -24,11 +24,14 @@ on:
         description: 'Sound mixes, comma separated (hook: A, B, C, D); empty for the one mix'
         default: ''
       from_run:
-        description: 'Sound only: reuse the shots of this earlier run id and remake just the soundtrack'
+        description: 'Reuse the shots of this earlier run id (alone: remake just the soundtrack)'
+        default: ''
+      only:
+        description: 'With from_run: re-render just these shots (names, comma separated), reuse the rest'
         default: ''
       hl:
         description: 'Hook: how the chord is highlighted (1 ring, 2 spotlight, 3 corners, 4 arrow); for stills, a list'
-        default: '2'
+        default: '1'
       stills:
         description: 'Stills only: seconds, comma separated (each hl value on its own runner)'
         default: ''
@@ -81,13 +84,13 @@ jobs:
 
   shots:
     needs: plan
-    if: inputs.from_run == '' && inputs.stills == ''
+    if: inputs.stills == '' && (inputs.from_run == '' || inputs.only != '')
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         format: ${{ fromJson(needs.plan.outputs.formats) }}
-        chunk: [0, 1, 2, 3, 4, 5, 6]
+        chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     env:
       TAG: ${{ inputs.cut == 'main' && matrix.format || format('{0}-{1}', inputs.cut, matrix.format) }}
     steps:
@@ -105,8 +108,8 @@ jobs:
         env:
           PROMO_SRC_KEY: ${{ secrets.PROMO_SRC_KEY }}
         run: bash promo/scripts/src-assets.sh fetch
-      - name: Shots ${{ matrix.chunk }}/7 (${{ matrix.format }})
-        run: node promo/scripts/film.js --cut=${{ inputs.cut }} --format=${{ matrix.format }} --fps=${{ inputs.fps }} --hl=${{ inputs.hl }} --chunk=${{ matrix.chunk }}/7
+      - name: Shots ${{ matrix.chunk }}/12 (${{ matrix.format }})
+        run: node promo/scripts/film.js --cut=${{ inputs.cut }} --format=${{ matrix.format }} --fps=${{ inputs.fps }} --hl=${{ inputs.hl }} --only=${{ inputs.only }} --chunk=${{ matrix.chunk }}/12
       - uses: actions/upload-artifact@v4
         with:
           name: shot-${{ env.TAG }}-${{ matrix.chunk }}
@@ -138,12 +141,21 @@ jobs:
         env:
           PROMO_SRC_KEY: ${{ secrets.PROMO_SRC_KEY }}
         run: bash promo/scripts/src-assets.sh fetch
-      - uses: actions/download-artifact@v4
+      - name: Shots from the earlier run
+        if: inputs.from_run != ''
+        uses: actions/download-artifact@v4
         with:
           pattern: shot-${{ env.TAG }}-*
           merge-multiple: true
-          run-id: ${{ inputs.from_run || github.run_id }}
+          run-id: ${{ inputs.from_run }}
           github-token: ${{ github.token }}
+          path: promo/film/out/${{ env.TAG }}
+      - name: Shots from this run
+        if: needs.shots.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: shot-${{ env.TAG }}-*
+          merge-multiple: true
           path: promo/film/out/${{ env.TAG }}
       - name: Soundtrack and join
         run: |
