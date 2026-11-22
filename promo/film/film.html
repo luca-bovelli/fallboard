@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Fallboard Film</title>
+<link rel="stylesheet" href="/promo/_src/myt/fonts.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..900&family=Newsreader:ital,opsz,wght@1,6..72,500..800&family=Roboto:wght@400;500&family=TikTok+Sans:wght@600;700;800&display=swap">
 <style>
   /* Fallboard's tokens (dist/index.html), the same set the signed-off stills used */
@@ -134,7 +135,7 @@
   #black { background: #000; opacity: 0; }
 
   /* ---------------------------------------------------------------- a YouTube player, full screen, as a screen recording shows it */
-  #yt { background: #000; display: none; font-family: Roboto, Arial, sans-serif; color: #fff; }
+  #yt { background: #000; display: none; font-family: YTRoboto, Arial, sans-serif; color: #fff; }
   #yt img.frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
   #ytDim { position: absolute; inset: 0; opacity: 0; }
   #ytRing { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
@@ -193,8 +194,8 @@
   /* the TikTok cut */
   #myt { display: none; overflow: hidden; }
   #phone { position: absolute; left: 0; width: 390px; height: 844px; transform-origin: 0 0; overflow: hidden; background: #0f0f0f; }
-  #mytPage { position: absolute; left: 0; top: 0; width: 390px; height: 844px; }
-  #mytPlayer { position: absolute; left: 0; top: 48px; width: 390px; height: 219.375px; overflow: hidden; background: #000; font-family: Roboto, Arial, sans-serif; color: #fff; }
+  #mytPage { position: absolute; left: 0; top: 0; width: 390px; height: 844px; overflow: hidden; }
+  #mytPlayer { position: absolute; left: 0; top: 48px; width: 390px; height: 219.375px; overflow: hidden; background: #000; font-family: YTRoboto, Arial, sans-serif; color: #fff; }
   #mytVid { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; overflow: hidden; }
   #mytFrame { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; }
   #mytDim { position: absolute; inset: 0; background: rgb(0 0 0 / 0.45); opacity: 0; }
@@ -202,7 +203,7 @@
   #mytIcons .i { position: absolute; width: 24px; height: 24px; fill: #fff; }
   #mytTime { position: absolute; left: 34px; top: 157px; font-size: 14px; line-height: 20px; white-space: nowrap; }
   #mytTime .rest { color: rgb(255 255 255 / 0.7); }
-  .dtap { position: absolute; top: 96px; display: flex; align-items: center; gap: 2px; font: 500 20px/28px Roboto, Arial, sans-serif; color: #fff; text-shadow: 0 0 4px rgb(0 0 0 / 0.5); opacity: 0; }
+  .dtap { position: absolute; top: 96px; display: flex; align-items: center; gap: 2px; font: 500 20px/28px YTRoboto, Arial, sans-serif; color: #fff; text-shadow: 0 0 4px rgb(0 0 0 / 0.5); opacity: 0; }
   .dtap svg { width: 28px; height: 28px; fill: #fff; }
   #mytDtapR { left: 252px; } #mytDtapL { left: 62px; }
   #mytBar { position: absolute; left: 30px; width: 330px; top: 195.8px; height: 3px; opacity: 0; }
@@ -216,12 +217,12 @@
   #mytTip { position: absolute; top: 56px; width: 140px; margin-left: -70px; opacity: 0; text-align: center; }
   #mytTip .th { width: 140px; height: 78.75px; border-radius: 8px; overflow: hidden; background: #000; box-shadow: 0 0 0 1.5px #fff; }
   #mytTip .th img { width: 100%; height: 100%; display: block; object-fit: cover; }
-  #mytTip .tt { margin-top: 4px; font: 500 13px/16px Roboto, Arial, sans-serif; text-shadow: 0 0 4px rgb(0 0 0 / 0.75); }
+  #mytTip .tt { margin-top: 4px; font: 500 13px/16px YTRoboto, Arial, sans-serif; text-shadow: 0 0 4px rgb(0 0 0 / 0.75); }
   #mytShade { position: absolute; inset: 0; background: rgb(0 0 0 / 0.6); opacity: 0; }
   .sheet { position: absolute; left: 8px; width: 374px; border-radius: 16px; overflow: hidden; background: #212121; display: none; }
   #mytSheet1 { height: 405px; } #mytSheet1 img { display: block; width: 374px; height: 405px; }
   .sheet .hl { position: absolute; left: 0; right: 0; height: 48px; background: rgb(255 255 255 / 0.1); opacity: 0; }
-  #mytSheet2 { height: 416px; padding-top: 24px; box-sizing: border-box; font: 400 16px/48px Roboto, Arial, sans-serif; color: #f1f1f1; }
+  #mytSheet2 { height: 416px; padding-top: 24px; box-sizing: border-box; font: 400 16px/48px YTRoboto, Arial, sans-serif; color: #f1f1f1; }
   #mytSheet2 .handle { position: absolute; left: 169px; top: 9px; width: 36px; height: 4px; border-radius: 2px; background: #404040; }
   #mytSheet2 .sp { position: relative; height: 48px; padding-left: 72px; }
   #mytSheet2 .sp.on { background: transparent; }
@@ -231,7 +232,7 @@
   #mytVig { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: radial-gradient(ellipse 80% 70% at 50% 45%, rgb(0 0 0 / 0) 55%, rgb(0 0 0 / 0.85) 100%); }
   #ttCap { display: none; }
   #ttCap .cap { position: absolute; left: 20px; right: 20px; text-align: center; font: 700 22px/1.18 'TikTok Sans', Inter, sans-serif; color: #fff; letter-spacing: -0.005em; transform-origin: 50% 50%; }
-  #ttCap .cap .stroke { position: absolute; inset: 0; color: #fff; -webkit-text-stroke: 2.2px #000; z-index: 0; }
+  #ttCap .cap .stroke { position: absolute; inset: 0; color: #000; -webkit-text-stroke: 3.4px #000; text-shadow: 2.60px 0.00px 0 #000, 2.40px 0.99px 0 #000, 1.84px 1.84px 0 #000, 0.99px 2.40px 0 #000, 0.00px 2.60px 0 #000, -0.99px 2.40px 0 #000, -1.84px 1.84px 0 #000, -2.40px 0.99px 0 #000, -2.60px 0.00px 0 #000, -2.40px -0.99px 0 #000, -1.84px -1.84px 0 #000, -0.99px -2.40px 0 #000, -0.00px -2.60px 0 #000, 0.99px -2.40px 0 #000, 1.84px -1.84px 0 #000, 2.40px -0.99px 0 #000; z-index: 0; }
   #ttCap .cap .stroke img { visibility: hidden; }
   #ttCap .cap .fill { position: relative; z-index: 1; }
   #ttCap .cap img.emo { height: 1.05em; width: auto; vertical-align: -0.17em; margin-left: 0.06em; }
@@ -349,7 +350,7 @@
 <!-- the TikTok cut: YouTube's iPhone web page, as a screen recording would show it -->
 <div class="layer" id="myt">
   <div id="phone">
-    <img id="mytPage" src="/promo/_src/myt/page.png" alt="">
+    <div id="mytPage"></div>
     <div id="mytPlayer">
       <div id="mytVid"><img id="mytFrame" alt=""></div>
       <div id="mytDim"></div>
@@ -381,7 +382,7 @@
 <div id="fbCursor"><svg viewBox="0 0 22 22"><path d="M3 2.2v16.3l4.1-3.9 2.7 6.1 2.9-1.3-2.7-6h5.8z" fill="#fff" stroke="#000" stroke-width="1.3" stroke-linejoin="round"/></svg></div>
 <div class="layer" id="topfade"></div>
 <div class="layer" id="heads"><div id="headHalo"></div><div class="head" id="headA"></div><div class="head" id="headB"></div></div>
-<div class="layer" id="ttCap"><div class="cap" id="ttCapA"></div></div>
+<div class="layer" id="ttCap"></div>
 <div class="layer" id="black"></div>
 
 <script src="/js/score.js"></script>

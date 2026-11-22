@@ -762,9 +762,9 @@
      the chord with its own buttons. */
   /* the TikTok cut: a shorter pause; from the speed menu on, the search lasts as long as the "ahh
      almost" clip; Fallboard's half is the hook's, moved earlier by D */
-  const TTK = { tap: 4.46, gear: 7.52, item: 7.92, half: 8.32, s0: 8.55, clip: 4.435 };
+  const TTK = { tap: 4.46, gear: 7.46, item: 7.58, half: 7.72, s0: 9.02, clip: 4.435, clipAt: 7.46 };
   const HK = TT ? (() => {
-    const stop = TTK.s0 + TTK.clip, cut = stop + 0.8, D = cut - 15.2;
+    const stop = TTK.clipAt + TTK.clip, cut = stop + 0.8, D = cut - 15.2;
     return { brake: 4.48, freeze: 4.84, unpause: 7.24, half: TTK.half, frenzy: TTK.s0, stop, cut, D,
       fbAudio: 14.3 + D, pause: 18.87 + D, steps: [19.297, 19.752, 20.206, 20.661].map((x) => x + D), playOn: 21.57 + D, end: 22.7 + D, out: 26.1 + D };
   })() : {
@@ -948,7 +948,7 @@
     ev.push({ k: 's', t: HK.freeze, kind: 'freeze' });
     ev.push({ k: 's', t: HK.freeze + 0.05, kind: 'scribble' });
     for (const t of BOOMS) ev.push({ k: 'c', t: t - 0.05, file: 'sfx/vine-boom.mp3', bus: 'boom', gain: 0.6 });
-    clip({ t: TTK.s0, file: 'sfx/almost-long.wav', gain: 2.4 });
+    clip({ t: TTK.clipAt, file: 'sfx/almost-long.wav', gain: 2.4 });
     const CL = [54, 64, 59, 73, 74, 69, 63, 67, 70, 66, 61, 76, 57, 72];
     ev.push({ k: 'str', t: HK.unpause, midi: 41, g: 1 }, { k: 'str', t: HK.unpause, midi: 48, g: 0.7 });
     BOOMS.forEach((t, i) => { if (i < 3 || (i - 3) % 2 === 0) { const m = CL[Math.min(CL.length - 1, i < 3 ? i : 3 + (i - 3) / 2)]; ev.push({ k: 'str', t, midi: m, g: 0.6 }); } });
@@ -1147,18 +1147,17 @@
   }
   /* the chord's box on screen: in the video, through the pause zoom; in Fallboard, through the camera */
   function ytHL(t) {
-    const z = pauseZoom(t), m = (x, y) => {
-      const vx = ZO.x + (x - ZO.x) * z, vy = ZO.y + (y - ZO.y) * z;
-      return TT ? { x: vx * VK * PH.k, y: PH.y + (48 + vy * VK) * PH.k } : { x: vx, y: vy };
-    };
+    let m;
+    if (TT) { const pm = phoneMap(t); m = (x, y) => pm.map({ x: x * VK * PH.k, y: PH.y + (48 + y * VK) * PH.k }); }
+    else { const z = pauseZoom(t); m = (x, y) => ({ x: ZO.x + (x - ZO.x) * z, y: ZO.y + (y - ZO.y) * z }); }
     const p0 = m(YT_BOX.x0, YT_BOX.y0), p1 = m(YT_BOX.x1, YT_BOX.y1);
     return { t0: HK.freeze + (TT ? 0.05 : 0.1), t1: HK.unpause, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA'),
-      from: () => document.querySelector('#ttCapA .fill .this') };
+      from: () => document.querySelector('#ttCap1 .fill .this') };
   }
   function fbHL(t) {
     const r = fbRing, m = (x, y) => stageToScreen(t, { x, y });
     const p0 = m(r.cx - r.rx + 14, r.cy - 44), p1 = m(r.cx + r.rx - 14, r.cy + 16);
-    return { t0: HK.steps[3] + 0.06, t1: HK.playOn, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA'), from: () => document.querySelector('#ttCapA .fill') };
+    return { t0: HK.steps[3] + 0.06, t1: HK.playOn, box: { x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }, head: $('headA'), from: () => document.querySelector('#ttCap4 .fill') };
   }
 
   /* a pulse: the picture jumps in a little the moment the note hits (at its top two frames later),
@@ -1203,7 +1202,7 @@
     for (const s of HK.steps.slice(0, 3)) hits.push({ t: s + 0.012, A: 0.008 });
     FB_HITS = [{ t: HK.cut, A: 0.15, k: 0.13, drop: true }, ...hits].sort((x, y) => x.t - y.t);
   }
-  const fbPulse = (t) => (HOOKY && t >= HK.cut && t < HK.end + 0.1 ? pulseAt(t, FB_HITS) + hold(t, HK.steps[3] + 0.012, HK.playOn, 0.06) : 1);
+  const fbPulse = (t) => (HOOKY && t >= HK.cut && t < HK.end + 0.1 ? pulseAt(t, FB_HITS) + (TT ? (t >= HK.pause && t < HK.playOn ? creep(t - HK.pause, 0.08, HK.playOn - HK.pause) : 0) : hold(t, HK.steps[3] + 0.012, HK.playOn, 0.06)) : 1);
   /* a stage point to the screen, through the camera and the lunge */
   function stageToScreen(t, p) {
     const v = viewAt(t), z = fbPulse(t);
@@ -1229,6 +1228,15 @@
      YouTube's iPhone web page (the real page, captured; its player drawn here with its own icons), a
      scrappy red circle and a blinking arrow drawn with a finger, and captions in TikTok's own style */
   const PH = { k: W / 390, y: 168 };          // the page on the 9:16 frame
+  /* the whole phone zooms: cut in to 1.7x on the chord while paused (and creeping), and pulses on the
+     chords about the player's middle */
+  const ttPause = (t) => (TT && t >= HK.freeze && t < HK.unpause ? 1.7 + creep(t - HK.freeze, 0.1, HK.unpause - HK.freeze) : 1);
+  const TT_C = { x: ZO.x * (390 / 1280) * (W / 390), y: 168 + (48 + ZO.y * (390 / 1280)) * (W / 390) };
+  const TT_P = { x: 195 * (W / 390), y: 168 + (48 + 110) * (W / 390) };
+  function phoneMap(t) {
+    const zc = ttPause(t), zp = pulseAt(t, YT_HITS);
+    return { zc, zp, map: (b) => { const x = TT_P.x + (b.x - TT_P.x) * zp, y = TT_P.y + (b.y - TT_P.y) * zp; return { x: TT_C.x + (x - TT_C.x) * zc, y: TT_C.y + (y - TT_C.y) * zc }; } };
+  }
   const VK = 390 / 1280;                      // the video in the page's player
   const VH = (H - PH.y) / PH.k;               // how much of the page the frame shows
   const MYT_PLAY = 'M6 4.8v14.4a1.5 1.5 0 002.3 1.27l11.3-7.2a1.5 1.5 0 000-2.54L8.3 3.53A1.5 1.5 0 006 4.8Z';
@@ -1246,23 +1254,23 @@
   }
   function ttSheets(t) {
     const g = MENU.gear, it = MENU.item, hf = MENU.half;
-    $('mytShade').style.opacity = (ease(t, g, g + 0.15) * (1 - ease(t, hf + 0.02, hf + 0.18))).toFixed(3);
+    $('mytShade').style.opacity = (ease(t, g, g + 0.06) * (1 - ease(t, hf + 0.01, hf + 0.08))).toFixed(3);
     const s1 = $('mytSheet1'), s2 = $('mytSheet2');
     if (t >= g && t < it) {
       s1.style.display = 'block';
       s1.style.top = (VH - 24 - 405).toFixed(1) + 'px';
-      s1.style.transform = `translateY(${((1 - easeOut(prog(t, g, g + 0.22))) * 440).toFixed(1)}px)`;
+      s1.style.transform = `translateY(${((1 - easeOut(prog(t, g, g + 0.07))) * 440).toFixed(1)}px)`;
       $('mytRowSpeed').style.top = '116px';
-      $('mytRowSpeed').style.opacity = t >= it - 0.1 ? 1 : 0;
+      $('mytRowSpeed').style.opacity = t >= it - 0.05 ? 1 : 0;
     } else s1.style.display = 'none';
-    if (t >= it && t < hf + 0.2) {
+    if (t >= it && t < hf + 0.09) {
       s2.style.display = 'block';
       s2.style.top = (VH - 24 - 416).toFixed(1) + 'px';
-      s2.style.transform = `translateY(${(ease(t, hf + 0.02, hf + 0.2, easeIn) * 440).toFixed(1)}px)`;
+      s2.style.transform = `translateY(${(ease(t, hf + 0.01, hf + 0.08, easeIn) * 440).toFixed(1)}px)`;
       for (const r of s2.querySelectorAll('.sp')) {
         const v = r.dataset.v;
         r.classList.toggle('on', v === (t >= hf ? '0.5x' : 'Normal'));
-        r.classList.toggle('hl', v === '0.5x' && t >= hf - 0.1 && t < hf + 0.03);
+        r.classList.toggle('hl', v === '0.5x' && t >= hf - 0.05 && t < hf + 0.02);
       }
     } else s2.style.display = 'none';
   }
@@ -1273,8 +1281,9 @@
     const sx = scrubShift(t) * 2, smear = Math.abs(sx) * 0.55;
     $('fxHBb').setAttribute('stdDeviation', `${smear.toFixed(2)} 0`);
     $('mytFrame').style.filter = [smear > 0.3 ? 'url(#fxHB)' : '', sink > 0 ? `brightness(${(1 - 0.5 * sink).toFixed(3)}) saturate(${(1 - 0.6 * sink).toFixed(3)})` : ''].join(' ').trim();
-    const z = pauseZoom(t), zp = pulseAt(t, YT_HITS);
-    $('mytFrame').style.transform = `translate(${sx.toFixed(2)}px, 0px) translate(${YT_PZ.x}px, ${YT_PZ.y}px) scale(${zp.toFixed(5)}) translate(${-YT_PZ.x}px, ${-YT_PZ.y}px) translate(${ZO.x}px, ${ZO.y}px) scale(${z.toFixed(5)}) translate(${-ZO.x}px, ${-ZO.y}px)`;
+    $('mytFrame').style.transform = sx ? `translate(${sx.toFixed(2)}px, 0px)` : '';
+    const pm = phoneMap(t);
+    $('phone').style.transform = `translate(${TT_C.x.toFixed(2)}px, ${TT_C.y.toFixed(2)}px) scale(${pm.zc.toFixed(5)}) translate(${(-TT_C.x).toFixed(2)}px, ${(-TT_C.y).toFixed(2)}px) translate(${TT_P.x.toFixed(2)}px, ${TT_P.y.toFixed(2)}px) scale(${pm.zp.toFixed(5)}) translate(${(-TT_P.x).toFixed(2)}px, ${(-TT_P.y).toFixed(2)}px) translate(0px, ${PH.y}px) scale(${PH.k.toFixed(5)})`;
     // the controls: up from the tap before the pause; a double tap shows only its own sign and the bar
     const c = ttControls(t), dt = ttDtap(t), ui = c * (dt ? 0 : 1);
     $('mytDim').style.opacity = ui.toFixed(3);
@@ -1320,14 +1329,20 @@
 
   /* captions: white, a hard black outline, lowercase, in TikTok Sans; in with a two-frame pop */
   const TT_CAPS = [];
-  const capT = (a, b, html, y) => TT_CAPS.push({ a, b, html, y });
+  const capT = (a, b, html, y, rot = 0) => TT_CAPS.push({ a, b, html, y, rot });
   function drawTTCaps(t) {
-    const el = $('ttCapA'), c = TT_CAPS.find((x) => t >= x.a && t < x.b);
-    if (!c) { el.style.display = 'none'; return; }
-    el.style.display = 'block';
-    if (el.dataset.k !== c.html) { el.innerHTML = `<div class="stroke">${c.html}</div><div class="fill">${c.html}</div>`; el.dataset.k = c.html; }
-    el.style.top = c.y + 'px';
-    el.style.transform = `translateY(-50%) scale(${t - c.a < 2 / 60 ? 1.12 : 1})`;
+    TT_CAPS.forEach((c, i) => {
+      let el = document.getElementById('ttCap' + i);
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'cap'; el.id = 'ttCap' + i;
+        el.innerHTML = `<div class="stroke">${c.html}</div><div class="fill">${c.html}</div>`;
+        $('ttCap').appendChild(el);
+      }
+      const on = t >= c.a && t < c.b;
+      el.style.display = on ? 'block' : 'none';
+      if (on) { el.style.top = c.y + 'px'; el.style.transform = `translateY(-50%) rotate(${c.rot}deg) scale(${t - c.a < 2 / 60 ? 1.12 : 1})`; }
+    });
   }
 
   /* drawn with a finger: a lumpy red loop that overshoots where it started, put down in 0.2 s at a
@@ -1349,7 +1364,8 @@
     const from = o.from && o.from();
     if (from && t >= o.t0 + 0.2 && Math.floor((t - o.t0 - 0.2) / 0.22) % 2 === 0) {
       const r = from.getBoundingClientRect();
-      const A0 = { x: r.left + r.width / 2, y: r.bottom + 5 }, A1 = { x: cx - rx * 0.1, y: cy - ry * 1.2 - 4 };
+      const up = cy < r.top;
+      const A0 = { x: r.left + r.width / 2, y: up ? r.top - 5 : r.bottom + 5 }, A1 = { x: cx - rx * 0.1, y: up ? cy + ry * 1.2 + 4 : cy - ry * 1.2 - 4 };
       const C = { x: (A0.x + A1.x) / 2 + 26, y: (A0.y + A1.y) / 2 };
       const ap = [];
       for (let i = 0; i <= 16; i++) {
@@ -1362,12 +1378,16 @@
     svg.innerHTML = s;
   }
 
-  function ttInit() {
-    $('phone').style.top = PH.y + 'px';
-    $('phone').style.transform = `scale(${PH.k.toFixed(5)})`;
+  async function ttInit() {
+    $('phone').style.top = '0px';
+    $('phone').style.transform = `translate(0px, ${PH.y}px) scale(${PH.k.toFixed(5)})`;
     $('mytVid').style.transform = `scale(${VK.toFixed(6)})`;
     $('ttCap').style.display = 'block';
     for (const c of ['1fae9', '1f940']) { const im = new Image(); im.src = `/promo/_src/emoji/${c}.png`; }
+    // the page round the player: YouTube's own HTML, every style inlined (promo/scripts/capture-myt.js)
+    $('mytPage').innerHTML = await (await fetch('/promo/_src/myt/page.html')).text();
+    await Promise.all([...$('mytPage').querySelectorAll('img')].map((im) => im.decode().catch(() => {})));
+    await document.fonts.ready;
   }
 
   async function drawYT(t) {
@@ -1488,7 +1508,7 @@
     measureFbRing();
     const r = fbRing, a = toStage(centreOf(q('#prevBtn'))), b = toStage(centreOf(q('#nextBtn')));
     const box = { x0: Math.min(r.cx - r.rx, a.x - 30) - 40, x1: Math.max(r.cx + r.rx, b.x + 30) + 40, y0: r.cy - r.ry - 150, y1: Math.max(a.y, b.y) + 40 };
-    const s = Math.min(1.3, W / (box.x1 - box.x0), H / (box.y1 - box.y0));
+    const s = Math.min(TT ? 1.75 : 1.3, W / (box.x1 - box.x0), H / (box.y1 - box.y0));
     const vw = W / s, vh = H / s;
     fbView = { s, x0: clamp((box.x0 + box.x1) / 2 - vw / 2, 0, W - vw), y0: clamp((box.y0 + box.y1) / 2 - vh / 2, 0, H - vh) };
   }
@@ -1504,7 +1524,7 @@
   function hookView(t) {
     if (!fbView || t < FRAME_T) return { s: 1, tx: 0, ty: 0 };
     const a = FRAME_T, b = HK.pause + 0.05, c = HK.playOn + 0.02, d = HK.playOn + 1.0;
-    const k = t < b ? EZ(prog(t, a, b)) : t < c ? 1 : 1 - EZ(prog(t, c, d));
+    const k = TT ? (t >= HK.pause && t < HK.playOn ? 1 : 0) : t < b ? EZ(prog(t, a, b)) : t < c ? 1 : 1 - EZ(prog(t, c, d));
     const s = Math.pow(fbView.s, k), mix = fbView.s > 1 ? (1 - 1 / s) / (1 - 1 / fbView.s) : 0;
     return { s, tx: -fbView.x0 * mix * s, ty: -fbView.y0 * mix * s };
   }
@@ -1530,11 +1550,11 @@
     Object.assign(T, { reveal: -10, end: HK.end, out: HK.out });
     if (TT) {
       const emo = (c) => `<img class="emo" src="/promo/_src/emoji/${c}.png" alt="">`;
-      capT(0, HK.freeze, 'pov: learning piano from youtube', 108);
-      capT(HK.freeze, HK.unpause, `good luck finding <span class="this">THIS</span> chord ${emo('1fae9')}${emo('1f940')}`, 108);
-      capT(HK.stop - 3, HK.cut, 'ahhh… almost, almost, almost', 108);
-      capT(HK.pause, HK.steps[3], 'or just step to it', 122);
-      capT(HK.steps[3], HK.end - 0.1, 'there it is', 122);
+      capT(0, HK.cut, 'pov: learning piano from youtube', 108);
+      capT(HK.freeze, HK.unpause, `good luck finding <span class="this">THIS</span> chord ${emo('1fae9')}${emo('1f940')}`, 462, -4);
+      capT(TTK.clipAt + 2.0, HK.cut, 'ahhh… almost, almost, almost', 318, 5);
+      capT(HK.pause, HK.steps[3], 'or just step to it', 250, -3);
+      capT(HK.steps[3], HK.end - 0.1, 'there it is', 236, 4);
     } else {
       head(HK.freeze + 0.04, HK.freeze + 1.75, `Trying to find <em class="hi">that one chord?</em>`, { y: 112, hi: HI.etude });
       head(HK.freeze + 1.98, HK.unpause - 0.1, `<em class="hi">Good luck.</em>`, { y: 112, hi: HI.etude });
@@ -1606,7 +1626,7 @@
     if (HOOKY) {
       buildHook();
       buildHits();
-      if (TT) ttInit(); else hoverRules();
+      if (TT) await ttInit(); else hoverRules();
     } else {
       plan();
       buildCut();
